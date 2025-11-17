@@ -1,166 +1,170 @@
 {
-  "hero.title": "Mystery box al kg da stock legali. Prezzi chiari, sorpresa vera.",
-  "hero.subtitle": "Scegli <b>Standard</b> o <b>Premium</b>, seleziona il peso e aggiungi al carrello. Qualità Kilomistery: design curato, trasparenza, tracciabilità.",
+  "hero.title": "Mystery box al Kg da stock legale. Prezzi chiari, sorpresa vera.",
+  "hero.subtitle": "Scegli <b>Standard</b> o <b>Premium</b>, seleziona il peso e aggiungi al carrello. Qualità Kilomystery: design curato, trasparenza, tracciabilità.",
   "hero.cta.prices": "Vedi prezzi",
   "hero.cta.how": "Come funziona",
-  "badges.invoice": "Fattura & tracciabilità lotti",
-  "badges.shipping": "Spedizione tracciata EU",
+
+  "badges.invoice": "Fattura e tracciabilità lotto",
+  "badges.shipping": "Spedizione tracciata in tutta Italia",
   "badges.payments": "Pagamenti sicuri",
+
   "tabs.standard": "Standard",
   "tabs.premium": "Premium",
+
   "how.title": "Come funziona",
   "how.step1": "Ordina Standard o Premium e scegli il peso.",
-  "how.step2": "Selezione casuale da stock legali (con fattura).",
-  "how.step3": "Pesatura netta, sigillo con ID lotto e data.",
-  "how.step4": "Spedizione tracciata in UE. Assicurazione opzionale.",
-  "returns.title": "Resi & Rimborsi",
-  "returns.point1": "Recesso entro 14 giorni dalla consegna.",
-  "returns.point2": "Solo per l’intera box sigillata in condizioni originali.",
-  "returns.point3": "Se il sigillo è rotto o gli articoli sono stati manipolati oltre il necessario, rimborso ridotto o rifiutato.",
-  "returns.point4": "Spese di reso a carico del cliente, salvo errore/danno di trasporto.",
+  "how.step2": "Selezione casuale da stock legale (con documentazione).",
+  "how.step3": "Peso netto con tolleranza, sigillo con ID lotto e data.",
+  "how.step4": "Spedizione tracciata. Assicurazione opzionale.",
+
+  "returns.title": "Resi e rimborsi",
+  "returns.point1": "Diritto di recesso entro 14 giorni dalla consegna.",
+  "returns.point2": "Solo per la box sigillata e in condizioni originali.",
+  "returns.point3": "Se il sigillo è rotto o i prodotti sono stati manipolati oltre il necessario, il rimborso può essere ridotto o rifiutato.",
+  "returns.point4": "Costi di reso a carico del cliente salvo danni da trasporto/errore.",
+
   "cart.title": "Carrello",
   "cart.empty": "Nessun articolo nel carrello.",
   "cart.total": "Totale",
   "cart.pay": "Paga con Stripe",
-  "cart.paypal": "PayPal (presto)",
+  "cart.paypal": "PayPal (presto disponibile)",
+
   "transparency.title": "Trasparenza",
-  "transparency.text": "Acquistiamo stock da marketplace B2B legittimi con documentazione. Controlli per escludere articoli illegali/contraffatti. Non usiamo marchi di terzi."
-} {
+  "transparency.text": "Acquistiamo stock da marketplace B2B legittimi con documentazione. Controlli per escludere articoli illegali o contraffatti. Non utilizziamo marchi di terzi.",
+
   "header": {
     "products": "Prodotti",
     "how": "Come funziona",
     "about": "Chi siamo"
   },
-  "footer": {
-    "menu": "Menu",
-    "legal": "Legale",
-    "privacy": "Privacy Policy",
-    "terms": "Termini e condizioni",
-    "returns": "Resi",
-    "shipping": "Spedizioni",
-    "newsletterTitle": "Iscriviti alla nostra newsletter",
-    "subscribe": "Iscriviti"
-  }
-} {
+
   "nav": {
     "products": "Prodotti",
     "how": "Come funziona",
     "about": "Chi siamo",
     "contact": "Contatti"
   },
+
   "footer": {
     "menu": "Menu",
-    "legal": "Legale",
+    "legal": "Note legali",
+    "privacy": "Privacy Policy",
+    "terms": "Termini e condizioni",
+    "returns": "Resi",
+    "shipping": "Spedizioni",
+    "newsletterTitle": "Iscriviti alla newsletter",
+    "subscribe": "Iscriviti",
     "newsletter": {
-      "title": "Iscriviti alla nostra newsletter",
-      "subtitle": "Ricevi offerte esclusive e novità.",
+      "title": "Iscriviti alla newsletter",
+      "subtitle": "Offerte esclusive e aggiornamenti sui drop.",
       "cta": "Iscriviti",
-      "disclaimer": "Con l’iscrizione accetti la nostra",
-      "privacy": "privacy policy"
+      "disclaimer": "Iscrivendoti accetti la nostra",
+      "privacy": "informativa privacy"
     }
   },
+
   "legal": {
     "privacy": {
-      "title": "Privacy Policy",
-      "intro": "La tua privacy è importante. Trattiamo i dati personali nel rispetto del Regolamento (UE) 2016/679 (GDPR) e della normativa italiana vigente.",
+      "title": "Informativa Privacy",
+      "intro": "La tua privacy è importante. Trattiamo i dati personali nel rispetto del GDPR (Reg. UE 2016/679) e della normativa italiana applicabile.",
       "sections": {
         "dataCollected": {
-          "title": "Dati che raccogliamo",
-          "body": "Raccogliamo nome, email, indirizzo di spedizione/fatturazione, dettagli dell’ordine, e informazioni di pagamento (gestite in modo sicuro dai provider). Possiamo raccogliere dati tecnici (IP, device, cookie) per sicurezza e statistiche."
+          "title": "Dati raccolti",
+          "body": "Raccogliamo nome, email, indirizzo di spedizione/fatturazione, dati dell’ordine e informazioni di pagamento (gestite in modo sicuro dai provider). Possiamo raccogliere dati tecnici (IP, dispositivo, cookie) per sicurezza e analisi."
         },
         "purpose": {
-          "title": "Finalità del trattamento",
-          "body": "Gestione ordini e spedizioni, assistenza clienti, adempimenti legali/contabili, prevenzione frodi, analisi aggregate per migliorare servizi, e – se acconsenti – invio comunicazioni commerciali."
+          "title": "Finalità",
+          "body": "Gestione ordini e spedizioni, assistenza clienti, obblighi legali/contabili, prevenzione frodi, analisi aggregate per migliorare il servizio e — se acconsenti — comunicazioni di marketing."
         },
         "legalBasis": {
           "title": "Basi giuridiche",
-          "body": "Esecuzione del contratto (ordini), obblighi di legge, legittimo interesse (sicurezza e miglioramento), consenso (marketing)."
+          "body": "Esecuzione del contratto (ordini), obblighi di legge, legittimo interesse (sicurezza e miglioramenti), consenso (marketing)."
         },
         "cookies": {
-          "title": "Cookie e tecnologie simili",
-          "body": "Usiamo cookie tecnici e, con consenso, cookie di analisi/marketing. Puoi gestirli dal banner o dalle impostazioni del browser."
+          "title": "Cookie",
+          "body": "Usiamo cookie tecnici e, con il tuo consenso, cookie di analisi/marketing. Puoi gestirli dal banner o dalle impostazioni del browser."
         },
         "retention": {
           "title": "Conservazione",
-          "body": "Conserviamo i dati per il tempo necessario alle finalità indicate e/o secondo i termini di legge (ad es. fiscali/contabili)."
+          "body": "Conserviamo i dati solo per il tempo necessario alle finalità indicate o previsto dalla legge (es. obblighi fiscali/contabili)."
         },
         "rights": {
           "title": "I tuoi diritti",
-          "body": "Puoi esercitare accesso, rettifica, cancellazione, limitazione, opposizione, portabilità, e revoca del consenso scrivendoci ai contatti indicati."
+          "body": "Puoi esercitare i diritti di accesso, rettifica, cancellazione, limitazione, opposizione, portabilità e revoca del consenso contattandoci."
         },
         "contacts": {
           "title": "Contatti privacy",
-          "body": "Per richieste privacy, contattaci a: support@kilomistery.com"
+          "body": "Per richieste sulla privacy, scrivi a: support@kilomistery.com"
         }
       }
     },
     "terms": {
       "title": "Termini e Condizioni",
-      "intro": "Questi termini regolano l’uso del sito e l’acquisto dei prodotti. Effettuando un ordine accetti integralmente le presenti condizioni.",
+      "intro": "Questi termini regolano l’uso del sito e l’acquisto dei prodotti. Effettuando un ordine li accetti integralmente.",
       "sections": {
         "contract": {
           "title": "Contratto e ordini",
-          "body": "Il contratto si perfeziona al pagamento e conferma dell’ordine. Ci riserviamo la facoltà di rifiutare/annullare ordini in caso di anomalie o indisponibilità."
+          "body": "Il contratto si conclude al momento del pagamento e della conferma d’ordine. Possiamo rifiutare/annullare ordini in caso di anomalie o problemi di stock."
         },
         "prices": {
           "title": "Prezzi e pagamenti",
-          "body": "I prezzi sono in EUR e includono IVA salvo diversa indicazione. Pagamenti gestiti tramite provider sicuri (es. Stripe)."
+          "body": "I prezzi sono in EUR e includono IVA salvo diversa indicazione. I pagamenti sono gestiti da provider sicuri (es. Stripe)."
         },
         "shipping": {
           "title": "Spedizione e consegna",
-          "body": "Spediamo con corrieri tracciati. Tempi indicativi in pagina Spedizioni. Ritardi non imputabili al venditore non danno diritto a indennizzi."
+          "body": "Spediamo con corrieri tracciati. I tempi indicativi sono riportati nella pagina Spedizioni. Ritardi non imputabili al venditore non danno diritto a risarcimento."
         },
         "mystery": {
           "title": "Prodotti mystery",
-          "body": "Le box sono sigillate e vendute ‘mystery’: il contenuto è a sorpresa, selezionato da stock legali. Le immagini sono esemplificative."
+          "body": "Le box sono sigillate e vendute come prodotti mystery: il contenuto è una sorpresa da stock regolare. Le immagini sono illustrative."
         },
         "returns": {
-          "title": "Resi e diritto di recesso",
-          "body": "Per policy di reso vedi pagina Resi. Per difetti o non conformità contattaci entro i termini di legge."
+          "title": "Resi e recesso",
+          "body": "Consulta la pagina Resi per la nostra policy. In caso di difetti o non conformità, contattaci nei termini di legge."
         },
         "liability": {
           "title": "Responsabilità",
-          "body": "Non rispondiamo di danni indiretti o consequenziali. In ogni caso, la responsabilità massima non supera il valore dell’ordine."
+          "body": "Non rispondiamo di danni indiretti o consequenziali. In ogni caso, la responsabilità è limitata al valore dell’ordine."
         },
         "law": {
           "title": "Legge applicabile",
-          "body": "Si applica la legge italiana. Foro competente: quello del consumatore se applicabile."
+          "body": "Si applica la legge italiana. Foro competente: quello del consumatore, ove previsto."
         }
       }
     },
     "returns": {
       "title": "Politica Resi",
-      "intro": "Le nostre box sono sigillate e vendute come ‘mystery’. Per questo, i resi non sono previsti salvo difetti, danni da trasporto o non conformità legale.",
+      "intro": "Le nostre box sono sigillate e vendute come prodotti mystery. Per questo i resi non sono previsti, salvo difetti, danni da trasporto o non conformità legale.",
       "sections": {
         "noReturns": {
-          "title": "Assenza di reso per contenuto",
-          "body": "La natura ‘mystery’ implica che il contenuto non è personalizzabile; non accettiamo resi per semplice insoddisfazione."
+          "title": "Nessun reso per contenuto",
+          "body": "La natura mystery implica che il contenuto non è personalizzabile; non accettiamo resi per semplice insoddisfazione."
         },
         "defects": {
-          "title": "Prodotti difettosi o danneggiati",
-          "body": "Se la box arriva danneggiata o con difetti, contattaci entro 48 ore con foto e numero ordine. Valuteremo sostituzione o rimborso parziale/total."
+          "title": "Articoli difettosi o danneggiati",
+          "body": "Se la box arriva danneggiata o difettosa, contattaci entro 48 ore con foto e numero ordine. Valuteremo sostituzione o rimborso totale/parziale."
         },
         "process": {
-          "title": "Procedura",
-          "body": "Scrivi a support@kilomistery.com indicando numero ordine, descrizione del problema e foto chiare dell’imballo e del contenuto."
+          "title": "Come richiedere assistenza",
+          "body": "Scrivi a support@kilomistery.com indicando numero d’ordine, descrizione del problema e foto chiare del pacco e del contenuto."
         }
       }
     },
     "shipping": {
       "title": "Spedizioni",
-      "intro": "Spediamo in Italia e UE con corrieri tracciati. Riceverai il tracking quando l’ordine viene affidato al corriere.",
+      "intro": "Spediamo in tutta Italia e in UE con corriere tracciato. Riceverai il tracking appena l’ordine viene affidato al corriere.",
       "sections": {
         "times": {
           "title": "Tempi di consegna",
-          "body": "Italia 24–72h lavorative in media; UE 3–6 giorni. Periodi festivi o zone remote possono richiedere più tempo."
+          "body": "Italia: in genere 24–72 ore lavorative; UE: 3–6 giorni. Festivi o zone remote possono richiedere più tempo."
         },
         "costs": {
           "title": "Costi di spedizione",
-          "body": "I costi sono calcolati al checkout in base a peso, destinazione ed eventuali promozioni."
+          "body": "Calcolati al checkout in base a peso, destinazione e promozioni attive."
         },
         "packaging": {
           "title": "Imballo e tracciabilità",
-          "body": "Ogni box ha sigillo con ID lotto, peso netto e data. Imballo rinforzato e tracciabilità completa."
+          "body": "Ogni box ha un sigillo con ID lotto, peso netto e data. Imballo rinforzato e tracking completo."
         }
       }
     }
