@@ -15,8 +15,8 @@ export default function ClientShell({ lang = 'it' as const }) {
       {/* Banner GDPR */}
       <CookieBanner />
 
-      {/* Popup newsletter (usa localStorage per non riproporlo) */}
-      <NewsletterModal lang={lang} />
+            {/* Popup newsletter (usa localStorage per non riproporlo) */}
+      <NewsletterModal />
     </>
   );
 }
