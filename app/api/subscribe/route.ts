@@ -1,23 +1,34 @@
 // app/api/subscribe/route.ts
-import { NextResponse } from 'next/server';
-import { existsSync } from 'fs';
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { NextResponse } from "next/server";
+import { Resend } from "resend";
 
-const FILE = 'cache/subscribers.json';
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
     const { email } = await req.json();
+
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      return NextResponse.json({ ok: false, error: 'invalid' }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: "invalid-email" },
+        { status: 400 }
+      );
     }
-    await mkdir('cache', { recursive: true });
-    let list: string[] = [];
-    if (existsSync(FILE)) list = JSON.parse(await readFile(FILE, 'utf8'));
-    if (!list.includes(email)) list.push(email);
-    await writeFile(FILE, JSON.stringify(list, null, 2));
+
+    const to = process.env.NEWSLETTER_TO || "kilomystery2025@gmail.com";
+    const from = process.env.NEWSLETTER_FROM || "newsletter@kilomystery.com";
+
+    // Invia una mail a te con il nuovo iscritto
+    await resend.emails.send({
+      from,
+      to,
+      subject: "Nuova iscrizione newsletter Kilomystery",
+      text: `Nuovo iscritto: ${email}`,
+    });
+
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (err) {
+    console.error("Newsletter subscribe error", err);
     return NextResponse.json({ ok: false }, { status: 500 });
   }
 }
