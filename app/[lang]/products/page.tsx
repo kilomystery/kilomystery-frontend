@@ -1,31 +1,34 @@
 // app/[lang]/products/page.tsx
-"use client";
+'use client';
 
-import { useEffect, useRef } from "react";
-import Image from "next/image";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
+import { useEffect, useRef } from 'react';
+import Image from 'next/image';
+import Header from '../../components/Header';
+import Footer from '../../components/Footer';
+import { useCart } from '../../context/CartContext';
 
 type Kg = 1 | 2 | 3 | 5 | 10;
 
+/** paths video */
 const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
 const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
 
-function pricePerKg(kind: "Standard" | "Premium", kg: Kg) {
-  if (kind === "Premium") return kg <= 3 ? 25.99 : 20.99;
+/** prezzo €/kg per Standard / Premium */
+function pricePerKg(kind: 'Standard' | 'Premium', kg: Kg) {
+  if (kind === 'Premium') return kg <= 3 ? 25.99 : 20.99;
   return kg <= 3 ? 19.9 : 17.99;
 }
 
 const euro = (n: number) =>
-  n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+  n.toLocaleString('it-IT', { style: 'currency', currency: 'EUR' });
 
 /** CO₂ indicativa evitata per kg (stima) */
 const co2ByKg: Record<Kg, string> = {
-  1: "≈0,25 kg di CO₂ evitati",
-  2: "≈0,5 kg di CO₂ evitati",
-  3: "≈0,75 kg di CO₂ evitati",
-  5: "≈1,25 kg di CO₂ evitati",
-  10: "≈2,5 kg di CO₂ evitati",
+  1: '≈0,25 kg di CO₂ evitati',
+  2: '≈0,5 kg di CO₂ evitati',
+  3: '≈0,75 kg di CO₂ evitati',
+  5: '≈1,25 kg di CO₂ evitati',
+  10: '≈2,5 kg di CO₂ evitati',
 };
 
 /** Log “safe” (solo stringhe) per evitare errori del Dev Overlay */
@@ -35,68 +38,73 @@ function safeError(label: string, err: unknown) {
       ? err.message
       : (() => {
           try {
-            return typeof err === "string" ? err : JSON.stringify(err);
+            return typeof err === 'string' ? err : JSON.stringify(err);
           } catch {
             return String(err);
           }
         })();
-  // stampiamo solo stringhe
   console.error(`${label}: ${msg}`);
 }
 
-/**
- * Mappa link diretti al carrello Shopify per ogni combinazione
- * kind + kg. Se vuoi cambiare dominio o ID, è tutto qui.
- */
-const shopifyCartUrlMap: Record<
-  "Standard" | "Premium",
-  Record<Kg, string | null>
-> = {
+/** ID varianti Shopify – stessi che usiamo in ProductsTabs */
+const VARIANT_IDS: Record<'Standard' | 'Premium', Record<Kg, string>> = {
   Standard: {
-    1: "https://kilomystery.myshopify.com/cart/52045370360146:1",
-    2: "https://kilomystery.myshopify.com/cart/52045370392914:1",
-    3: "https://kilomystery.myshopify.com/cart/52045370425682:1",
-    5: "https://kilomystery.myshopify.com/cart/52045370458450:1",
-    10: "https://kilomystery.myshopify.com/cart/52045370491218:1",
+    1: '52045370360146',
+    2: '52045370392914',
+    3: '52045370425682',
+    5: '52045370458450',
+    10: '52045370491218',
   },
   Premium: {
-    1: "https://kilomystery.myshopify.com/cart/52045402571090:1",
-    2: "https://kilomystery.myshopify.com/cart/52045402603858:1",
-    3: "https://kilomystery.myshopify.com/cart/52045402636626:1",
-    5: "https://kilomystery.myshopify.com/cart/52045402669394:1",
-    10:
-      // ID variante 10 kg Premium
-      "https://kilomystery.myshopify.com/cart/52045402702162:1",
+    1: '52045402571090',
+    2: '52045402603858',
+    3: '52045402636626',
+    5: '52045402669394',
+    10: '52045402702162',
   },
 };
 
+/** Card singola Standard/Premium che USA il CARRELLO FRONTEND */
 function PackCard({
   kind,
   kg,
   video,
 }: {
-  kind: "Standard" | "Premium";
+  kind: 'Standard' | 'Premium';
   kg: Kg;
   video: string;
 }) {
+  const { addItem } = useCart();
+
   const ppk = pricePerKg(kind, kg);
   const total = +(ppk * kg).toFixed(2);
-  const isStd = kind === "Standard";
+  const isStd = kind === 'Standard';
 
+  // per la ruota: anchor #buy-standard-10 / #buy-premium-10
   const anchorId = kg === 10 ? `buy-${kind.toLowerCase()}-10` : undefined;
-  const cartUrl = shopifyCartUrlMap[kind][kg];
+
+  const variantId = VARIANT_IDS[kind][kg];
+
+  function handleAddToCart() {
+    addItem({
+      id: `${kind}-${kg}`,
+      shopifyId: variantId,
+      title: `${kind} · ${kg} kg`,
+      kg,
+      kind,
+      price: total, // prezzo per 1 box
+      image: `/videos/packs/${kind === 'Standard' ? 'std' : 'prm'}-${kg}.mp4`,
+      qty: 1,
+    });
+  }
 
   return (
     <article
-      className={`card ${isStd ? "card--standard" : "card--premium"}`}
+      className={`card ${isStd ? 'card--standard' : 'card--premium'}`}
       id={anchorId}
     >
       {/* media con glow/ombre */}
-      <div
-        className={`media-wrap ${
-          isStd ? "media-wrap--std" : "media-wrap--prm"
-        }`}
-      >
+      <div className={`media-wrap ${isStd ? 'media-wrap--std' : 'media-wrap--prm'}`}>
         <div className="ratio-16-9">
           <video
             className="media rounded-[12px] object-cover"
@@ -122,7 +130,7 @@ function PackCard({
         <div className="text-right">
           <div
             className={`price-figure ${
-              isStd ? "price-figure--std" : "price-figure--prm"
+              isStd ? 'price-figure--std' : 'price-figure--prm'
             } text-3xl`}
           >
             {euro(total)}
@@ -139,62 +147,50 @@ function PackCard({
         <li>{co2ByKg[kg]}</li>
         {kg === 10 && (
           <li>
-            Include <b>1 giro</b> alla Ruota (finestra <b>30 minuti</b>) • vinci
-            fino a <b>+2 kg</b>.
+            Include <b>1 giro</b> alla Ruota (finestra <b>30 minuti</b>) • vinci fino a{' '}
+            <b>+2 kg</b>.
           </li>
         )}
       </ul>
 
-      {/* CTA */}
+      {/* CTA → aggiunge al carrello FRONTEND */}
       <div className="mt-4">
-        {cartUrl ? (
-          <a href={cartUrl} rel="noreferrer">
-            <button
-              className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}
-            >
-              Aggiungi al carrello
-            </button>
-          </a>
-        ) : (
-          <button
-            className={`btn w-full opacity-60 cursor-not-allowed ${
-              isStd ? "btn-silver" : "btn-gold"
-            }`}
-            disabled
-          >
-            Presto disponibile
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className={`btn w-full ${isStd ? 'btn-silver' : 'btn-gold'}`}
+        >
+          Aggiungi al carrello
+        </button>
       </div>
     </article>
   );
 }
 
 export default function ProductsPage({ params }: { params: { lang: string } }) {
-  const lang = (params?.lang || "it") as any;
+  const lang = (params?.lang || 'it') as any;
   const animRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let destroyed = false;
-    let anim: import("lottie-web").AnimationItem | null = null;
+    let anim: import('lottie-web').AnimationItem | null = null;
 
     const prefersReduced =
-      typeof window !== "undefined" &&
+      typeof window !== 'undefined' &&
       window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     if (prefersReduced) return;
 
     (async () => {
       try {
-        // import dinamico (niente peso nel bundle iniziale)
-        const { default: lottie } = await import("lottie-web");
+        const { default: lottie } = await import('lottie-web');
 
-        const res = await fetch("/lottie/products-animation.json", {
-          cache: "no-store",
+        const res = await fetch('/lottie/products-animation.json', {
+          cache: 'no-store',
         });
         if (!res.ok) {
-          safeError("Lottie load error", `HTTP ${res.status}`);
+          safeError('Lottie load error', `HTTP ${res.status}`);
           return;
         }
         const data = await res.json();
@@ -202,16 +198,15 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
         if (!destroyed && animRef.current) {
           anim = lottie.loadAnimation({
             container: animRef.current,
-            renderer: "svg",
+            renderer: 'svg',
             loop: true,
             autoplay: true,
             animationData: data,
           });
-          // piccolo hint al browser
-          (animRef.current.style as any).willChange = "transform";
+          (animRef.current.style as any).willChange = 'transform';
         }
       } catch (e) {
-        safeError("Lottie load error", e);
+        safeError('Lottie load error', e);
       }
     })();
 
@@ -250,17 +245,16 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
         {/* intro */}
         <header className="text-center max-w-2xl mx-auto space-y-3">
           <h1 className="section-title text-3xl md:text-4xl">
-            Pesa il mistero,{" "}
+            Pesa il mistero,{' '}
             <span className="brand-text">spacchetta la sorpresa!</span>
           </h1>
           <p className="text-white/70">
-            Standard o Premium? 1 kg o 10 kg? Decidi quanto emozionante sarà il
-            tuo unboxing: ogni box è selezionata, sigillata e tracciata.
+            Standard o Premium? 1 kg o 10 kg? Decidi quanto emozionante sarà il tuo unboxing:
+            ogni box è selezionata, sigillata e tracciata.
           </p>
           <p className="text-white/70">
-            Ogni box non è solo una sorpresa: è anche un modo concreto per
-            ridurre sprechi e CO₂, dando nuova vita a pacchi che altrimenti
-            finirebbero nello smaltimento.
+            Ogni box non è solo una sorpresa: è anche un modo concreto per ridurre sprechi e CO₂,
+            dando nuova vita a pacchi che altrimenti finirebbero nello smaltimento.
           </p>
         </header>
 
@@ -279,9 +273,8 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           <div className="flex-1">
             <h3 className="text-xl font-extrabold">Ruota della fortuna</h3>
             <p className="text-white/70">
-              Con un ordine da <b>10 kg</b> ottieni <b>1 giro immediato</b>{" "}
-              nella pagina di conferma (finestra <b>30 minuti</b>). Premi fino a{" "}
-              <b>+2 kg</b> sullo stesso pacco.
+              Con un ordine da <b>10 kg</b> ottieni <b>1 giro immediato</b> nella pagina di
+              conferma (finestra <b>30 minuti</b>). Premi fino a <b>+2 kg</b> sullo stesso pacco.
             </p>
           </div>
           <div className="flex flex-col gap-2">
@@ -298,7 +291,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
         <section className="space-y-4">
           <h2 className="text-2xl font-extrabold text-silver-soft">Standard</h2>
           <div className="grid md:grid-cols-2 gap-5">
-            {[1, 2, 3, 5, 10].map((kg) => (
+            {[1, 2, 3, 5, 10].map(kg => (
               <PackCard
                 key={`std-${kg}`}
                 kind="Standard"
@@ -313,7 +306,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
         <section className="space-y-4">
           <h2 className="text-2xl font-extrabold text-gold-soft">Premium</h2>
           <div className="grid md:grid-cols-2 gap-5">
-            {[1, 2, 3, 5, 10].map((kg) => (
+            {[1, 2, 3, 5, 10].map(kg => (
               <PackCard
                 key={`prm-${kg}`}
                 kind="Premium"
@@ -328,9 +321,8 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
         <section id="policy" className="card">
           <h3 className="text-xl font-extrabold mb-2">Politica Resi</h3>
           <p className="text-white/70">
-            Le box sono vendute come <b>mystery</b> sigillate: il reso non è
-            previsto. In etichetta trovi peso, lotto e tracciabilità per la
-            massima trasparenza.
+            Le box sono vendute come <b>mystery</b> sigillate: il reso non è previsto. In
+            etichetta trovi peso, lotto e tracciabilità per la massima trasparenza.
           </p>
           <a
             href={`/${lang}/policy/returns`}

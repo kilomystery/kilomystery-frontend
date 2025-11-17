@@ -1,66 +1,74 @@
-// components/Newsletter.tsx
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState } from "react";
+import Image from "next/image";
 
 export default function Newsletter() {
-  const [email, setEmail] = useState('');
-  const [state, setState] = useState<'idle' | 'ok' | 'err'>('idle');
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<"idle" | "ok" | "err" | "loading">("idle");
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (state === "loading") return;
+
+    setState("loading");
+
     try {
-      const r = await fetch('/api/subscribe', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
+      const r = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      if (!r.ok) throw new Error('fail');
-      setState('ok');
-      setEmail('');
+
+      if (!r.ok) throw new Error();
+      setState("ok");
+      setEmail("");
     } catch {
-      setState('err');
+      setState("err");
     }
   }
 
   return (
-    <div className="card max-w-md">
-      {/* LOGO NEWSLETTER */}
+    <div className="card max-w-md mx-auto">
       <div className="flex justify-center mb-3">
-        <img
+        <Image
           src="/hero/hero.svg"
           alt="KiloMystery"
-          className="w-32 h-auto drop-shadow-[0_0_20px_rgba(124,58,237,0.3)]"
+          width={120}
+          height={40}
+          className="drop-shadow-[0_0_20px_rgba(124,58,237,0.3)]"
         />
       </div>
 
-      <h3 className="text-lg font-bold mb-2">Iscriviti alla newsletter</h3>
-      <p className="text-sm text-white/70 mb-3">
-        Offerte, drop e consigli per massimizzare il valore dei lotti.
+      <h3 className="text-lg font-bold mb-1">Newsletter</h3>
+
+      <p className="text-white/70 text-sm mb-3">
+        Drop, offerte e consigli per i tuoi lotti Mystery.
       </p>
 
       <form onSubmit={onSubmit} className="flex gap-2">
         <input
-          className="flex-1 bg-[#0f1216] border border-white/15 rounded-xl px-3 py-2 outline-none focus:border-white/30"
           type="email"
-          placeholder="la-tua@email.com"
           required
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          placeholder="La tua email"
+          className="flex-1 input rounded-xl px-4 py-2 bg-[#111317] border border-white/20 focus:border-white/40"
         />
 
-        {/* QUI USIAMO SIA .btn CHE .btn-brand */}
-        <button className="btn btn-brand" type="submit">
-          Iscriviti
+        <button
+          type="submit"
+          disabled={state === "loading"}
+          className="btn btn-brand rounded-xl"
+        >
+          {state === "loading" ? "Invio…" : "Iscriviti"}
         </button>
       </form>
 
-      {state === 'ok' && (
-        <p className="text-emerald-400 text-sm mt-2">
-          Iscrizione completata ✔️
-        </p>
+      {state === "ok" && (
+        <p className="text-emerald-400 text-sm mt-2">Iscritto ✔️</p>
       )}
-      {state === 'err' && (
+      {state === "err" && (
         <p className="text-rose-400 text-sm mt-2">Errore, riprova.</p>
       )}
     </div>

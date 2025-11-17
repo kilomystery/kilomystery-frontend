@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import CartIcon from './CartIcon';
 
 type Lang = 'it' | 'en' | 'es' | 'fr' | 'de';
 const SUPPORTED: Lang[] = ['it', 'en', 'es', 'fr', 'de'];
@@ -27,7 +28,12 @@ function replaceLang(path: string, to: Lang) {
     return `/${to}${clean === '/' ? '' : clean}`;
   }
   parts[1] = to;
-  return parts.join('/').replace(/\/{2,}/g, '/').replace(/\/$/, '') || `/${to}`;
+  return (
+    parts
+      .join('/')
+      .replace(/\/{2,}/g, '/')
+      .replace(/\/$/, '') || `/${to}`
+  );
 }
 
 export default function Header({ lang = 'it' as Lang }) {
@@ -72,9 +78,9 @@ export default function Header({ lang = 'it' as Lang }) {
             Eventi Pop-Up
           </Link>
 
-          {/* SOCIAL ICONS */}
+          {/* SOCIAL + CARRELLO */}
           <div className="flex items-center gap-3 pl-2">
-            {/* INSTAGRAM */}
+            {/* Instagram */}
             <a
               href={INSTAGRAM_URL}
               target="_blank"
@@ -107,31 +113,32 @@ export default function Header({ lang = 'it' as Lang }) {
               </svg>
             </a>
 
-  {/* TikTok */}
-<a
-  href="https://www.tiktok.com/@kilomystery"
-  target="_blank"
-  rel="noreferrer"
-  className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/5 hover:bg-white/10 transition"
-  aria-label="TikTok KiloMystery"
->
-  <svg
-    viewBox="0 0 24 24"
-    aria-hidden="true"
-    className="h-4 w-4 text-white"
-  >
-    {/* nota TikTok stile outline */}
-    <path
-      d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.7"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-</a>
+            {/* TikTok */}
+            <a
+              href={TIKTOK_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="TikTok KiloMystery"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/5 hover:bg-white/10 transition"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="h-4 w-4 text-white"
+              >
+                <path
+                  d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </a>
 
+            {/* CARRELLO FRONT-END */}
+            <CartIcon lang={currentLang} />
           </div>
 
           {/* LANG DROPDOWN */}
@@ -210,6 +217,11 @@ export default function Header({ lang = 'it' as Lang }) {
             >
               Eventi Pop-Up
             </Link>
+
+            {/* CARRELLO MOBILE */}
+            <div className="mt-3 px-1">
+              <CartIcon lang={currentLang} />
+            </div>
 
             {/* SOCIAL ICONS MOBILE */}
             <div className="flex items-center gap-4 mt-3 px-1">

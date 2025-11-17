@@ -11,9 +11,7 @@ export default function NewsletterModal() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const seen = window.localStorage.getItem("km-newsletter-dismissed");
-    if (!seen) {
-      setOpen(true);
-    }
+    if (!seen) setOpen(true);
   }, []);
 
   function close() {
@@ -48,7 +46,7 @@ export default function NewsletterModal() {
   return (
     <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
       <div className="card relative max-w-md w-full bg-[#0f1216]/95 border border-white/15 rounded-2xl p-6 md:p-8">
-        {/* pulsante chiudi */}
+        {/* Pulsante chiudi */}
         <button
           type="button"
           onClick={close}
@@ -58,14 +56,14 @@ export default function NewsletterModal() {
           ✕
         </button>
 
-        {/* logo */}
+        {/* LOGO */}
         <div className="flex flex-col items-center gap-3 mb-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-black/70 overflow-hidden">
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/20 bg-black/70 overflow-hidden">
             <Image
-              src="/logo.svg"          // 👈 qui usa il tuo logo vero
-              alt="KiloMistery"
-              width={56}
-              height={56}
+              src="/hero/hero.svg"   // 👈 uso lo stesso logo dell’hero che sappiamo esistere
+              alt="KiloMystery"
+              width={80}
+              height={80}
               className="object-contain"
             />
           </div>
@@ -74,24 +72,24 @@ export default function NewsletterModal() {
             Iscriviti alla newsletter
           </h2>
           <p className="text-sm text-white/75 text-center max-w-sm">
-            Sconti, nuove mystery box e anteprime. Nessuno spam, promesso.
+            Sconti, nuove mystery box e anteprime. Nessuno spam, solo drop utili.
           </p>
         </div>
 
-        {/* form */}
+        {/* FORM */}
         <form onSubmit={onSubmit} className="space-y-3">
           <input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="La tua email"
-            className="input w-full"
+            placeholder="la-tua@email.com"
+            className="input w-full rounded-full px-4 py-3 text-[15px]"
           />
 
           <button
             type="submit"
-            className="btn btn-brand w-full justify-center"
+            className="btn btn-brand btn-lg w-full justify-center rounded-full"
           >
             {state === "ok"
               ? "Iscritto ✔️"
@@ -103,7 +101,7 @@ export default function NewsletterModal() {
           <p className="text-[11px] text-white/60 text-center">
             Iscrivendoti accetti la nostra{" "}
             <a
-              href="/it/policy/privacy"
+              href="/it/legal/privacy"
               className="underline underline-offset-2"
             >
               Privacy Policy

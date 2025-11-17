@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useCart } from '../context/CartContext';
 
 type Lang = 'it' | 'en' | 'es' | 'fr' | 'de';
 type Kg = 1 | 2 | 3 | 5 | 10;
@@ -35,41 +36,35 @@ const co2ByKg: Record<Kg, string> = {
   10: '≈2,5 kg di CO₂ evitati',
 };
 
-/**
- * Link diretti a Shopify:
- * usiamo /cart/add?id=...&quantity=1&return_to=/checkout
- * così gli articoli si SOMMANO al carrello e si va diretto al checkout.
- */
-const SHOPIFY_BASE = 'https://shop.kilomystery.com';
-
-const shopifyCartUrlMap: Record<'Standard' | 'Premium', Record<Kg, string>> = {
+/** ID varianti Shopify per checkout (usati dopo nella pagina /cart) */
+const VARIANT_IDS: Record<'Standard' | 'Premium', Record<Kg, string>> = {
   Standard: {
-    1: `${SHOPIFY_BASE}/cart/add?id=52045370360146&quantity=1&return_to=/checkout`,
-    2: `${SHOPIFY_BASE}/cart/add?id=52045370392914&quantity=1&return_to=/checkout`,
-    3: `${SHOPIFY_BASE}/cart/add?id=52045370425682&quantity=1&return_to=/checkout`,
-    5: `${SHOPIFY_BASE}/cart/add?id=52045370458450&quantity=1&return_to=/checkout`,
-    10: `${SHOPIFY_BASE}/cart/add?id=52045370491218&quantity=1&return_to=/checkout`,
+    1: '52045370360146',
+    2: '52045370392914',
+    3: '52045370425682',
+    5: '52045370458450',
+    10: '52045370491218',
   },
   Premium: {
-    1: `${SHOPIFY_BASE}/cart/add?id=52045402571090&quantity=1&return_to=/checkout`,
-    2: `${SHOPIFY_BASE}/cart/add?id=52045402603858&quantity=1&return_to=/checkout`,
-    3: `${SHOPIFY_BASE}/cart/add?id=52045402636626&quantity=1&return_to=/checkout`,
-    5: `${SHOPIFY_BASE}/cart/add?id=52045402669394&quantity=1&return_to=/checkout`,
-    10: `${SHOPIFY_BASE}/cart/add?id=52045402702162&quantity=1&return_to=/checkout`,
+    1: '52045402571090',
+    2: '52045402603858',
+    3: '52045402636626',
+    5: '52045402669394',
+    10: '52045402702162',
   },
 };
 
 /** Gradients coerenti con background verde/midnight */
 const silverCards = [
-  'from-[#e3e8ea]/90 to-[#b7c0c6]/90', // argento chiaro
-  'from-[#d7dde2]/90 to-[#a9b1b7]/90', // metal freddo
-  'from-[#e6e6e6]/90 to-[#bfbfbf]/90', // neutro
+  'from-[#e3e8ea]/90 to-[#b7c0c6]/90',
+  'from-[#d7dde2]/90 to-[#a9b1b7]/90',
+  'from-[#e6e6e6]/90 to-[#bfbfbf]/90',
 ];
 
 const goldCards = [
-  'from-[#f6e27a]/90 to-[#d4af37]/90', // gold
-  'from-[#f9e79f]/90 to-[#c9a14b]/90', // champagne
-  'from-[#f7d774]/90 to-[#d4b35a]/90', // caldo
+  'from-[#f6e27a]/90 to-[#d4af37]/90',
+  'from-[#f9e79f]/90 to-[#c9a14b]/90',
+  'from-[#f7d774]/90 to-[#d4b35a]/90',
 ];
 
 /** Bottoni */
@@ -80,6 +75,7 @@ const goldBtn =
 
 export default function ProductsTabs({ lang = 'it' as Lang }) {
   const [tab, setTab] = useState<Tier>('std');
+  const { addItem } = useCart();
 
   const supported = ['it', 'en', 'es', 'fr', 'de'] as const;
   const normalized = String(lang).toLowerCase();
@@ -89,6 +85,20 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
 
   const L = LABELS[safeLang];
   const currentKind: 'Standard' | 'Premium' = tab === 'std' ? 'Standard' : 'Premium';
+
+  function handleAddToCart(kind: 'Standard' | 'Premium', kg: Kg, total: number) {
+    const variantId = VARIANT_IDS[kind][kg];
+    addItem({
+      id: `${kind}-${kg}`,
+      shopifyId: variantId,
+      title: `${kind} · ${kg} kg`,
+      kg,
+      kind,
+      price: total,
+      image: `/videos/packs/${kind === 'Standard' ? 'std' : 'prm'}-${kg}.mp4`, // o immagine statica se preferisci
+      qty: 1,
+    });
+  }
 
   return (
     <section className="container py-10 space-y-6">
@@ -144,7 +154,6 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
               : `bg-gradient-to-br ${goldCards[i % goldCards.length]}`;
 
           const kg = w as Kg;
-          const cartUrl = shopifyCartUrlMap[currentKind][kg];
 
           return (
             <article
@@ -225,11 +234,12 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
                 </ul>
 
                 <div className="mt-4">
-                  <a href={cartUrl} rel="noreferrer">
-                    <button className={tab === 'prm' ? goldBtn : silverBtn}>
-                      {L?.add || 'Aggiungi al carrello'}
-                    </button>
-                  </a>
+                  <button
+                    className={tab === 'prm' ? goldBtn : silverBtn}
+                    onClick={() => handleAddToCart(currentKind, kg, total)}
+                  >
+                    {L?.add || 'Aggiungi al carrello'}
+                  </button>
                 </div>
               </div>
             </article>
