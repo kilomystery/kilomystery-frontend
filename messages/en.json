@@ -3,34 +3,48 @@
   "hero.subtitle": "Choose <b>Standard</b> or <b>Premium</b>, select the weight and add to cart. Kilomistery quality: crafted design, transparency, traceability.",
   "hero.cta.prices": "See prices",
   "hero.cta.how": "How it works",
+
   "badges.invoice": "Invoice & batch traceability",
   "badges.shipping": "Tracked EU shipping",
   "badges.payments": "Secure payments",
+
   "tabs.standard": "Standard",
   "tabs.premium": "Premium",
+
   "how.title": "How it works",
   "how.step1": "Order Standard or Premium and choose the weight.",
   "how.step2": "Random selection from legal stock (with invoice).",
   "how.step3": "Net weigh, seal with batch ID and date.",
   "how.step4": "Tracked EU shipping. Optional insurance.",
+
   "returns.title": "Returns & Refunds",
   "returns.point1": "Right of withdrawal within 14 days of delivery.",
   "returns.point2": "Only for the sealed box in original condition.",
   "returns.point3": "If the seal is broken or items are handled beyond necessary, refund may be reduced or refused.",
   "returns.point4": "Return costs borne by the customer unless transport damage/error.",
+
   "cart.title": "Cart",
   "cart.empty": "No items in cart.",
   "cart.total": "Total",
   "cart.pay": "Pay with Stripe",
   "cart.paypal": "PayPal (soon)",
+
   "transparency.title": "Transparency",
-  "transparency.text": "We buy stock from legitimate B2B marketplaces with documentation. Checks to exclude illegal/counterfeit items. No third-party trademarks used."
-} {
+  "transparency.text": "We buy stock from legitimate B2B marketplaces with documentation. Checks to exclude illegal/counterfeit items. No third-party trademarks used.",
+
   "header": {
     "products": "Products",
     "how": "How it works",
     "about": "About us"
   },
+
+  "nav": {
+    "products": "Products",
+    "how": "How it works",
+    "about": "About",
+    "contact": "Contact"
+  },
+
   "footer": {
     "menu": "Menu",
     "legal": "Legal",
@@ -39,18 +53,7 @@
     "returns": "Returns",
     "shipping": "Shipping",
     "newsletterTitle": "Subscribe to our newsletter",
-    "subscribe": "Subscribe"
-  }
-} {
-  "nav": {
-    "products": "Products",
-    "how": "How it works",
-    "about": "About",
-    "contact": "Contact"
-  },
-  "footer": {
-    "menu": "Menu",
-    "legal": "Legal",
+    "subscribe": "Subscribe",
     "newsletter": {
       "title": "Subscribe to our newsletter",
       "subtitle": "Get exclusive offers and updates.",
@@ -59,6 +62,7 @@
       "privacy": "privacy policy"
     }
   },
+
   "legal": {
     "privacy": {
       "title": "Privacy Policy",
