@@ -36,23 +36,26 @@ const co2ByKg: Record<Kg, string> = {
 };
 
 /**
- * Link diretti al carrello Shopify per ogni combinazione
- * Standard/Premium + peso.
+ * Link diretti a Shopify:
+ * usiamo /cart/add?id=...&quantity=1&return_to=/checkout
+ * così gli articoli si SOMMANO al carrello e si va diretto al checkout.
  */
+const SHOPIFY_BASE = 'https://shop.kilomystery.com';
+
 const shopifyCartUrlMap: Record<'Standard' | 'Premium', Record<Kg, string>> = {
   Standard: {
-    1: 'https://kilomystery.myshopify.com/cart/52045370360146:1',
-    2: 'https://kilomystery.myshopify.com/cart/52045370392914:1',
-    3: 'https://kilomystery.myshopify.com/cart/52045370425682:1',
-    5: 'https://kilomystery.myshopify.com/cart/52045370458450:1',
-    10: 'https://kilomystery.myshopify.com/cart/52045370491218:1',
+    1: `${SHOPIFY_BASE}/cart/add?id=52045370360146&quantity=1&return_to=/checkout`,
+    2: `${SHOPIFY_BASE}/cart/add?id=52045370392914&quantity=1&return_to=/checkout`,
+    3: `${SHOPIFY_BASE}/cart/add?id=52045370425682&quantity=1&return_to=/checkout`,
+    5: `${SHOPIFY_BASE}/cart/add?id=52045370458450&quantity=1&return_to=/checkout`,
+    10: `${SHOPIFY_BASE}/cart/add?id=52045370491218&quantity=1&return_to=/checkout`,
   },
   Premium: {
-    1: 'https://kilomystery.myshopify.com/cart/52045402571090:1',
-    2: 'https://kilomystery.myshopify.com/cart/52045402603858:1',
-    3: 'https://kilomystery.myshopify.com/cart/52045402636626:1',
-    5: 'https://kilomystery.myshopify.com/cart/52045402669394:1',
-    10: 'https://kilomystery.myshopify.com/cart/52045402702162:1',
+    1: `${SHOPIFY_BASE}/cart/add?id=52045402571090&quantity=1&return_to=/checkout`,
+    2: `${SHOPIFY_BASE}/cart/add?id=52045402603858&quantity=1&return_to=/checkout`,
+    3: `${SHOPIFY_BASE}/cart/add?id=52045402636626&quantity=1&return_to=/checkout`,
+    5: `${SHOPIFY_BASE}/cart/add?id=52045402669394&quantity=1&return_to=/checkout`,
+    10: `${SHOPIFY_BASE}/cart/add?id=52045402702162&quantity=1&return_to=/checkout`,
   },
 };
 
@@ -85,7 +88,6 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
     : 'it';
 
   const L = LABELS[safeLang];
-
   const currentKind: 'Standard' | 'Premium' = tab === 'std' ? 'Standard' : 'Premium';
 
   return (
@@ -147,13 +149,12 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
           return (
             <article
               key={`${tab}-${w}`}
+              id={tab === 'std' && w === 10 ? 'buy-standard-10' : undefined}
               className={[
                 'relative rounded-2xl border',
                 'border-white/10',
                 gradient,
-                // layer di “glass” per far vibrare meno i gradient e integrarsi col bg
                 'before:absolute before:inset-0 before:bg-[#0f1216]/40 before:rounded-2xl before:pointer-events-none',
-                // glow + hover
                 'shadow-[0_20px_60px_rgba(0,0,0,.25)] hover:shadow-[0_30px_80px_rgba(0,0,0,.35)]',
                 'transition-transform duration-200 hover:-translate-y-0.5',
                 'p-4',
@@ -178,7 +179,6 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
                   loop
                   playsInline
                 />
-                {/* cornice glow sottile */}
                 <div className="pointer-events-none absolute inset-0 ring-1 ring-white/15 rounded-xl" />
               </div>
 
