@@ -1,0 +1,168 @@
+{
+  "hero.title": "Kilo mystery boxes from legal stock. Clear prices, real surprise.",
+  "hero.subtitle": "Choose <b>Standard</b> or <b>Premium</b>, select the weight and add to cart. Kilomistery quality: crafted design, transparency, traceability.",
+  "hero.cta.prices": "See prices",
+  "hero.cta.how": "How it works",
+  "badges.invoice": "Invoice & batch traceability",
+  "badges.shipping": "Tracked EU shipping",
+  "badges.payments": "Secure payments",
+  "tabs.standard": "Standard",
+  "tabs.premium": "Premium",
+  "how.title": "How it works",
+  "how.step1": "Order Standard or Premium and choose the weight.",
+  "how.step2": "Random selection from legal stock (with invoice).",
+  "how.step3": "Net weigh, seal with batch ID and date.",
+  "how.step4": "Tracked EU shipping. Optional insurance.",
+  "returns.title": "Returns & Refunds",
+  "returns.point1": "Right of withdrawal within 14 days of delivery.",
+  "returns.point2": "Only for the sealed box in original condition.",
+  "returns.point3": "If the seal is broken or items are handled beyond necessary, refund may be reduced or refused.",
+  "returns.point4": "Return costs borne by the customer unless transport damage/error.",
+  "cart.title": "Cart",
+  "cart.empty": "No items in cart.",
+  "cart.total": "Total",
+  "cart.pay": "Pay with Stripe",
+  "cart.paypal": "PayPal (soon)",
+  "transparency.title": "Transparency",
+  "transparency.text": "We buy stock from legitimate B2B marketplaces with documentation. Checks to exclude illegal/counterfeit items. No third-party trademarks used."
+} {
+  "header": {
+    "products": "Products",
+    "how": "How it works",
+    "about": "About us"
+  },
+  "footer": {
+    "menu": "Menu",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "terms": "Terms & Conditions",
+    "returns": "Returns",
+    "shipping": "Shipping",
+    "newsletterTitle": "Subscribe to our newsletter",
+    "subscribe": "Subscribe"
+  }
+} {
+  "nav": {
+    "products": "Products",
+    "how": "How it works",
+    "about": "About",
+    "contact": "Contact"
+  },
+  "footer": {
+    "menu": "Menu",
+    "legal": "Legal",
+    "newsletter": {
+      "title": "Subscribe to our newsletter",
+      "subtitle": "Get exclusive offers and updates.",
+      "cta": "Subscribe",
+      "disclaimer": "By subscribing you accept our",
+      "privacy": "privacy policy"
+    }
+  },
+  "legal": {
+    "privacy": {
+      "title": "Privacy Policy",
+      "intro": "Your privacy matters. We process personal data in compliance with EU GDPR (Reg. 2016/679) and applicable Italian law.",
+      "sections": {
+        "dataCollected": {
+          "title": "Data we collect",
+          "body": "We collect name, email, shipping/billing address, order details, and payment information (handled securely by providers). We may collect technical data (IP, device, cookies) for security and analytics."
+        },
+        "purpose": {
+          "title": "Purposes",
+          "body": "Order fulfillment and shipping, customer support, legal/accounting obligations, fraud prevention, aggregated analytics to improve services, and—if you consent—marketing communications."
+        },
+        "legalBasis": {
+          "title": "Legal bases",
+          "body": "Contract performance (orders), legal obligations, legitimate interest (security & improvements), consent (marketing)."
+        },
+        "cookies": {
+          "title": "Cookies",
+          "body": "We use technical cookies and, with your consent, analytics/marketing cookies. You can manage them via the banner or your browser settings."
+        },
+        "retention": {
+          "title": "Retention",
+          "body": "We keep data only as long as needed for the stated purposes or required by law (e.g., tax/accounting)."
+        },
+        "rights": {
+          "title": "Your rights",
+          "body": "You can exercise access, rectification, erasure, restriction, objection, portability, and consent withdrawal by contacting us."
+        },
+        "contacts": {
+          "title": "Privacy contacts",
+          "body": "For privacy requests, write to: support@kilomistery.com"
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms and Conditions",
+      "intro": "These terms govern the use of the website and the purchase of products. By placing an order you fully accept them.",
+      "sections": {
+        "contract": {
+          "title": "Contract & orders",
+          "body": "The contract is concluded upon payment and order confirmation. We may refuse/cancel orders in case of anomalies or stock issues."
+        },
+        "prices": {
+          "title": "Prices & payments",
+          "body": "Prices are in EUR and include VAT unless otherwise stated. Payments are handled by secure providers (e.g., Stripe)."
+        },
+        "shipping": {
+          "title": "Shipping & delivery",
+          "body": "We ship with tracked couriers. Indicative timings are shown in the Shipping page. Delays not attributable to the seller do not entitle compensation."
+        },
+        "mystery": {
+          "title": "Mystery products",
+          "body": "Boxes are sealed and sold as mystery items: contents are a surprise from lawful stock. Images are illustrative."
+        },
+        "returns": {
+          "title": "Returns & withdrawal",
+          "body": "See the Returns page for our policy. For defects or non-conformities, contact us within the statutory timeframe."
+        },
+        "liability": {
+          "title": "Liability",
+          "body": "We are not liable for indirect or consequential damages. In any case, liability is capped at the order value."
+        },
+        "law": {
+          "title": "Governing law",
+          "body": "Italian law applies. Competent court: consumer’s court where applicable."
+        }
+      }
+    },
+    "returns": {
+      "title": "Return Policy",
+      "intro": "Our boxes are sealed and sold as mystery items. Therefore, returns are not accepted except for defects, shipping damage, or legal non-conformity.",
+      "sections": {
+        "noReturns": {
+          "title": "No returns for content",
+          "body": "The mystery nature means contents are not customizable; returns for mere dissatisfaction are not accepted."
+        },
+        "defects": {
+          "title": "Defective or damaged items",
+          "body": "If your box arrives damaged or defective, contact us within 48 hours with photos and order number. We will assess replacement or partial/full refund."
+        },
+        "process": {
+          "title": "How to request",
+          "body": "Email support@kilomistery.com with order number, description of the issue, and clear photos of packaging and contents."
+        }
+      }
+    },
+    "shipping": {
+      "title": "Shipping Policy",
+      "intro": "We ship across Italy and the EU with tracked couriers. You’ll receive tracking once the order is handed to the carrier.",
+      "sections": {
+        "times": {
+          "title": "Delivery times",
+          "body": "Italy: typically 24–72 business hours; EU: 3–6 days. Holidays or remote areas may take longer."
+        },
+        "costs": {
+          "title": "Shipping costs",
+          "body": "Calculated at checkout based on weight, destination, and any promotions."
+        },
+        "packaging": {
+          "title": "Packaging & traceability",
+          "body": "Each box has a seal with lot ID, net weight, and date. Reinforced packaging and full tracking."
+        }
+      }
+    }
+  }
+}
