@@ -4,20 +4,51 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
 import { normalizeLang, Lang } from "@/i18n/lang";
+import { useState } from "react";
 
 export default function CartPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal } = useCart();
+  const [loading, setLoading] = useState(false);
 
-  function goToCheckout() {
+  async function goToCheckout() {
     if (items.length === 0) return;
 
-    const base = "https://shop.kilomystery.com/cart/";
-    const query = items
-      .map(i => `${i.shopifyId}:${i.qty}`)
-      .join(",");
+    setLoading(true);
 
-    window.location.href = base + query;
+    // totale kg
+    const totalKg = items.reduce(
+      (sum, i) => sum + i.weightKg * i.qty,
+      0
+    );
+
+    // URL a cui Shopify torna dopo il pagamento
+    // QUI NON METTETE SPACES O MAIUSCOLE
+    const returnUrl = `${window.location.origin}/${lang}/reward`;
+
+    try {
+      const res = await fetch("/api/checkout/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, returnUrl, totalKg }),
+      });
+
+      const data = await res.json();
+
+      if (!data?.url) {
+        alert("Errore nella creazione del checkout");
+        setLoading(false);
+        return;
+      }
+
+      // Vai al checkout Shopify
+      window.location.href = data.url;
+
+    } catch (err) {
+      console.error("Checkout error", err);
+      alert("Errore checkout");
+      setLoading(false);
+    }
   }
 
   return (
@@ -96,14 +127,17 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               ))}
             </div>
 
-            {/* Totale */}
             <div className="border-t border-white/10 pt-4 flex justify-between">
               <div className="text-white/60">Totale</div>
               <div className="text-2xl font-extrabold">{subtotal.toFixed(2)} €</div>
             </div>
 
-            <button className="btn btn-brand px-6 py-3" onClick={goToCheckout}>
-              Vai al checkout
+            <button
+              className="btn btn-brand px-6 py-3"
+              onClick={goToCheckout}
+              disabled={loading}
+            >
+              {loading ? "Preparazione..." : "Vai al checkout"}
             </button>
           </>
         )}

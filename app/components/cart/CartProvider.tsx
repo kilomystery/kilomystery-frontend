@@ -11,14 +11,14 @@ import {
 export type Tier = 'Standard' | 'Premium';
 
 export type CartItem = {
-  id: string;              // tipo: "Standard-10"
-  title: string;           // tipo: "Standard · 10 kg"
-  tier: Tier;              // "Standard" | "Premium"
-  weightKg: number;        // 10
-  pricePerKg: number;      // 19.90
-  qty: number;             // 1
-  image?: string;          // video immagine
-  shopifyId?: string;      // variante shopify
+  id: string;
+  title: string;
+  tier: Tier;
+  weightKg: number;
+  pricePerKg: number;
+  qty: number;
+  image?: string;
+  shopifyId: string;     // 👉 ora obbligatorio
 };
 
 type CartContextValue = {
@@ -41,11 +41,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // LOAD
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
-
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed)) setItems(parsed);
     } catch (e) {
@@ -56,7 +54,6 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // SAVE
   useEffect(() => {
     if (typeof window === 'undefined') return;
-
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (e) {
@@ -64,8 +61,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items]);
 
-  // 🟢 NORMALIZZATORE – accetta TUTTI i formati
+  // NORMALIZZATORE
   function normalize(data: any): CartItem {
+    if (!data.shopifyId) {
+      throw new Error("Missing Shopify ID in product");
+    }
+
     return {
       id: data.id,
       title: data.title ?? `${data.kind} · ${data.kg} kg`,
