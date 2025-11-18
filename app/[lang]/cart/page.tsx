@@ -3,9 +3,10 @@
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
+import { normalizeLang, Lang } from "@/i18n/lang";
 
 export default function CartPage({ params }: { params: { lang: string } }) {
-  const lang = (params?.lang || "it") as string;
+  const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal } = useCart();
 
   function goToCheckout() {

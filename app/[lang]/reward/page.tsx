@@ -206,7 +206,7 @@ export default function RewardPage({
         // 👉 qui chiamiamo il backend UNA VOLTA SOLA
         if (!sentRef.current && checkoutId) {
           sentRef.current = true;
-          fetch("/api/spin", {
+          fetch("/api/spin/route", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
