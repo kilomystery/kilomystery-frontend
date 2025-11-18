@@ -4,53 +4,30 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
 import { normalizeLang, Lang } from "@/i18n/lang";
-import { useState } from "react";
 
 export default function CartPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal } = useCart();
-  const [loading, setLoading] = useState(false);
 
-  async function goToCheckout() {
+  function goToCheckout() {
     if (items.length === 0) return;
 
-    setLoading(true);
+    // 🔹 URL del carrello Shopify (ONLINE STORE)
+    const base = "https://shop.kilomystery.com/cart/";
 
-    const totalKg = items.reduce(
-      (sum, i) => sum + i.weightKg * i.qty,
-      0
-    );
+    // 🔹 Formato: variantId:qty,variantId:qty,...
+    const query = items
+      .map((i) => `${i.shopifyId}:${i.qty}`)
+      .join(",");
 
-    const returnUrl = `${window.location.origin}/${lang}/reward`;
-
-    try {
-      const res = await fetch("/api/checkout/create", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, returnUrl, totalKg }),
-      });
-
-      const data = await res.json();
-      console.log("🔍 CHECKOUT RAW RESPONSE (client):", data);
-
-      if (!data?.url) {
-        console.error("❌ Checkout creation failed:", data);
-        alert("Errore nella creazione del checkout");
-        setLoading(false);
-        return;
-      }
-
-      window.location.href = data.url;
-    } catch (err) {
-      console.error("Checkout error", err);
-      alert("Errore checkout");
-      setLoading(false);
-    }
+    // 🔹 Redirect diretto a Shopify (niente API, niente errori)
+    window.location.href = base + query;
   }
 
   return (
     <>
       <Header lang={lang} />
+
       <main className="container py-10 space-y-8">
         <h1 className="text-3xl font-extrabold mb-4">Carrello</h1>
 
@@ -139,9 +116,8 @@ export default function CartPage({ params }: { params: { lang: string } }) {
             <button
               className="btn btn-brand px-6 py-3"
               onClick={goToCheckout}
-              disabled={loading}
             >
-              {loading ? "Preparazione..." : "Vai al checkout"}
+              Vai al checkout
             </button>
           </>
         )}
