@@ -1,13 +1,12 @@
+// app/[lang]/reward/page.tsx
 "use client";
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 
 /* -------------------------------------------------------
    CONFIGURAZIONE PREMI
-   - 16 spicchi totali
-   - 0 kg × 6, 0.5 kg × 3, 1 kg × 2, 2 kg × 1, +1 spin × 2, X2 × 2
-   - Zero SEMPRE alternato: distribuito sugli indici pari (0,2,4,...) per evitare adiacenze
 ------------------------------------------------------- */
 
 type Sector = { label: string; color: string };
@@ -30,6 +29,8 @@ const SPEC = {
   x2: 2,
 };
 
+type Nullable<T> = T | null;
+
 function buildSectorsAlternated(): Sector[] {
   const N = 16;
   const out = new Array<Nullable<Sector>>(N).fill(null);
@@ -41,12 +42,12 @@ function buildSectorsAlternated(): Sector[] {
     zerosToPlace--;
   }
 
-  // 2) “cintura” di slot liberi (gli indici dispari prima, poi eventuali pari rimasti)
+  // 2) slot liberi
   const freeIdx: number[] = [];
   for (let i = 1; i < N; i += 2) freeIdx.push(i);
   for (let i = 0; i < N; i += 2) if (!out[i]) freeIdx.push(i);
 
-  // 3) round-robin degli altri premi nei freeIdx
+  // 3) round robin degli altri premi
   const bucket: Array<{ label: string; color: string; left: number }> = [
     { label: "0.5 kg", color: COLORS.half, left: SPEC.half },
     { label: "1 kg", color: COLORS.one, left: SPEC.one },
@@ -71,21 +72,16 @@ function buildSectorsAlternated(): Sector[] {
     }
   }
 
-  // Type guard
   return out.map((x) => x!) as Sector[];
 }
 
-type Nullable<T> = T | null;
-
 /* -------------------------------------------------------
-   GEOMETRIA & UTILITY
+   GEOMETRIA
 ------------------------------------------------------- */
 
-const TAU = Math.PI * 2;
 const rad = (d: number) => (d * Math.PI) / 180;
 const norm = (deg: number) => ((deg % 360) + 360) % 360;
 
-/** path di uno spicchio a raggio r tra startDeg e endDeg */
 function arcPath(
   cx: number,
   cy: number,
@@ -116,6 +112,11 @@ export default function RewardPage({
   const N = sectors.length; // 16
   const STEP = 360 / N; // 22.5°
 
+  // 🔹 parametri dalla URL: ?kg=...&checkout_id=...
+  const searchParams = useSearchParams();
+  const orderedKg = Number(searchParams.get("kg") || "0");
+  const checkoutId = searchParams.get("checkout_id") || "";
+
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
   const [spinning, setSpinning] = useState(false);
@@ -130,6 +131,9 @@ export default function RewardPage({
   // popup di riepilogo finale
   const [showSummary, setShowSummary] = useState(false);
 
+  // per non mandare due volte la nota
+  const sentRef = useRef(false);
+
   // layout ruota
   const size = 560;
   const cx = size / 2,
@@ -138,7 +142,7 @@ export default function RewardPage({
   const R_BULB = 238;
 
   /* -----------------------------------------------------
-     SPIN: animazione + assegnazione premio coerente
+     SPIN
   ----------------------------------------------------- */
   const spin = () => {
     if (spinning || spinsLeft <= 0) return;
@@ -146,23 +150,17 @@ export default function RewardPage({
     setLastResult(null);
     setSpinning(true);
 
-    // snapshot locali per evitare condizioni di gara con setState
     let nextSpins = spinsLeft - 1;
     let nextMultiplier = multiplier;
     let nextWonKg = wonKg;
 
-    // 1) scegliamo uno spicchio target
     const targetIndex = Math.floor(Math.random() * N);
 
-    // 2) ruotiamo per mettere il centro del target sotto la freccia
-    // - gli spicchi sono [i*STEP-90, i*STEP-90+STEP]
-    // - centro = i*STEP-90 + STEP/2
     const targetCenter = norm(targetIndex * STEP - 90 + STEP / 2);
-    const pointer = 270; // puntatore in alto
+    const pointer = 270;
     const current = norm(spinDeg);
     const align = norm(pointer - targetCenter - current);
 
-    // giri extra
     const extraSpins = 6 + Math.floor(Math.random() * 2); // 6–7
     const delta = extraSpins * 360 + align;
     const finalDeg = spinDeg + delta;
@@ -174,19 +172,15 @@ export default function RewardPage({
     wheelRef.current?.style.setProperty("--dur", `${duration}ms`);
     wheelRef.current?.style.setProperty("--ease", easing);
 
-    // 3) al termine assegniamo il premio calcolando l'indice "visivo"
     window.setTimeout(() => {
-      const landed = norm(finalDeg); // angolo assoluto finale
-      // quale centro di settore sta sotto la freccia?
+      const landed = norm(finalDeg);
       const centerUnderPointer = norm(pointer - landed);
-      let visualIndex = Math.floor(norm(centerUnderPointer + 90) / STEP) % N;
+      const visualIndex =
+        Math.floor(norm(centerUnderPointer + 90) / STEP) % N;
 
-      // (dovrebbe coincidere con targetIndex, ma se differisce usiamo quello visivo)
-      const idx = visualIndex;
-      const prize = sectors[idx].label;
+      const prize = sectors[visualIndex].label;
       setLastResult(prize);
 
-      // applico regole
       const numeric =
         prize.endsWith("kg")
           ? parseFloat(prize.replace(",", ".").replace(" kg", ""))
@@ -194,14 +188,14 @@ export default function RewardPage({
 
       if (numeric !== null) {
         nextWonKg = +(nextWonKg + numeric * nextMultiplier).toFixed(2);
-        nextMultiplier = 1; // consumato
+        nextMultiplier = 1;
         setWonKg(nextWonKg);
         setMultiplier(1);
       } else if (prize === "+1 spin") {
         nextSpins += 1;
       } else if (prize === "X2") {
         nextMultiplier = nextMultiplier * 2;
-        nextSpins += 1; // diamo un altro giro
+        nextSpins += 1;
         setMultiplier(nextMultiplier);
       }
 
@@ -209,7 +203,23 @@ export default function RewardPage({
       setSpinning(false);
 
       if (nextSpins <= 0) {
-        // apriamo il popup quando lo stato è renderizzato
+        // 👉 qui chiamiamo il backend UNA VOLTA SOLA
+        if (!sentRef.current && checkoutId) {
+          sentRef.current = true;
+          fetch("/api/spin", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              checkoutId,
+              orderedKg,
+              bonusKg: nextWonKg,
+              lang: params?.lang ?? "it",
+            }),
+          }).catch((e) => {
+            console.error("spin API error", e);
+          });
+        }
+
         requestAnimationFrame(() => setShowSummary(true));
       }
     }, duration);
@@ -222,7 +232,13 @@ export default function RewardPage({
     <main className="container py-8">
       {/* Logo + claim */}
       <div className="mx-auto mb-6 w-[170px] relative aspect-[3/1]">
-        <Image src="/logo.svg" alt="KiloMistery" fill className="object-contain" priority />
+        <Image
+          src="/logo.svg"
+          alt="KiloMistery"
+          fill
+          className="object-contain"
+          priority
+        />
       </div>
 
       <h1 className="text-center text-4xl md:text-5xl font-extrabold">
@@ -230,9 +246,10 @@ export default function RewardPage({
       </h1>
 
       <p className="mx-auto mt-4 max-w-3xl text-center text-white/80">
-        Gira la ruota <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi per
-        il tuo ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e ottieni
-        un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro gratuito.
+        Gira la ruota <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi
+        per il tuo ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e
+        ottieni un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro
+        gratuito.
       </p>
 
       {/* Stat boxes */}
@@ -324,7 +341,6 @@ export default function RewardPage({
                     stroke="#111827"
                     strokeWidth={1.2}
                   />
-                  {/* divider */}
                   <line
                     x1={cx}
                     y1={cy}
@@ -333,7 +349,6 @@ export default function RewardPage({
                     stroke="rgba(255,255,255,.28)"
                     strokeWidth={1}
                   />
-                  {/* label */}
                   <g
                     style={{
                       transformOrigin: "0 0",

@@ -1,145 +1,86 @@
+// app/components/cart/CartProvider.tsx
 "use client";
 
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
   useState,
+  ReactNode,
 } from "react";
-import { SHOPIFY_DOMAIN } from "@/app/config/shopifyProducts";
 
+export type Kg = 1 | 2 | 3 | 5 | 10;
 export type Tier = "standard" | "premium";
 
 export type CartItem = {
   id: string;          // Shopify variant ID
-  title: string;
+  title: string;       // es: "Standard · 3 kg"
   tier: Tier;
-  weightKg: number;
-  quantity: number;
-  pricePerKg: number;
+  weightKg: Kg;
+  pricePerKg: number;  // €/kg
+  qty: number;
 };
 
 type CartContextValue = {
   items: CartItem[];
-  totalItems: number;
+  totalQty: number;
   subtotal: number;
-  addItem: (item: Omit<CartItem, "quantity">, qty?: number) => void;
+  addItem: (input: Omit<CartItem, "qty"> & { qty?: number }) => void;
   removeItem: (id: string) => void;
-  updateQty: (id: string, qty: number) => void;
   clear: () => void;
-  buildCheckoutUrl: () => string | null;
 };
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-const STORAGE_KEY = "km-cart-v1";
-
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // load da localStorage
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) setItems(parsed);
-      }
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  // salva su localStorage ad ogni cambio
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      // ignore
-    }
-  }, [items]);
-
-  const totalItems = useMemo(
-    () => items.reduce((sum, it) => sum + it.quantity, 0),
-    [items]
-  );
-
-  const subtotal = useMemo(
-    () =>
-      items.reduce(
-        (sum, it) => sum + it.quantity * it.pricePerKg * it.weightKg,
-        0
-      ),
-    [items]
-  );
-
-  function addItem(
-    item: Omit<CartItem, "quantity">,
-    qty: number = 1
-  ) {
+  function addItem(input: Omit<CartItem, "qty"> & { qty?: number }) {
+    const qty = input.qty ?? 1;
     setItems((prev) => {
-      const existing = prev.find((p) => p.id === item.id);
-      if (existing) {
-        return prev.map((p) =>
-          p.id === item.id
-            ? { ...p, quantity: p.quantity + qty }
-            : p
-        );
+      const existing = prev.find((i) => i.id === input.id);
+      if (!existing) {
+        return [...prev, { ...input, qty }];
       }
-      return [...prev, { ...item, quantity: qty }];
+      return prev.map((i) =>
+        i.id === input.id ? { ...i, qty: i.qty + qty } : i
+      );
     });
   }
 
   function removeItem(id: string) {
-    setItems((prev) => prev.filter((p) => p.id !== id));
-  }
-
-  function updateQty(id: string, qty: number) {
-    if (qty <= 0) {
-      removeItem(id);
-      return;
-    }
-    setItems((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, quantity: qty } : p))
-    );
+    setItems((prev) => prev.filter((i) => i.id !== id));
   }
 
   function clear() {
     setItems([]);
   }
 
-  function buildCheckoutUrl(): string | null {
-    if (!items.length) return null;
-    const parts = items.map(
-      (it) => `${it.id}:${it.quantity}`
+  const { totalQty, subtotal } = useMemo(() => {
+    const totalQty = items.reduce((acc, i) => acc + i.qty, 0);
+    const subtotal = items.reduce(
+      (acc, i) => acc + i.qty * i.weightKg * i.pricePerKg,
+      0
     );
-    const path = `/cart/${parts.join(",")}`;
-    return `${SHOPIFY_DOMAIN}${path}`;
-  }
+    return { totalQty, subtotal };
+  }, [items]);
 
   const value: CartContextValue = {
     items,
-    totalItems,
+    totalQty,
     subtotal,
     addItem,
     removeItem,
-    updateQty,
     clear,
-    buildCheckoutUrl,
   };
 
-  return (
-    <CartContext.Provider value={value}>{children}</CartContext.Provider>
-  );
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
 
 export function useCart() {
   const ctx = useContext(CartContext);
   if (!ctx) {
-    throw new Error("useCart must be used within CartProvider");
+    throw new Error("useCart must be used inside <CartProvider>");
   }
   return ctx;
 }

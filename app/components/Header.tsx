@@ -1,47 +1,49 @@
-'use client';
+// app/components/Header.tsx
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useState } from 'react';
-import CartIcon from './CartIcon';
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import CartIcon from "@/app/components/CartIcon";
+; // 👈 usa il path reale del tuo file
 
-type Lang = 'it' | 'en' | 'es' | 'fr' | 'de';
-const SUPPORTED: Lang[] = ['it', 'en', 'es', 'fr', 'de'];
+type Lang = "it" | "en" | "es" | "fr" | "de";
+const SUPPORTED: Lang[] = ["it", "en", "es", "fr", "de"];
 
-const INSTAGRAM_URL = 'https://www.instagram.com/kilo.mystery/';
-const TIKTOK_URL = 'https://www.tiktok.com/@kilomystery';
+const INSTAGRAM_URL = "https://www.instagram.com/kilo.mystery/";
+const TIKTOK_URL = "https://www.tiktok.com/@kilomystery";
 
 const LANGS = [
-  { code: 'it', label: 'IT', flag: '🇮🇹' },
-  { code: 'en', label: 'EN', flag: '🇬🇧' },
-  { code: 'es', label: 'ES', flag: '🇪🇸' },
-  { code: 'fr', label: 'FR', flag: '🇫🇷' },
-  { code: 'de', label: 'DE', flag: '🇩🇪' },
+  { code: "it", label: "IT", flag: "🇮🇹" },
+  { code: "en", label: "EN", flag: "🇬🇧" },
+  { code: "es", label: "ES", flag: "🇪🇸" },
+  { code: "fr", label: "FR", flag: "🇫🇷" },
+  { code: "de", label: "DE", flag: "🇩🇪" },
 ] as const;
 
 function replaceLang(path: string, to: Lang) {
-  if (!path || path === '/') return `/${to}`;
-  const clean = ('/' + path).replace(/\/{2,}/g, '/');
-  const parts = clean.split('/');
+  if (!path || path === "/") return `/${to}`;
+  const clean = ("/" + path).replace(/\/{2,}/g, "/");
+  const parts = clean.split("/");
   if (!SUPPORTED.includes(parts[1] as Lang)) {
-    return `/${to}${clean === '/' ? '' : clean}`;
+    return `/${to}${clean === "/" ? "" : clean}`;
   }
   parts[1] = to;
   return (
     parts
-      .join('/')
-      .replace(/\/{2,}/g, '/')
-      .replace(/\/$/, '') || `/${to}`
+      .join("/")
+      .replace(/\/{2,}/g, "/")
+      .replace(/\/$/, "") || `/${to}`
   );
 }
 
-export default function Header({ lang = 'it' as Lang }) {
+export default function Header({ lang = "it" as Lang }) {
   const pathname = usePathname() || `/${lang}`;
   const [open, setOpen] = useState(false);
   const [openLang, setOpenLang] = useState(false);
 
-  const currentLang: Lang = SUPPORTED.includes(lang) ? lang : 'it';
+  const currentLang: Lang = SUPPORTED.includes(lang) ? lang : "it";
 
   const langLinks = useMemo(() => {
     const safePath = pathname || `/${currentLang}`;
@@ -57,10 +59,16 @@ export default function Header({ lang = 'it' as Lang }) {
 
   return (
     <header className="site-header sticky top-0 z-40 bg-[#0f1216cc] backdrop-blur border-b border-[var(--border)]">
-      <div className="container h-16 flex items-center justify-between">
+      <div className="container h-16 flex items-center justify-between gap-3">
         {/* LOGO */}
         <Link href={`/${currentLang}`} className="flex items-center gap-3">
-          <Image src="/logo.svg" alt="Kilomistery" width={80} height={80} priority />
+          <Image
+            src="/logo.svg"
+            alt="Kilomistery"
+            width={80}
+            height={80}
+            priority
+          />
         </Link>
 
         {/* NAV DESKTOP */}
@@ -78,7 +86,7 @@ export default function Header({ lang = 'it' as Lang }) {
             Eventi Pop-Up
           </Link>
 
-          {/* SOCIAL + CARRELLO */}
+          {/* SOCIAL + CARRELLO DESKTOP */}
           <div className="flex items-center gap-3 pl-2">
             {/* Instagram */}
             <a
@@ -130,14 +138,14 @@ export default function Header({ lang = 'it' as Lang }) {
                   d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="1.7"
+                  strokeWidth={1.7}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
             </a>
 
-            {/* CARRELLO FRONT-END */}
+            {/* CARRELLO DESKTOP */}
             <CartIcon lang={currentLang} />
           </div>
 
@@ -149,14 +157,16 @@ export default function Header({ lang = 'it' as Lang }) {
               aria-haspopup="listbox"
               aria-expanded={openLang}
             >
-              <span>{LANGS.find(l => l.code === currentLang)?.flag}</span>
-              <span className="font-semibold">{currentLang.toUpperCase()}</span>
+              <span>{LANGS.find((l) => l.code === currentLang)?.flag}</span>
+              <span className="font-semibold">
+                {currentLang.toUpperCase()}
+              </span>
               <span className="i-caret">▾</span>
             </button>
 
             {openLang && (
               <ul role="listbox" className="dropdown-menu right open">
-                {LANGS.map(l => (
+                {LANGS.map((l) => (
                   <li key={l.code}>
                     <Link
                       role="option"
@@ -175,14 +185,23 @@ export default function Header({ lang = 'it' as Lang }) {
           </div>
         </nav>
 
-        {/* HAMBURGER */}
-        <button
-          aria-label="Apri menu"
-          className="md:hidden rounded-xl border border-[var(--border)] p-2"
-          onClick={() => setOpen(v => !v)}
-        >
-          <span className="text-xl leading-none">≡</span>
-        </button>
+        {/* DESTRA MOBILE: carrello + burger */}
+        <div className="flex items-center gap-2 md:hidden">
+          {/* Carrello mobile SEMPRE visibile */}
+          <CartIcon
+            lang={currentLang}
+            className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition"
+          />
+
+          {/* HAMBURGER */}
+          <button
+            aria-label="Apri menu"
+            className="rounded-xl border border-[var(--border)] p-2"
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className="text-xl leading-none">≡</span>
+          </button>
+        </div>
       </div>
 
       {/* MENU MOBILE */}
@@ -217,11 +236,6 @@ export default function Header({ lang = 'it' as Lang }) {
             >
               Eventi Pop-Up
             </Link>
-
-            {/* CARRELLO MOBILE */}
-            <div className="mt-3 px-1">
-              <CartIcon lang={currentLang} />
-            </div>
 
             {/* SOCIAL ICONS MOBILE */}
             <div className="flex items-center gap-4 mt-3 px-1">
@@ -279,7 +293,7 @@ export default function Header({ lang = 'it' as Lang }) {
 
             {/* Lingue mobile */}
             <div className="mt-2 grid grid-cols-5 gap-1 px-1">
-              {LANGS.map(l => (
+              {LANGS.map((l) => (
                 <Link
                   key={l.code}
                   href={langLinks[l.code]}
