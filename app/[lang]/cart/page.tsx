@@ -16,13 +16,11 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
     setLoading(true);
 
-    // totale kg
     const totalKg = items.reduce(
       (sum, i) => sum + i.weightKg * i.qty,
       0
     );
 
-    // URL a cui Shopify torna dopo il pagamento
     const returnUrl = `${window.location.origin}/${lang}/reward`;
 
     try {
@@ -32,27 +30,20 @@ export default function CartPage({ params }: { params: { lang: string } }) {
         body: JSON.stringify({ items, returnUrl, totalKg }),
       });
 
-      const data = await res.json().catch(() => ({}));
-
+      const data = await res.json();
       console.log("🔍 CHECKOUT RAW RESPONSE (client):", data);
 
-      if (!res.ok || !data?.url) {
+      if (!data?.url) {
         console.error("❌ Checkout creation failed:", data);
-
-        alert(
-          "Errore nella creazione del checkout:\n\n" +
-            JSON.stringify(data, null, 2)
-        );
-
+        alert("Errore nella creazione del checkout");
         setLoading(false);
         return;
       }
 
-      // Vai al checkout Shopify
       window.location.href = data.url;
     } catch (err) {
       console.error("Checkout error", err);
-      alert("Errore checkout (network o JS). Guarda la console per dettagli.");
+      alert("Errore checkout");
       setLoading(false);
     }
   }
@@ -60,7 +51,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   return (
     <>
       <Header lang={lang} />
-
       <main className="container py-10 space-y-8">
         <h1 className="text-3xl font-extrabold mb-4">Carrello</h1>
 
@@ -104,7 +94,8 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                           €
                         </div>
                         <div className="text-xs text-white/60">
-                          {(item.pricePerKg * item.weightKg).toFixed(2)} € / box
+                          {(item.pricePerKg * item.weightKg).toFixed(2)} € /
+                          box
                         </div>
                       </div>
                     </div>

@@ -1,45 +1,94 @@
 // app/api/checkout/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;          // es: kilomystery.myshopify.com
-const STOREFRONT_TOKEN  = process.env.SHOPIFY_STOREFRONT_TOKEN;      // ⚠️ stesso nome di Vercel
+const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.myshopify.com
+const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
+const API_VERSION = "2024-01";
 
 export async function POST(req: NextRequest) {
   try {
-    // --- debug env ---
-    const envStatus = {
-      hasDomain: !!STOREFRONT_DOMAIN,
-      hasToken: !!STOREFRONT_TOKEN,
-      domain: STOREFRONT_DOMAIN,
-    };
-    console.log("[CHECKOUT] ENV STATUS:", envStatus);
+    const body = await req.json();
+    const items = body?.items || [];
+    const clientTotalKg = body?.totalKg;
+    const returnUrl = body?.returnUrl;
 
+    // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
       return NextResponse.json(
         {
           error: "Missing Shopify configuration",
           code: "NO_ENV",
-          details: envStatus,
+          details: {
+            hasDomain: !!STOREFRONT_DOMAIN,
+            hasToken: !!STOREFRONT_TOKEN,
+          },
         },
         { status: 500 }
       );
     }
-    // ------------------
 
-    const { items, totalKg, returnUrl } = await req.json();
-
-    if (!items?.length) {
-      return NextResponse.json({ error: "Missing items" }, { status: 400 });
+    if (!Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: "Missing items" },
+        { status: 400 }
+      );
     }
 
-    const lines = items.map((i: any) => ({
-      quantity: i.qty,
-      merchandiseId: `gid://shopify/ProductVariant/${i.shopifyId}`,
-      attributes: [
-        { key: "tier", value: i.tier },
-        { key: "weightKg", value: String(i.weightKg) },
-      ],
-    }));
+    // 🧮 totale kg ricalcolato lato server
+    const totalKg =
+      typeof clientTotalKg === "number" && !Number.isNaN(clientTotalKg)
+        ? clientTotalKg
+        : items.reduce(
+            (sum: number, i: any) =>
+              sum + (Number(i.weightKg ?? i.kg ?? 0) || 0) * (Number(i.qty ?? 1) || 1),
+            0
+          );
+
+    // 🧱 linee carrello per Storefront API
+    const lines = items.map((i: any) => {
+      const qty = Number(i.qty ?? 1) || 1;
+      const weight = Number(i.weightKg ?? i.kg ?? 0) || 0;
+
+      const attributes: { key: string; value: string }[] = [];
+
+      if (i.tier) {
+        attributes.push({
+          key: "tier",
+          value: String(i.tier),
+        });
+      }
+
+      if (weight > 0) {
+        attributes.push({
+          key: "weightKg",
+          value: String(weight),
+        });
+      }
+
+      const line: any = {
+        quantity: qty,
+        merchandiseId: `gid://shopify/ProductVariant/${i.shopifyId}`,
+      };
+
+      if (attributes.length > 0) {
+        line.attributes = attributes;
+      }
+
+      return line;
+    });
+
+    // Attributi sul CARRELLO
+    const cartAttributes: { key: string; value: string }[] = [
+      { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
+      { key: "orderedKg", value: totalKg.toString() },
+    ];
+
+    if (returnUrl) {
+      cartAttributes.push({
+        key: "returnUrl",
+        value: String(returnUrl),
+      });
+    }
 
     const query = `
       mutation CartCreate($input: CartInput!) {
@@ -59,21 +108,17 @@ export async function POST(req: NextRequest) {
     const variables = {
       input: {
         lines,
-        attributes: [
-          { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
-          { key: "orderedKg", value: String(totalKg) },
-          { key: "returnUrl", value: returnUrl },
-        ],
+        attributes: cartAttributes,
       },
     };
 
     const response = await fetch(
-      `https://${STOREFRONT_DOMAIN}/api/2024-01/graphql.json`,
+      `https://${STOREFRONT_DOMAIN}/api/${API_VERSION}/graphql.json`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
+          "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN!,
         },
         body: JSON.stringify({ query, variables }),
       }
@@ -81,27 +126,45 @@ export async function POST(req: NextRequest) {
 
     const data = await response.json();
 
-    console.log("[CHECKOUT] Shopify raw response:", JSON.stringify(data));
-
+    const graphqlErrors = data?.errors;
     const cart = data?.data?.cartCreate?.cart;
-    const errors = data?.data?.cartCreate?.userErrors;
+    const userErrors = data?.data?.cartCreate?.userErrors;
 
-    if (!cart?.checkoutUrl) {
+    if (graphqlErrors?.length || userErrors?.length) {
       return NextResponse.json(
         {
           error: "Checkout error",
           message: "Shopify non ha creato il checkout",
-          shopify: { errors, raw: data },
+          shopify: {
+            graphqlErrors,
+            userErrors,
+            raw: data,
+          },
         },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ url: cart.checkoutUrl });
+    if (!cart?.checkoutUrl) {
+      return NextResponse.json(
+        {
+          error: "Checkout error",
+          message: "Shopify non ha restituito checkoutUrl",
+          shopify: { raw: data },
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({
+      url: cart.checkoutUrl,
+    });
   } catch (err: any) {
-    console.error("[CHECKOUT] Fatal error:", err);
     return NextResponse.json(
-      { error: err.message || "Internal server error" },
+      {
+        error: "Internal server error",
+        message: err?.message || "Unknown error",
+      },
       { status: 500 }
     );
   }
