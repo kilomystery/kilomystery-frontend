@@ -22,8 +22,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       0
     );
 
-    // URL a cui Shopify torna dopo il pagamento
-    // QUI NON METTETE SPACES O MAIUSCOLE
     const returnUrl = `${window.location.origin}/${lang}/reward`;
 
     try {
@@ -35,18 +33,20 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
       const data = await res.json();
 
+      console.log("🔍 CHECKOUT RAW RESPONSE (client):", data);
+
       if (!data?.url) {
-        alert("Errore nella creazione del checkout");
+        console.error("❌ Checkout creation failed:", data);
+        alert("Errore nella creazione del checkout (vedi console)");
         setLoading(false);
         return;
       }
 
-      // Vai al checkout Shopify
       window.location.href = data.url;
 
     } catch (err) {
-      console.error("Checkout error", err);
-      alert("Errore checkout");
+      console.error("❌ Checkout error:", err);
+      alert("Errore checkout (vedi console)");
       setLoading(false);
     }
   }
