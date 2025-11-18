@@ -109,12 +109,19 @@ export default function RewardPage({
   params: { lang: string };
 }) {
   const sectors = useMemo(buildSectorsAlternated, []);
-  const N = sectors.length; // 16
-  const STEP = 360 / N; // 22.5°
+  const N = sectors.length;
+  const STEP = 360 / N;
 
   const searchParams = useSearchParams();
-  const orderedKg = Number(searchParams.get("kg") || "0");
-  const checkoutId = searchParams.get("checkout_id") || "";
+
+  // 🔹 1) prendiamo i parametri dalla URL
+  // es: /it/reward?order_id=12345&kg=10000
+  const orderId = searchParams.get("order_id") || "";
+  const gramsParam = searchParams.get("kg");
+  const totalGrams = gramsParam ? Number(gramsParam) || 0 : 0;
+
+  // Shopify manda il peso in grammi → lo trasformiamo in kg
+  const orderedKg = totalGrams / 1000;
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -202,16 +209,16 @@ export default function RewardPage({
       setSpinning(false);
 
       if (nextSpins <= 0) {
-        // 👉 chiamiamo il backend UNA VOLTA
-        if (!sentRef.current && checkoutId) {
+        // 👉 chiamiamo il backend UNA VOLTA con l'ID ordine
+        if (!sentRef.current && orderId) {
           sentRef.current = true;
           fetch("/api/spin/init", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              checkoutId,
-              orderedKg,
-              bonusKg: nextWonKg,
+              orderId,
+              orderedKg,          // in kg, es: 10
+              bonusKg: nextWonKg, // kg vinti
               lang: params?.lang ?? "it",
             }),
           }).catch((e) => {
@@ -228,8 +235,12 @@ export default function RewardPage({
      RENDER
   ----------------------------------------------------- */
 
-  // se per qualche motivo arriva qui senza checkoutId o kg < 10
-  const notEligible = !checkoutId || orderedKg < 10;
+  // ✅ ora sei eleggibile se:
+  // - abbiamo orderId
+  // - e il peso in kg è almeno 10
+  const hasOrderId = !!orderId;
+  const eligible = hasOrderId && orderedKg >= 10;
+  const notEligible = !eligible;
 
   return (
     <main className="container py-8">
@@ -262,6 +273,13 @@ export default function RewardPage({
             ottieni un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro
             gratuito.
           </p>
+
+          {orderedKg > 0 && (
+            <p className="mx-auto mt-2 max-w-2xl text-center text-white/60 text-sm">
+              Peso del tuo ordine: circa{" "}
+              <b>{orderedKg.toFixed(1)} kg</b>
+            </p>
+          )}
 
           {/* Stat boxes */}
           <div className="mx-auto mt-6 mb-4 flex flex-wrap items-center justify-center gap-3 text-sm md:text-base">
