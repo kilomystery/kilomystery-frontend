@@ -109,19 +109,17 @@ export default function RewardPage({
   params: { lang: string };
 }) {
   const sectors = useMemo(buildSectorsAlternated, []);
-  const N = sectors.length;
-  const STEP = 360 / N;
+  const N = sectors.length; // 16
+  const STEP = 360 / N; // 22.5°
 
   const searchParams = useSearchParams();
 
-  // 🔹 1) prendiamo i parametri dalla URL
-  // es: /it/reward?order_id=12345&kg=10000
+  // 🔹 leggiamo i parametri dalla URL
   const orderId = searchParams.get("order_id") || "";
-  const gramsParam = searchParams.get("kg");
-  const totalGrams = gramsParam ? Number(gramsParam) || 0 : 0;
 
-  // Shopify manda il peso in grammi → lo trasformiamo in kg
-  const orderedKg = totalGrams / 1000;
+  const rawKgParam = searchParams.get("kg") || "0"; // arriva in grammi
+  const grams = Number(rawKgParam);
+  const orderedKg = !isNaN(grams) && grams > 0 ? grams / 1000 : 0;
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -137,7 +135,7 @@ export default function RewardPage({
   // popup riepilogo
   const [showSummary, setShowSummary] = useState(false);
 
-  // per non mandare due volte la nota
+  // per non mandare due volte la nota (quando in futuro collegheremo l’Admin API)
   const sentRef = useRef(false);
 
   // layout ruota
@@ -208,17 +206,18 @@ export default function RewardPage({
       setSpinsLeft(nextSpins);
       setSpinning(false);
 
+      // 👉 in futuro qui potremo chiamare /api/spin/init con orderId e bonusKg
       if (nextSpins <= 0) {
-        // 👉 chiamiamo il backend UNA VOLTA con l'ID ordine
         if (!sentRef.current && orderId) {
           sentRef.current = true;
+          // per ora la chiamata è opzionale, così non rompiamo nulla
           fetch("/api/spin/init", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               orderId,
-              orderedKg,          // in kg, es: 10
-              bonusKg: nextWonKg, // kg vinti
+              orderedKg,
+              bonusKg: nextWonKg,
               lang: params?.lang ?? "it",
             }),
           }).catch((e) => {
@@ -235,12 +234,8 @@ export default function RewardPage({
      RENDER
   ----------------------------------------------------- */
 
-  // ✅ ora sei eleggibile se:
-  // - abbiamo orderId
-  // - e il peso in kg è almeno 10
-  const hasOrderId = !!orderId;
-  const eligible = hasOrderId && orderedKg >= 10;
-  const notEligible = !eligible;
+  // Eligibile se ha almeno 10 kg (non blocco più per l’id mancante)
+  const notEligible = orderedKg < 10;
 
   return (
     <main className="container py-8">
@@ -268,18 +263,12 @@ export default function RewardPage({
       ) : (
         <>
           <p className="mx-auto mt-4 max-w-3xl text-center text-white/80">
-            Gira la ruota <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi
-            per il tuo ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e
-            ottieni un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro
-            gratuito.
+            Hai effettuato un ordine di circa{" "}
+            <b>{orderedKg.toFixed(1)} kg</b>. Gira la ruota{" "}
+            <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi per il tuo
+            ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e ottieni un
+            altro giro). Se esce <b>+1 spin</b> ottieni un altro giro gratuito.
           </p>
-
-          {orderedKg > 0 && (
-            <p className="mx-auto mt-2 max-w-2xl text-center text-white/60 text-sm">
-              Peso del tuo ordine: circa{" "}
-              <b>{orderedKg.toFixed(1)} kg</b>
-            </p>
-          )}
 
           {/* Stat boxes */}
           <div className="mx-auto mt-6 mb-4 flex flex-wrap items-center justify-center gap-3 text-sm md:text-base">
