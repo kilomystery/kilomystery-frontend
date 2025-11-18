@@ -1,10 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { useCart } from "@/components/cart/CartProvider";
+import { useCart } from "@/app/components/cart/CartProvider"; // ✅ percorso corretto
+import { useParams } from "next/navigation";
 
 export default function CheckoutButton() {
   const { items } = useCart();
+  const params = useParams();
+  const lang = (params?.lang as string) || "it"; // lingua dinamica
+
   const [loading, setLoading] = useState(false);
 
   async function goCheckout() {
@@ -12,22 +16,33 @@ export default function CheckoutButton() {
 
     setLoading(true);
 
-    const kg = items.reduce((s, i) => s + i.weightKg * i.qty, 0);
+    // totale kg ordinati
+    const kg = items.reduce((sum, item) => sum + item.weightKg * item.qty, 0);
 
-    const returnUrl = `${window.location.origin}/it/reward?kg=${kg}`;
+    // URL di ritorno verso la ruota
+    const returnUrl = `${window.location.origin}/${lang}/reward?kg=${kg}`;
 
-    const res = await fetch("/api/checkout/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ items, returnUrl }),
-    });
+    try {
+      const res = await fetch("/api/checkout/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items, returnUrl }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (data?.url) {
-      window.location.href = data.url; // Shopify checkout
-    } else {
-      alert("Errore avvio checkout");
+      if (!data?.url) {
+        alert("Errore durante la creazione del checkout.");
+        setLoading(false);
+        return;
+      }
+
+      // redirect al checkout Shopify
+      window.location.href = data.url;
+
+    } catch (err) {
+      console.error("Checkout error:", err);
+      alert("Errore di connessione al checkout");
       setLoading(false);
     }
   }
