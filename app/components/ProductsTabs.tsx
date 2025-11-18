@@ -74,17 +74,24 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
   // kind “umano” per UI
   const currentKind: 'Standard' | 'Premium' = tab === 'std' ? 'Standard' : 'Premium';
 
+  /** 
+   * FIX FONDAMENTALE 🔥🔥🔥
+   * Ora passiamo *shopifyId* e *qty* al carrello.
+   */
   function handleAddToCart(kind: 'Standard' | 'Premium', kg: Kg, perKg: number) {
-    // tier per Shopify / carrello
     const tier: Tier = kind === 'Standard' ? 'standard' : 'premium';
-    const variantId = SHOPIFY_VARIANTS[tier][kg];
+
+    // 🚀 Shopify variant ID ORIGINALE da SHOPIFY_VARIANTS
+    const shopifyId = SHOPIFY_VARIANTS[tier][kg];
 
     addItem({
-      id: variantId,                            // id univoco riga carrello
+      id: `${tier}-${kg}`,     // id interno carrello
       title: `${kind} · ${kg} kg`,
-      tier,                                     // 'standard' | 'premium'
+      tier,
       weightKg: kg,
       pricePerKg: perKg,
+      qty: 1,                 // ❤️ aggiunto
+      shopifyId,              // ❤️ aggiunto
     });
   }
 

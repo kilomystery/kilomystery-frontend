@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   createContext,
@@ -18,7 +18,7 @@ export type CartItem = {
   pricePerKg: number;
   qty: number;
   image?: string;
-  shopifyId: string;     // 👉 ora obbligatorio
+  shopifyId: string;     // obbligatorio
 };
 
 type CartContextValue = {
@@ -38,7 +38,7 @@ const STORAGE_KEY = 'km-cart-v1';
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // LOAD
+  // Load localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -51,7 +51,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // SAVE
+  // Save localStorage
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -61,7 +61,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, [items]);
 
-  // NORMALIZZATORE
+  // Normalizer
   function normalize(data: any): CartItem {
     if (!data.shopifyId) {
       throw new Error("Missing Shopify ID in product");
@@ -69,19 +69,17 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     return {
       id: data.id,
-      title: data.title ?? `${data.kind} · ${data.kg} kg`,
-      tier: data.tier ?? data.kind ?? 'Standard',
-      weightKg: data.weightKg ?? data.kg,
-      pricePerKg:
-        data.pricePerKg ??
-        (data.price && data.kg ? data.price / data.kg : 0),
+      title: data.title,
+      tier: data.tier,
+      weightKg: data.weightKg,
+      pricePerKg: data.pricePerKg,
       qty: data.qty ?? 1,
-      image: data.image,
+      image: data.image ?? null,
       shopifyId: data.shopifyId,
     };
   }
 
-  // ADD ITEM
+  // Add Item
   function addItem(data: any) {
     const norm = normalize(data);
 

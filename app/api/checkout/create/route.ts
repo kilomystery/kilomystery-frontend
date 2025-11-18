@@ -1,8 +1,7 @@
-// app/api/checkout/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const SHOP_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;            // Esempio: shop.kilomystery.com
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;       // Token Admin API (NON Storefront)
+const SHOP_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
+const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +11,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing items" }, { status: 400 });
     }
 
-    // Format line items for Shopify Admin REST
     const line_items = items.map((i: any) => ({
       variant_id: Number(i.shopifyId),
       quantity: i.qty,
