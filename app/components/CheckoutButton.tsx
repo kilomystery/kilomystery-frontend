@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { useCart } from "@/components/cart/CartProvider";
+"use client";
+
+
+import { useCart } from "./cart/CartProvider";   // ✅ PATH CORRETTO
 
 export default function CheckoutButton() {
   const { items } = useCart();
