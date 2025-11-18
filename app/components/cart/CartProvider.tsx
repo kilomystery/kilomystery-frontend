@@ -37,7 +37,7 @@ const STORAGE_KEY = "km-cart-v1";
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Carica dal localStorage al primo render sul client
+  // Carica dal localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -52,7 +52,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Salva ogni volta che cambia il carrello
+  // Salva su localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {

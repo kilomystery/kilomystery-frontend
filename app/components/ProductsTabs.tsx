@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCart } from '../context/CartContext';
+import { useCart } from '@/app/components/cart/CartProvider';
 
 type Lang = 'it' | 'en' | 'es' | 'fr' | 'de';
 type Kg = 1 | 2 | 3 | 5 | 10;

@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import CartIcon from "@/app/components/CartIcon";
+import CartIcon from "@/app/components/cart/CartIcon";
 ; // 👈 usa il path reale del tuo file
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
