@@ -1,22 +1,54 @@
+// app/api/checkout/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; 
+const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.myshopify.com
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 
 export async function POST(req: NextRequest) {
   try {
-    const { items, totalKg, returnUrl } = await req.json();
+    // 🔎 Controllo variabili ambiente
+    if (!STORE_DOMAIN || !STOREFRONT_TOKEN) {
+      console.error("[checkout] Missing env vars", {
+        hasDomain: !!STORE_DOMAIN,
+        hasToken: !!STOREFRONT_TOKEN,
+      });
 
-    if (!items?.length) {
-      return NextResponse.json({ error: "Missing items" }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: "Missing Shopify configuration",
+          code: "NO_ENV",
+          details: {
+            hasDomain: !!STORE_DOMAIN,
+            hasToken: !!STOREFRONT_TOKEN,
+          },
+        },
+        { status: 500 }
+      );
     }
 
+    const body = await req.json().catch(() => ({}));
+    const { items, totalKg, returnUrl } = body;
+
+    console.log("[checkout] Incoming payload", {
+      items,
+      totalKg,
+      returnUrl,
+    });
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: "Missing items", code: "NO_ITEMS" },
+        { status: 400 }
+      );
+    }
+
+    // 🔧 Costruiamo le linee per Cart API
     const lines = items.map((i: any) => ({
-      quantity: i.qty,
+      quantity: Number(i.qty) || 1,
       merchandiseId: `gid://shopify/ProductVariant/${i.shopifyId}`,
       attributes: [
-        { key: "tier", value: i.tier },
-        { key: "weightKg", value: String(i.weightKg) },
+        { key: "tier", value: String(i.tier ?? "") },
+        { key: "weightKg", value: String(i.weightKg ?? "") },
       ],
     }));
 
@@ -39,50 +71,97 @@ export async function POST(req: NextRequest) {
       input: {
         lines,
         attributes: [
-          { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
+          {
+            key: "spinEligible",
+            value: Number(totalKg) >= 10 ? "true" : "false",
+          },
           { key: "orderedKg", value: String(totalKg) },
-          { key: "returnUrl", value: returnUrl },
+          { key: "returnUrl", value: String(returnUrl || "") },
         ],
       },
     };
 
+    console.log("[checkout] Sending to Shopify Storefront", {
+      domain: STORE_DOMAIN,
+      hasToken: !!STOREFRONT_TOKEN,
+      lines,
+      attributes: variables.input.attributes,
+    });
+
     const response = await fetch(
-      `https://${STOREFRONT_DOMAIN}/api/2024-01/graphql.json`,
+      `https://${STORE_DOMAIN}/api/2024-01/graphql.json`,
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN!,
+          "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN,
         },
         body: JSON.stringify({ query, variables }),
       }
     );
 
-    const data = await response.json();
+    const text = await response.text();
+    let data: any = null;
 
-    console.log("🔍 RAW SHOPIFY RESPONSE (server):", JSON.stringify(data, null, 2));
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("[checkout] Non-JSON response from Shopify", text);
+      return NextResponse.json(
+        {
+          error: "Invalid response from Shopify",
+          raw: text,
+        },
+        { status: 502 }
+      );
+    }
 
-    const cart = data?.data?.cartCreate?.cart;
-    const errors = data?.data?.cartCreate?.userErrors;
+    console.log("[checkout] Shopify response JSON", JSON.stringify(data, null, 2));
 
-    if (!cart?.checkoutUrl) {
+    // ❗ Errori GraphQL top-level
+    if (data.errors && data.errors.length) {
+      console.error("[checkout] GraphQL top-level errors", data.errors);
       return NextResponse.json(
         {
           error: "Checkout error",
-          message: "Shopify non ha creato il checkout",
-          shopify: data,
-          errors,
+          message: "Shopify ha risposto con errori",
+          shopifyErrors: data.errors,
+          shopifyRaw: data,
         },
         { status: 500 }
       );
     }
 
+    const cartNode = data?.data?.cartCreate?.cart;
+    const userErrors = data?.data?.cartCreate?.userErrors ?? [];
+
+    // ❗ Nessuna checkoutUrl = errore nella mutation
+    if (!cartNode?.checkoutUrl) {
+      console.error("[checkout] cartCreate.userErrors", userErrors);
+      return NextResponse.json(
+        {
+          error: "Checkout error",
+          message: "Shopify non ha creato il checkout",
+          shopifyUserErrors: userErrors,
+          shopifyRaw: data,
+        },
+        { status: 500 }
+      );
+    }
+
+    // ✅ Tutto ok
     return NextResponse.json({
-      url: cart.checkoutUrl,
+      ok: true,
+      url: cartNode.checkoutUrl,
+      cartId: cartNode.id,
     });
   } catch (err: any) {
+    console.error("[checkout] Unexpected error", err);
     return NextResponse.json(
-      { error: err.message || "Internal server error" },
+      {
+        error: "Internal server error",
+        message: err?.message ?? "Unknown error",
+      },
       { status: 500 }
     );
   }

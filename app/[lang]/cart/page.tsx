@@ -22,6 +22,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       0
     );
 
+    // URL a cui Shopify torna dopo il pagamento
     const returnUrl = `${window.location.origin}/${lang}/reward`;
 
     try {
@@ -31,22 +32,27 @@ export default function CartPage({ params }: { params: { lang: string } }) {
         body: JSON.stringify({ items, returnUrl, totalKg }),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
 
       console.log("🔍 CHECKOUT RAW RESPONSE (client):", data);
 
-      if (!data?.url) {
+      if (!res.ok || !data?.url) {
         console.error("❌ Checkout creation failed:", data);
-        alert("Errore nella creazione del checkout (vedi console)");
+
+        alert(
+          "Errore nella creazione del checkout:\n\n" +
+            JSON.stringify(data, null, 2)
+        );
+
         setLoading(false);
         return;
       }
 
+      // Vai al checkout Shopify
       window.location.href = data.url;
-
     } catch (err) {
-      console.error("❌ Checkout error:", err);
-      alert("Errore checkout (vedi console)");
+      console.error("Checkout error", err);
+      alert("Errore checkout (network o JS). Guarda la console per dettagli.");
       setLoading(false);
     }
   }
@@ -63,7 +69,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
         ) : (
           <>
             <div className="space-y-4">
-              {items.map(item => (
+              {items.map((item) => (
                 <div
                   key={item.id}
                   className="flex flex-col sm:flex-row gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl"
@@ -90,7 +96,12 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
                       <div className="text-right">
                         <div className="text-xl font-bold">
-                          {(item.pricePerKg * item.weightKg * item.qty).toFixed(2)} €
+                          {(
+                            item.pricePerKg *
+                            item.weightKg *
+                            item.qty
+                          ).toFixed(2)}{" "}
+                          €
                         </div>
                         <div className="text-xs text-white/60">
                           {(item.pricePerKg * item.weightKg).toFixed(2)} € / box
@@ -129,7 +140,9 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
             <div className="border-t border-white/10 pt-4 flex justify-between">
               <div className="text-white/60">Totale</div>
-              <div className="text-2xl font-extrabold">{subtotal.toFixed(2)} €</div>
+              <div className="text-2xl font-extrabold">
+                {subtotal.toFixed(2)} €
+              </div>
             </div>
 
             <button
