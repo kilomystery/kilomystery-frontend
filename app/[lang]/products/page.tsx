@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 import Image from 'next/image';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { useCart } from '../../context/CartContext';
+import { useCart } from '../../components/cart/CartProvider';
 
 type Kg = 1 | 2 | 3 | 5 | 10;
 

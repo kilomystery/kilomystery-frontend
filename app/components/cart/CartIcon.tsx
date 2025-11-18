@@ -1,4 +1,3 @@
-// app/components/cart/CartIcon.tsx
 "use client";
 
 import Link from "next/link";
@@ -21,11 +20,10 @@ export default function CartIcon({ lang, className }: Props) {
       }
       aria-label="Carrello"
     >
-      {/* icona stile Shopify, sottile */}
       <svg
         viewBox="0 0 24 24"
-        aria-hidden="true"
         className="h-5 w-5 text-white"
+        aria-hidden="true"
       >
         <path
           d="M6 6h14l-1.5 8.5H8L6 4H3"
@@ -40,7 +38,7 @@ export default function CartIcon({ lang, className }: Props) {
       </svg>
 
       <span className="text-sm font-semibold">
-        {totalQty > 0 ? totalQty : 0}
+        {totalQty}
       </span>
     </Link>
   );

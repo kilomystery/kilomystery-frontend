@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   createContext,
@@ -6,124 +6,138 @@ import {
   useEffect,
   useMemo,
   useState,
-} from "react";
+} from 'react';
 
-export type Tier = "standard" | "premium";
+export type Tier = 'Standard' | 'Premium';
 
 export type CartItem = {
-  id: string;          // ID variante Shopify
-  title: string;       // es: "Standard · 3 kg"
-  tier: Tier;          // "standard" | "premium"
-  weightKg: number;    // es: 3
-  pricePerKg: number;  // es: 19.9
-  qty: number;         // quantità pezzi
+  id: string;              // tipo: "Standard-10"
+  title: string;           // tipo: "Standard · 10 kg"
+  tier: Tier;              // "Standard" | "Premium"
+  weightKg: number;        // 10
+  pricePerKg: number;      // 19.90
+  qty: number;             // 1
+  image?: string;          // video immagine
+  shopifyId?: string;      // variante shopify
 };
 
 type CartContextValue = {
   items: CartItem[];
-  totalQty: number;
-  totalKg: number;
-  subtotal: number;
-  addItem: (input: Omit<CartItem, "qty"> & { qty?: number }) => void;
+  addItem: (data: any) => void;
   removeItem: (id: string) => void;
   setQty: (id: string, qty: number) => void;
   clear: () => void;
+  totalQty: number;
+  subtotal: number;
 };
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
 
-const STORAGE_KEY = "km-cart-v1";
+const STORAGE_KEY = 'km-cart-v1';
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Carica dal localStorage
+  // LOAD
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
+
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
+
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) {
-        setItems(parsed);
-      }
+      if (Array.isArray(parsed)) setItems(parsed);
     } catch (e) {
-      console.error("Cart load error", e);
+      console.error('Cart load error', e);
     }
   }, []);
 
-  // Salva su localStorage
+  // SAVE
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
+
     try {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (e) {
-      console.error("Cart save error", e);
+      console.error('Cart save error', e);
     }
   }, [items]);
 
-  function addItem(input: Omit<CartItem, "qty"> & { qty?: number }) {
-    const qty = input.qty ?? 1;
+  // 🟢 NORMALIZZATORE – accetta TUTTI i formati
+  function normalize(data: any): CartItem {
+    return {
+      id: data.id,
+      title: data.title ?? `${data.kind} · ${data.kg} kg`,
+      tier: data.tier ?? data.kind ?? 'Standard',
+      weightKg: data.weightKg ?? data.kg,
+      pricePerKg:
+        data.pricePerKg ??
+        (data.price && data.kg ? data.price / data.kg : 0),
+      qty: data.qty ?? 1,
+      image: data.image,
+      shopifyId: data.shopifyId,
+    };
+  }
+
+  // ADD ITEM
+  function addItem(data: any) {
+    const norm = normalize(data);
+
     setItems((prev) => {
-      const existing = prev.find((i) => i.id === input.id);
+      const existing = prev.find((x) => x.id === norm.id);
       if (existing) {
-        return prev.map((i) =>
-          i.id === input.id ? { ...i, qty: i.qty + qty } : i
+        return prev.map((x) =>
+          x.id === norm.id ? { ...x, qty: x.qty + norm.qty } : x
         );
       }
-      const newItem: CartItem = { ...input, qty };
-      return [...prev, newItem];
+      return [...prev, norm];
     });
   }
 
   function removeItem(id: string) {
-    setItems((prev) => prev.filter((i) => i.id !== id));
+    setItems((prev) => prev.filter((x) => x.id !== id));
   }
 
   function setQty(id: string, qty: number) {
     setItems((prev) =>
-      prev.map((i) =>
-        i.id === id ? { ...i, qty: Math.max(1, qty) } : i
+      prev.map((x) =>
+        x.id === id ? { ...x, qty: Math.max(1, qty) } : x
       )
     );
   }
 
-  function clear() {
-    setItems([]);
-  }
-
-  const { totalQty, totalKg, subtotal } = useMemo(() => {
-    let q = 0;
-    let kg = 0;
+  const { subtotal, totalQty } = useMemo(() => {
     let total = 0;
+    let qty = 0;
+
     for (const item of items) {
-      q += item.qty;
-      kg += item.weightKg * item.qty;
+      qty += item.qty;
       total += item.pricePerKg * item.weightKg * item.qty;
     }
-    return { totalQty: q, totalKg: kg, subtotal: total };
+
+    return { subtotal: total, totalQty: qty };
   }, [items]);
 
-  const value: CartContextValue = {
-    items,
-    totalQty,
-    totalKg,
-    subtotal,
-    addItem,
-    removeItem,
-    setQty,
-    clear,
-  };
-
   return (
-    <CartContext.Provider value={value}>{children}</CartContext.Provider>
+    <CartContext.Provider
+      value={{
+        items,
+        addItem,
+        removeItem,
+        setQty,
+        clear: () => setItems([]),
+        subtotal,
+        totalQty,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
   );
 }
 
 export function useCart() {
   const ctx = useContext(CartContext);
-  if (!ctx) {
-    throw new Error("useCart must be used inside <CartProvider>");
-  }
+  if (!ctx) throw new Error('useCart must be inside CartProvider');
   return ctx;
 }

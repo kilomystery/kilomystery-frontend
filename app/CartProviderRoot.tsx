@@ -1,11 +1,7 @@
-"use client";
+'use client';
 
 import { CartProvider } from "./components/cart/CartProvider";
 
-export default function CartProviderRoot({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function CartProviderRoot({ children }: { children: React.ReactNode }) {
   return <CartProvider>{children}</CartProvider>;
 }

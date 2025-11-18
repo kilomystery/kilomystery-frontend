@@ -2,10 +2,14 @@
 
 import { useState } from 'react';
 import { useCart } from '@/app/components/cart/CartProvider';
+import {
+  SHOPIFY_VARIANTS,
+  Kg,
+  Tier,
+} from '@/app/config/shopifyProducts';
 
 type Lang = 'it' | 'en' | 'es' | 'fr' | 'de';
-type Kg = 1 | 2 | 3 | 5 | 10;
-type Tier = 'std' | 'prm';
+type TabTier = 'std' | 'prm'; // solo per i tab UI (Standard/Premium)
 
 const LABELS: Record<Lang, any> = {
   it: { standard: 'Standard', premium: 'Premium', add: 'Aggiungi al carrello', kg: 'kg', perkg: '€/kg' },
@@ -15,10 +19,10 @@ const LABELS: Record<Lang, any> = {
   de: { standard: 'Standard', premium: 'Premium', add: 'In den Warenkorb', kg: 'kg', perkg: '€/kg' },
 };
 
-const WEIGHTS = [1, 2, 3, 5, 10] as const;
+const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
 /** prezzi indicativi come avevamo prima */
-function priceForKg(weight: number, tier: Tier) {
+function priceForKg(weight: number, tier: TabTier) {
   if (tier === 'prm') {
     const perKg = weight <= 3 ? 25.99 : 20.99;
     return { perKg, total: +(perKg * weight).toFixed(2) };
@@ -34,24 +38,6 @@ const co2ByKg: Record<Kg, string> = {
   3: '≈0,75 kg di CO₂ evitati',
   5: '≈1,25 kg di CO₂ evitati',
   10: '≈2,5 kg di CO₂ evitati',
-};
-
-/** ID varianti Shopify per checkout (usati dopo nella pagina /cart) */
-const VARIANT_IDS: Record<'Standard' | 'Premium', Record<Kg, string>> = {
-  Standard: {
-    1: '52045370360146',
-    2: '52045370392914',
-    3: '52045370425682',
-    5: '52045370458450',
-    10: '52045370491218',
-  },
-  Premium: {
-    1: '52045402571090',
-    2: '52045402603858',
-    3: '52045402636626',
-    5: '52045402669394',
-    10: '52045402702162',
-  },
 };
 
 /** Gradients coerenti con background verde/midnight */
@@ -74,7 +60,7 @@ const goldBtn =
   'bg-gradient-to-r from-[#f6e27a] to-[#d4af37] text-[#1a1a1a] font-extrabold rounded-xl px-5 py-3 shadow-[0_10px_30px_rgba(212,175,55,.25)] ring-1 ring-yellow-100/60 hover:shadow-[0_16px_40px_rgba(212,175,55,.35)] transition';
 
 export default function ProductsTabs({ lang = 'it' as Lang }) {
-  const [tab, setTab] = useState<Tier>('std');
+  const [tab, setTab] = useState<TabTier>('std');
   const { addItem } = useCart();
 
   const supported = ['it', 'en', 'es', 'fr', 'de'] as const;
@@ -84,19 +70,21 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
     : 'it';
 
   const L = LABELS[safeLang];
+
+  // kind “umano” per UI
   const currentKind: 'Standard' | 'Premium' = tab === 'std' ? 'Standard' : 'Premium';
 
-  function handleAddToCart(kind: 'Standard' | 'Premium', kg: Kg, total: number) {
-    const variantId = VARIANT_IDS[kind][kg];
+  function handleAddToCart(kind: 'Standard' | 'Premium', kg: Kg, perKg: number) {
+    // tier per Shopify / carrello
+    const tier: Tier = kind === 'Standard' ? 'standard' : 'premium';
+    const variantId = SHOPIFY_VARIANTS[tier][kg];
+
     addItem({
-      id: `${kind}-${kg}`,
-      shopifyId: variantId,
+      id: variantId,                            // id univoco riga carrello
       title: `${kind} · ${kg} kg`,
-      kg,
-      kind,
-      price: total,
-      image: `/videos/packs/${kind === 'Standard' ? 'std' : 'prm'}-${kg}.mp4`, // o immagine statica se preferisci
-      qty: 1,
+      tier,                                     // 'standard' | 'premium'
+      weightKg: kg,
+      pricePerKg: perKg,
     });
   }
 
@@ -236,7 +224,7 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
                 <div className="mt-4">
                   <button
                     className={tab === 'prm' ? goldBtn : silverBtn}
-                    onClick={() => handleAddToCart(currentKind, kg, total)}
+                    onClick={() => handleAddToCart(currentKind, kg, perKg)}
                   >
                     {L?.add || 'Aggiungi al carrello'}
                   </button>

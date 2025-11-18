@@ -1,4 +1,3 @@
-// app/api/spin/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 const API_VERSION = "2024-01";
@@ -9,6 +8,7 @@ export async function POST(req: NextRequest) {
     const checkoutId: string = body.checkoutId || "";
     const orderedKg: number = Number(body.orderedKg || 0);
     const bonusKg: number = Number(body.bonusKg || 0);
+    const lang: string = body.lang || "it";
 
     if (!checkoutId) {
       return NextResponse.json(
@@ -28,7 +28,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1) Trova l'ordine collegato al checkout
+    /* ---------------------------------------------------------
+       1) TROVIAMO L'ORDINE
+    --------------------------------------------------------- */
     const findOrderRes = await fetch(
       `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
       {
@@ -46,20 +48,20 @@ export async function POST(req: NextRequest) {
                     id
                     name
                     note
+                    customer { email }
+                    email
                   }
                 }
               }
             }
           `,
-          // 👇 da adattare se il campo non è "checkout_token"
           variables: { query: `checkout_token:${checkoutId}` },
         }),
       }
     );
 
     const findJson = await findOrderRes.json();
-    const orderNode =
-      findJson?.data?.orders?.edges?.[0]?.node ?? null;
+    const orderNode = findJson?.data?.orders?.edges?.[0]?.node ?? null;
 
     if (!orderNode) {
       console.error("Order not found for checkoutId", checkoutId);
@@ -69,6 +71,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    /* ---------------------------------------------------------
+       2) NOTA INTERNA (QUELLA PER VOI)
+    --------------------------------------------------------- */
     const baseNote: string = orderNode.note || "";
 
     const lines: string[] = [];
@@ -83,12 +88,9 @@ export async function POST(req: NextRequest) {
     lines.push(`- Data spin: ${new Date().toISOString()}`);
 
     const extra = lines.join("\n");
-    const newNote = baseNote
-      ? `${baseNote}\n\n${extra}`
-      : extra;
+    const newNote = baseNote ? `${baseNote}\n\n${extra}` : extra;
 
-    // 2) Aggiorna la nota ordine
-    const updateRes = await fetch(
+    const updateNoteRes = await fetch(
       `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
       {
         method: "POST",
@@ -100,29 +102,67 @@ export async function POST(req: NextRequest) {
           query: `
             mutation UpdateNote($id: ID!, $note: String) {
               orderUpdate(id: $id, input: { note: $note }) {
-                order { id note }
+                order { id }
                 userErrors { field message }
               }
             }
           `,
-          variables: {
-            id: orderNode.id,
-            note: newNote,
-          },
+          variables: { id: orderNode.id, note: newNote },
         }),
       }
     );
 
-    const updateJson = await updateRes.json();
-    const errors =
-      updateJson?.data?.orderUpdate?.userErrors || [];
+    const updateNoteJson = await updateNoteRes.json();
+    if (updateNoteJson?.data?.orderUpdate?.userErrors?.length) {
+      console.error("orderUpdate errors", updateNoteJson.data.orderUpdate.userErrors);
+    }
 
-    if (errors.length) {
-      console.error("orderUpdate errors", errors);
-      return NextResponse.json(
-        { error: "orderUpdate failed", details: errors },
-        { status: 500 }
+    /* ---------------------------------------------------------
+       3) INVIO NOTIFICA EMAIL AL CLIENTE VIA SHOPIFY
+    --------------------------------------------------------- */
+
+    // scegliamo la migliore email disponibile
+    const customerEmail =
+      orderNode.customer?.email || orderNode.email || "";
+
+    if (customerEmail) {
+      const message = bonusKg > 0
+        ? `Hai vinto ${bonusKg.toFixed(2)} kg bonus sulla Ruota Mistery Kilo! 🎉`
+        : `Purtroppo questa volta la Ruota Mistery Kilo non ha aggiunto kg extra. 😅`;
+
+      const notifyRes = await fetch(
+        `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Access-Token": token,
+          },
+          body: JSON.stringify({
+            query: `
+              mutation AddTimelineComment($id: ID!, $message: String!) {
+                orderTimelineCommentCreate(
+                  orderId: $id,
+                  message: $message,
+                  notifyCustomer: true
+                ) {
+                  timelineComment { id }
+                  userErrors { field message }
+                }
+              }
+            `,
+            variables: {
+              id: orderNode.id,
+              message,
+            },
+          }),
+        }
       );
+
+      const notifyJson = await notifyRes.json();
+      if (notifyJson?.data?.orderTimelineCommentCreate?.userErrors?.length) {
+        console.error("timelineComment errors", notifyJson.data.orderTimelineCommentCreate.userErrors);
+      }
     }
 
     return NextResponse.json({ ok: true });
