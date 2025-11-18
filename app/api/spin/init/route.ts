@@ -1,37 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createHmac } from "crypto";
 
 const API_VERSION = "2024-01";
+const SECRET = process.env.SPIN_SECRET || "dev-secret-change-me";
+
+type SpinState = {
+  orderId: string;
+  customerId: string;
+  kg: number;
+  exp: number;
+  jti: string;
+  spinCount: number;
+  multiplier: number;
+  pendingSpins: number;
+};
+
+const b64u = (s: Buffer | string) =>
+  Buffer.from(s).toString("base64").replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");
+
+function sign(payload: string) {
+  return b64u(createHmac("sha256", SECRET).update(payload).digest());
+}
+
+function encode(state: SpinState) {
+  const p = b64u(JSON.stringify(state));
+  return `${p}.${sign(p)}`;
+}
 
 export async function POST(req: NextRequest) {
   try {
-    const body = await req.json().catch(() => ({}));
-    const checkoutId: string = body.checkoutId || "";
-    const orderedKg: number = Number(body.orderedKg || 0);
-    const bonusKg: number = Number(body.bonusKg || 0);
-    const lang: string = body.lang || "it";
+    const body = await req.json();
+    const checkoutId = body.checkoutId;
+    const orderedKg = Number(body.orderedKg || 0);
+    const lang = body.lang || "it";
 
     if (!checkoutId) {
-      return NextResponse.json(
-        { error: "Missing checkoutId" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing checkoutId" }, { status: 400 });
     }
 
-    const domain = process.env.SHOPIFY_STORE_DOMAIN;
-    const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
+    const domain = process.env.SHOPIFY_STORE_DOMAIN!;
+    const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN!;
 
-    if (!domain || !token) {
-      console.error("SHOPIFY env vars missing");
-      return NextResponse.json(
-        { error: "Server misconfigured" },
-        { status: 500 }
-      );
-    }
-
-    /* ---------------------------------------------------------
-       1) TROVIAMO L'ORDINE
-    --------------------------------------------------------- */
-    const findOrderRes = await fetch(
+    // 1 - Trova ordine
+    const res = await fetch(
       `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
       {
         method: "POST",
@@ -47,9 +58,8 @@ export async function POST(req: NextRequest) {
                   node {
                     id
                     name
-                    note
-                    customer { email }
                     email
+                    customer { id email }
                   }
                 }
               }
@@ -60,117 +70,29 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const findJson = await findOrderRes.json();
-    const orderNode = findJson?.data?.orders?.edges?.[0]?.node ?? null;
+    const json = await res.json();
+    const node = json?.data?.orders?.edges?.[0]?.node;
 
-    if (!orderNode) {
-      console.error("Order not found for checkoutId", checkoutId);
-      return NextResponse.json(
-        { error: "Order not found" },
-        { status: 404 }
-      );
+    if (!node) {
+      return NextResponse.json({ error: "Order not found" }, { status: 404 });
     }
 
-    /* ---------------------------------------------------------
-       2) NOTA INTERNA (QUELLA PER VOI)
-    --------------------------------------------------------- */
-    const baseNote: string = orderNode.note || "";
+    // 2 - Genera token spin
+    const state: SpinState = {
+      orderId: node.id,
+      customerId: node.customer?.id ?? "",
+      kg: orderedKg,
+      exp: Math.floor(Date.now()/1000) + 3600,
+      jti: crypto.randomUUID(),
+      spinCount: 0,
+      multiplier: 1,
+      pendingSpins: 1,
+    };
 
-    const lines: string[] = [];
-    lines.push("🎡 Ruota Mistery Kilo:");
-    if (orderedKg) lines.push(`- Kg ordinati: ${orderedKg.toFixed(2)} kg`);
-    lines.push(`- Kg bonus vinti: ${bonusKg.toFixed(2)} kg`);
-    if (orderedKg) {
-      lines.push(
-        `- Totale teorico: ${(orderedKg + bonusKg).toFixed(2)} kg`
-      );
-    }
-    lines.push(`- Data spin: ${new Date().toISOString()}`);
+    const signedToken = encode(state);
 
-    const extra = lines.join("\n");
-    const newNote = baseNote ? `${baseNote}\n\n${extra}` : extra;
-
-    const updateNoteRes = await fetch(
-      `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": token,
-        },
-        body: JSON.stringify({
-          query: `
-            mutation UpdateNote($id: ID!, $note: String) {
-              orderUpdate(id: $id, input: { note: $note }) {
-                order { id }
-                userErrors { field message }
-              }
-            }
-          `,
-          variables: { id: orderNode.id, note: newNote },
-        }),
-      }
-    );
-
-    const updateNoteJson = await updateNoteRes.json();
-    if (updateNoteJson?.data?.orderUpdate?.userErrors?.length) {
-      console.error("orderUpdate errors", updateNoteJson.data.orderUpdate.userErrors);
-    }
-
-    /* ---------------------------------------------------------
-       3) INVIO NOTIFICA EMAIL AL CLIENTE VIA SHOPIFY
-    --------------------------------------------------------- */
-
-    // scegliamo la migliore email disponibile
-    const customerEmail =
-      orderNode.customer?.email || orderNode.email || "";
-
-    if (customerEmail) {
-      const message = bonusKg > 0
-        ? `Hai vinto ${bonusKg.toFixed(2)} kg bonus sulla Ruota Mistery Kilo! 🎉`
-        : `Purtroppo questa volta la Ruota Mistery Kilo non ha aggiunto kg extra. 😅`;
-
-      const notifyRes = await fetch(
-        `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Access-Token": token,
-          },
-          body: JSON.stringify({
-            query: `
-              mutation AddTimelineComment($id: ID!, $message: String!) {
-                orderTimelineCommentCreate(
-                  orderId: $id,
-                  message: $message,
-                  notifyCustomer: true
-                ) {
-                  timelineComment { id }
-                  userErrors { field message }
-                }
-              }
-            `,
-            variables: {
-              id: orderNode.id,
-              message,
-            },
-          }),
-        }
-      );
-
-      const notifyJson = await notifyRes.json();
-      if (notifyJson?.data?.orderTimelineCommentCreate?.userErrors?.length) {
-        console.error("timelineComment errors", notifyJson.data.orderTimelineCommentCreate.userErrors);
-      }
-    }
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("spin route error", e);
-    return NextResponse.json(
-      { error: "Internal error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ token: signedToken });
+  } catch (err: any) {
+    return NextResponse.json({ error: err?.message }, { status: 500 });
   }
 }

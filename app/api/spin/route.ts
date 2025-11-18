@@ -7,12 +7,12 @@ const SECRET = process.env.SPIN_SECRET || "dev-secret-change-me";
 type SpinState = {
   orderId: string;
   customerId: string;
-  kg: number;           // deve essere 10
-  exp: number;          // epoch seconds
-  jti: string;          // nonce
-  spinCount: number;    // quanti giri già fatti (0-based)
-  multiplier: number;   // moltiplicatore corrente (parte da 1)
-  pendingSpins: number; // giri bonus rimasti
+  kg: number;
+  exp: number;
+  jti: string;
+  spinCount: number;
+  multiplier: number;
+  pendingSpins: number;
 };
 
 const b64u = (s: Buffer | string) =>
@@ -54,7 +54,6 @@ export async function POST(req: NextRequest) {
     if (state.exp < now) return NextResponse.json({ error: "Expired" }, { status: 403 });
     if (state.kg !== 10)  return NextResponse.json({ error: "Not eligible" }, { status: 403 });
 
-    // indice deterministico: ordine + jti + spinCount
     const idx = seededIndex(`${state.orderId}:${state.jti}:${state.spinCount}`, SEGMENTS.length);
     const seg  = SEGMENTS[idx];
 
@@ -70,15 +69,12 @@ export async function POST(req: NextRequest) {
       case "X2":     next.multiplier *= 2; break;
     }
 
-    const base = 360 * 6; // giri pieni
+    const base = 360 * 6;
     const angle = base + (idx + 0.5) * SEGMENT_ANGLE;
 
-    // se ci sono giri pendenti, consumane uno automaticamente (quello appena fatto)
-    // nota: qui abbiamo già incrementato spinCount, pendingSpins descrive quelli EXTRA rimasti
     const hasMoreSpin = next.pendingSpins > 0;
     if (hasMoreSpin) next.pendingSpins -= 1;
 
-    // TODO: salva su DB l’esito cumulativo per orderId (kg vinti totali, spin log, multiplier corrente)
     const nextToken = encode(next);
 
     return NextResponse.json({
