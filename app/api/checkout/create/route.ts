@@ -1,8 +1,8 @@
 // app/api/checkout/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const SHOP_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;            // shop.kilomystery.com
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;       // token admin REST
+const SHOP_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;            // Esempio: shop.kilomystery.com
+const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;       // Token Admin API (NON Storefront)
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing items" }, { status: 400 });
     }
 
-    // Convert line items → Admin REST format
+    // Format line items for Shopify Admin REST
     const line_items = items.map((i: any) => ({
       variant_id: Number(i.shopifyId),
       quantity: i.qty,
@@ -25,7 +25,6 @@ export async function POST(req: NextRequest) {
           { name: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
           { name: "orderedKg", value: String(totalKg) },
         ],
-        // Shopify REST API accetta return_url qui
         return_url: returnUrl,
       },
     };
@@ -43,7 +42,6 @@ export async function POST(req: NextRequest) {
     );
 
     const data = await response.json();
-
     const checkout = data?.checkout;
 
     if (!checkout?.web_url) {
