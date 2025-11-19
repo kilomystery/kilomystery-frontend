@@ -108,7 +108,6 @@ function PackCard({
             preload="metadata"
           />
         </div>
-        {kg === 10 && <span className="badge-flag">1 giro incluso</span>}
       </div>
 
       <div className="mt-4 flex items-start justify-between gap-4">
@@ -133,12 +132,6 @@ function PackCard({
         <li>Peso netto (toll. ±3%)</li>
         <li>Sigillo con ID lotto e data</li>
         <li>{co2ByKg[kg]}</li>
-        {kg === 10 && (
-          <li>
-            Include <b>1 giro</b> alla Ruota (finestra <b>30 minuti</b>) • vinci
-            fino a <b>+2 kg</b>.
-          </li>
-        )}
       </ul>
 
       <div className="mt-4">
@@ -240,35 +233,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           </p>
         </header>
 
-        <section className="card flex flex-col md:flex-row items-center gap-5">
-          <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
-            <img
-              src="/wheel/wheel.svg"
-              alt="Ruota della fortuna"
-              width={500}
-              height={250}
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-xl font-extrabold">Ruota della fortuna</h3>
-            <p className="text-white/70">
-              Con un ordine da <b>10 kg</b> ottieni <b>1 giro immediato</b> nella
-              pagina di conferma (finestra <b>30 minuti</b>). Premi fino a{" "}
-              <b>+2 kg</b> sullo stesso pacco.
-            </p>
-          </div>
-          <div className="flex flex-col gap-2">
-            <a href="#buy-standard-10" className="btn btn-silver">
-              10 kg Standard
-            </a>
-            <a href="#buy-premium-10" className="btn btn-gold">
-              10 kg Premium
-            </a>
-          </div>
-        </section>
-
+        {/* Sezione prodotti Standard */}
         <section className="space-y-4">
           <h2 className="text-2xl font-extrabold text-silver-soft">Standard</h2>
           <div className="grid md:grid-cols-2 gap-5">
@@ -283,6 +248,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
+        {/* Sezione prodotti Premium */}
         <section className="space-y-4">
           <h2 className="text-2xl font-extrabold text-gold-soft">Premium</h2>
           <div className="grid md:grid-cols-2 gap-5">
