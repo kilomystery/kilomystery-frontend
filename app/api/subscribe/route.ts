@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN; // 👈 usiamo questo
+// 👇 se il tuo token è in SHOPIFY_ADMIN_ACCESS_TOKEN lascia così.
+// se invece è in SHOPIFY_ADMIN_API_ACCESS_TOKEN, cambia qui di conseguenza.
+const ADMIN_TOKEN =
+  process.env.SHOPIFY_ADMIN_ACCESS_TOKEN ||
+  process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
+
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
 
 const IS_DEV = process.env.NODE_ENV !== "production";
@@ -34,7 +39,16 @@ async function createCustomer(email: string) {
     body: JSON.stringify(body),
   });
 
-  const data = await res.json().catch(() => ({}));
+  let data: any = {};
+  try {
+    data = await res.json();
+  } catch {
+    // se non è JSON, leggiamo il testo per debug
+    const txt = await res.text().catch(() => "");
+    data = { raw: txt };
+  }
+
+  console.error("[newsletter] createCustomer response", res.status, data);
 
   return { ok: res.ok, status: res.status, data };
 }
@@ -90,7 +104,15 @@ async function updateCustomerMarketingConsent(customerId: number | string) {
     body: JSON.stringify(body),
   });
 
-  const data = await res.json().catch(() => ({}));
+  let data: any = {};
+  try {
+    data = await res.json();
+  } catch {
+    const txt = await res.text().catch(() => "");
+    data = { raw: txt };
+  }
+
+  console.error("[newsletter] updateCustomer response", res.status, data);
 
   return { ok: res.ok, status: res.status, data };
 }
@@ -126,12 +148,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    console.error(
-      "[newsletter] createCustomer error",
-      created.status,
-      created.data
-    );
-
     // Se è un 422 per email già esistente, aggiorniamo il consenso
     const rawErrors = created.data?.errors || created.data?.customer?.errors;
     const isDuplicate =
@@ -145,26 +161,33 @@ export async function POST(req: NextRequest) {
         if (updated.ok) {
           return NextResponse.json({ ok: true });
         }
-        console.error(
-          "[newsletter] updateCustomer error",
-          updated.status,
-          updated.data
+        return NextResponse.json(
+          {
+            error: "Errore aggiornando consenso marketing",
+            shopifyStatus: updated.status,
+            shopifyBody: updated.data,
+          },
+          { status: 500 }
         );
       }
     }
 
+    // 🔍 QUI: ritorniamo tutti i dettagli dell’errore Shopify al client
     return NextResponse.json(
-      IS_DEV
-        ? { error: "Shopify error", details: created }
-        : { error: "Impossibile iscrivere alla newsletter" },
+      {
+        error: "Shopify error",
+        shopifyStatus: created.status,
+        shopifyBody: created.data,
+      },
       { status: 500 }
     );
   } catch (err) {
     console.error("[newsletter] generic error", err);
     return NextResponse.json(
-      IS_DEV
-        ? { error: "Errore interno", details: String(err) }
-        : { error: "Errore interno" },
+      {
+        error: "Errore interno",
+        details: String(err),
+      },
       { status: 500 }
     );
   }
