@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN; // 👈 unica variabile usata
+const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN; // unica variabile usata
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2025-10";
 
-const IS_DEV = process.env.NODE_ENV !== "production";
+// ⚠️ PER DEBUG: lo forziamo a true così vediamo sempre i dettagli
+const IS_DEV = true;
 
-// 🔍 Debug minimale per controllare cosa legge Vercel (puoi toglierlo dopo)
+// Debug env (solo prefisso e lunghezza, niente leak del token completo)
 console.log("[newsletter] DEBUG ENV", {
   STORE_DOMAIN,
   ADMIN_TOKEN_PREFIX: ADMIN_TOKEN?.slice(0, 10) || null,
@@ -173,22 +174,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 🔥 ORA ritorniamo SEMPRE i dettagli Shopify
     return NextResponse.json(
-      IS_DEV
-        ? {
-            error: "Shopify error",
-            shopifyStatus: created.status,
-            shopifyBody: created.data,
-          }
-        : { error: "Impossibile iscrivere alla newsletter" },
+      {
+        error: "Shopify error",
+        shopifyStatus: created.status,
+        shopifyBody: created.data,
+      },
       { status: 500 }
     );
   } catch (err) {
     console.error("[newsletter] generic error", err);
     return NextResponse.json(
-      IS_DEV
-        ? { error: "Errore interno", details: String(err) }
-        : { error: "Errore interno" },
+      {
+        error: "Errore interno",
+        details: String(err),
+      },
       { status: 500 }
     );
   }
