@@ -1,4 +1,3 @@
-// app/[lang]/reward/page.tsx
 "use client";
 
 import { useMemo, useRef, useState } from "react";
@@ -17,7 +16,7 @@ const COLORS = {
   one: "#22D3EE", // 1 kg
   two: "#8B5CF6", // 2 kg
   spin: "#EC4899", // +1 spin
-  x2: "#F97316", // X2
+  x2: "#F97316",  // X2
 };
 
 const SPEC = {
@@ -50,10 +49,10 @@ function buildSectorsAlternated(): Sector[] {
   // 3) round robin degli altri premi
   const bucket: Array<{ label: string; color: string; left: number }> = [
     { label: "0.5 kg", color: COLORS.half, left: SPEC.half },
-    { label: "1 kg", color: COLORS.one, left: SPEC.one },
-    { label: "2 kg", color: COLORS.two, left: SPEC.two },
+    { label: "1 kg",   color: COLORS.one,  left: SPEC.one },
+    { label: "2 kg",   color: COLORS.two,  left: SPEC.two },
     { label: "+1 spin", color: COLORS.spin, left: SPEC.spin },
-    { label: "X2", color: COLORS.x2, left: SPEC.x2 },
+    { label: "X2",      color: COLORS.x2,   left: SPEC.x2 },
   ];
 
   let p = 0;
@@ -109,15 +108,25 @@ export default function RewardPage({
   params: { lang: string };
 }) {
   const sectors = useMemo(buildSectorsAlternated, []);
-  const N = sectors.length; // 16
-  const STEP = 360 / N; // 22.5°
+  const N = sectors.length;       // 16 spicchi
+  const STEP = 360 / N;           // 22.5°
 
   const searchParams = useSearchParams();
 
-  // 👉 ci fidiamo di Shopify Flow:
-  // se manda questa mail, l'ordine è già >= 10 kg.
-  const orderId = searchParams.get("order_id") || "";
-  const orderedKg = Number(searchParams.get("kg") || "0"); // solo per info, non per il blocco
+  // supportiamo sia order_id che checkout_id per sicurezza
+  const hasOrderParam =
+    searchParams.has("order_id") || searchParams.has("checkout_id");
+
+  const orderId =
+    searchParams.get("order_id") ||
+    searchParams.get("checkout_id") ||
+    "";
+
+  // kg sono solo informativi, NON blocchiamo più la ruota con questo
+  const orderedKg = Number(searchParams.get("kg") || "0");
+
+  // blocchiamo la ruota solo se la pagina viene aperta senza alcun parametro ordine
+  const notEligible = !hasOrderParam;
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -204,15 +213,15 @@ export default function RewardPage({
       setSpinsLeft(nextSpins);
       setSpinning(false);
 
+      // fine giri => invio nota a Shopify SE abbiamo un id ordine valido
       if (nextSpins <= 0) {
-        // 👉 chiamiamo il backend UNA VOLTA
         if (!sentRef.current && orderId) {
           sentRef.current = true;
           fetch("/api/spin/init", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              orderId,
+              orderId,      // qui serve il vero {{ order.id }} nel link della mail
               orderedKg,
               bonusKg: nextWonKg,
               lang: params?.lang ?? "it",
@@ -230,9 +239,6 @@ export default function RewardPage({
   /* -----------------------------------------------------
      RENDER
   ----------------------------------------------------- */
-
-  // 👉 blocchiamo SOLO se proprio non c'è l'orderId
-  const notEligible = !orderId;
 
   return (
     <main className="container py-8">
@@ -261,7 +267,7 @@ export default function RewardPage({
       ) : (
         <>
           <p className="mx-auto mt-4 max-w-3xl text-center text-white/80">
-            Gira la ruota <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi
+            Gira la ruota <b>KiloMystery</b> e vinci <b>kg bonus</b> aggiuntivi
             per il tuo ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e
             ottieni un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro
             gratuito.
@@ -465,6 +471,14 @@ export default function RewardPage({
                     </>
                   )}
                 </p>
+
+                {!orderId && (
+                  <p className="mt-3 text-xs text-white/50">
+                    Nota: non siamo riusciti ad associare automaticamente questo
+                    giro a un ordine. Se pensi che sia un errore, contatta il
+                    supporto KiloMystery indicando il numero ordine.
+                  </p>
+                )}
 
                 <div className="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
                   <a
