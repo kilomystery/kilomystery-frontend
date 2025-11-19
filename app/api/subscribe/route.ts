@@ -1,17 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN; // unica variabile usata
+// 👇 togliamo eventuali spazi/newline dalla env
+const ADMIN_TOKEN = (process.env.SHOPIFY_ADMIN_ACCESS_TOKEN || "").trim();
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
 
-// ⚠️ PER DEBUG: lo forziamo a true così vediamo sempre i dettagli
+// lo forziamo a true per vedere sempre i dettagli di errore
 const IS_DEV = true;
 
-// Debug env (solo prefisso e lunghezza, niente leak del token completo)
+// Debug env (solo prefisso e length, niente leak del token)
 console.log("[newsletter] DEBUG ENV", {
   STORE_DOMAIN,
-  ADMIN_TOKEN_PREFIX: ADMIN_TOKEN?.slice(0, 10) || null,
-  ADMIN_TOKEN_LEN: ADMIN_TOKEN?.length || null,
+  ADMIN_TOKEN_PREFIX: ADMIN_TOKEN ? ADMIN_TOKEN.slice(0, 10) : null,
+  ADMIN_TOKEN_LEN: ADMIN_TOKEN ? ADMIN_TOKEN.length : null,
 });
 
 function isValidEmail(email: string) {
@@ -35,7 +36,7 @@ async function createCustomer(email: string) {
   const res = await fetch(url, {
     method: "POST",
     headers: {
-      "X-Shopify-Access-Token": ADMIN_TOKEN as string,
+      "X-Shopify-Access-Token": ADMIN_TOKEN,
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -62,7 +63,7 @@ async function findCustomerByEmail(email: string) {
 
   const res = await fetch(url, {
     headers: {
-      "X-Shopify-Access-Token": ADMIN_TOKEN as string,
+      "X-Shopify-Access-Token": ADMIN_TOKEN,
       Accept: "application/json",
     },
     cache: "no-store",
@@ -99,7 +100,7 @@ async function updateCustomerMarketingConsent(customerId: number | string) {
   const res = await fetch(url, {
     method: "PUT",
     headers: {
-      "X-Shopify-Access-Token": ADMIN_TOKEN as string,
+      "X-Shopify-Access-Token": ADMIN_TOKEN,
       "Content-Type": "application/json",
       Accept: "application/json",
     },
@@ -174,7 +175,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 🔥 ORA ritorniamo SEMPRE i dettagli Shopify
     return NextResponse.json(
       {
         error: "Shopify error",
