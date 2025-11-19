@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
-const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07"; // usa una versione reale
+const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN; // 👈 usiamo questo
+const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
 
 const IS_DEV = process.env.NODE_ENV !== "production";
 
@@ -126,7 +126,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ ok: true });
     }
 
-    console.error("[newsletter] createCustomer error", created.status, created.data);
+    console.error(
+      "[newsletter] createCustomer error",
+      created.status,
+      created.data
+    );
 
     // Se è un 422 per email già esistente, aggiorniamo il consenso
     const rawErrors = created.data?.errors || created.data?.customer?.errors;
