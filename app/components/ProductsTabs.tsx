@@ -75,13 +75,12 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
   const currentKind: 'Standard' | 'Premium' = tab === 'std' ? 'Standard' : 'Premium';
 
   /** 
-   * FIX FONDAMENTALE 🔥🔥🔥
    * Ora passiamo *shopifyId* e *qty* al carrello.
    */
   function handleAddToCart(kind: 'Standard' | 'Premium', kg: Kg, perKg: number) {
     const tier: Tier = kind === 'Standard' ? 'standard' : 'premium';
 
-    // 🚀 Shopify variant ID ORIGINALE da SHOPIFY_VARIANTS
+    // Shopify variant ID da SHOPIFY_VARIANTS
     const shopifyId = SHOPIFY_VARIANTS[tier][kg];
 
     addItem({
@@ -90,8 +89,8 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
       tier,
       weightKg: kg,
       pricePerKg: perKg,
-      qty: 1,                 // ❤️ aggiunto
-      shopifyId,              // ❤️ aggiunto
+      qty: 1,
+      shopifyId,
     });
   }
 
@@ -103,8 +102,7 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
           Pesa il mistero, <span className="text-white/80">spacchetta la sorpresa!</span>
         </h2>
         <p className="text-white/70">
-          Standard o Premium? 1 kg o 10 kg? Scegli tu — e il bonus della ruota può aggiungere
-          ancora più kg.
+          Standard o Premium? 1 kg o 10 kg? Scegli tu.
         </p>
         <p className="text-white/70 mt-2 text-sm md:text-base">
           Ogni box recupera pacchi che altrimenti finirebbero nello smaltimento: meno rifiuti,
@@ -164,15 +162,6 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
                 'p-4',
               ].join(' ')}
             >
-              {/* badge 10kg */}
-              {w === 10 && (
-                <div className="absolute -top-3 right-3 z-20">
-                  <span className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-bold text-[#0f1216] bg-gradient-to-r from-purple-300 to-emerald-300 ring-1 ring-white/60 shadow-md">
-                    🎡 1 giro incluso
-                  </span>
-                </div>
-              )}
-
               {/* video */}
               <div className="relative rounded-xl overflow-hidden border border-white/20 bg-black">
                 <video
@@ -221,11 +210,6 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
                   <li>Peso netto (toll. ±3%)</li>
                   <li>Sigillo con ID lotto e data</li>
                   <li>{co2ByKg[kg]}</li>
-                  {w === 10 && (
-                    <li className="font-semibold">
-                      🎡 Include 1 giro: bonus fino a <b>+2 kg</b>
-                    </li>
-                  )}
                 </ul>
 
                 <div className="mt-4">
@@ -240,34 +224,6 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
             </article>
           );
         })}
-
-        {/* Card promo ruota */}
-        <div className="relative rounded-2xl border border-white/10 bg-gradient-to-br from-emerald-200/30 to-purple-200/30 p-5 shadow-[0_20px_60px_rgba(0,0,0,.25)] hover:shadow-[0_30px_80px_rgba(0,0,0,.35)] transition">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            <div className="rounded-xl overflow-hidden border border-white/20 bg-black/60">
-              <img
-                src="/wheel/wheel.svg"
-                alt="Ruota della fortuna"
-                width={420}
-                height={210}
-                className="block"
-              />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-extrabold text-white">Ruota della fortuna</h3>
-              <p className="text-white/80">
-                Con un ordine da <b>10 kg</b> ottieni <b>1 giro immediato</b> nella pagina di
-                conferma ordine. Finestra di utilizzo: <b>30 minuti</b>. Premi fino a <b>+2 kg</b>.
-              </p>
-            </div>
-            <a
-              href={`/${safeLang}/products#buy-standard-10`}
-              className="rounded-xl px-4 py-2 font-bold bg-gradient-to-r from-purple-300 to-emerald-300 text-[#0f1216] ring-1 ring-white/60 shadow-md"
-            >
-              Acquista 10 kg
-            </a>
-          </div>
-        </div>
       </div>
     </section>
   );
