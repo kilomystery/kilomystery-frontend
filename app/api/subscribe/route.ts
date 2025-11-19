@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
-// 👇 se il tuo token è in SHOPIFY_ADMIN_ACCESS_TOKEN lascia così.
-// se invece è in SHOPIFY_ADMIN_API_ACCESS_TOKEN, cambia qui di conseguenza.
-const ADMIN_TOKEN =
-  process.env.SHOPIFY_ADMIN_ACCESS_TOKEN ||
-  process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
-
-const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
+const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN; // 👈 unica variabile usata
+const API_VERSION = process.env.SHOPIFY_API_VERSION || "2025-10";
 
 const IS_DEV = process.env.NODE_ENV !== "production";
+
+// 🔍 Debug minimale per controllare cosa legge Vercel (puoi toglierlo dopo)
+console.log("[newsletter] DEBUG ENV", {
+  STORE_DOMAIN,
+  ADMIN_TOKEN_PREFIX: ADMIN_TOKEN?.slice(0, 10) || null,
+  ADMIN_TOKEN_LEN: ADMIN_TOKEN?.length || null,
+});
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -43,7 +45,6 @@ async function createCustomer(email: string) {
   try {
     data = await res.json();
   } catch {
-    // se non è JSON, leggiamo il testo per debug
     const txt = await res.text().catch(() => "");
     data = { raw: txt };
   }
@@ -120,7 +121,7 @@ async function updateCustomerMarketingConsent(customerId: number | string) {
 export async function POST(req: NextRequest) {
   try {
     if (!STORE_DOMAIN || !ADMIN_TOKEN) {
-      console.error("[newsletter] env mancanti", {
+      console.error("[newsletter] ENV MANCANTI", {
         STORE_DOMAIN: !!STORE_DOMAIN,
         ADMIN_TOKEN: !!ADMIN_TOKEN,
       });
@@ -172,22 +173,22 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 🔍 QUI: ritorniamo tutti i dettagli dell’errore Shopify al client
     return NextResponse.json(
-      {
-        error: "Shopify error",
-        shopifyStatus: created.status,
-        shopifyBody: created.data,
-      },
+      IS_DEV
+        ? {
+            error: "Shopify error",
+            shopifyStatus: created.status,
+            shopifyBody: created.data,
+          }
+        : { error: "Impossibile iscrivere alla newsletter" },
       { status: 500 }
     );
   } catch (err) {
     console.error("[newsletter] generic error", err);
     return NextResponse.json(
-      {
-        error: "Errore interno",
-        details: String(err),
-      },
+      IS_DEV
+        ? { error: "Errore interno", details: String(err) }
+        : { error: "Errore interno" },
       { status: 500 }
     );
   }
