@@ -2,31 +2,23 @@ import { NextRequest, NextResponse } from "next/server";
 
 const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN;
-const API_VERSION = process.env.SHOPIFY_API_VERSION || "2025-01";
+const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07"; // usa una versione reale
 
-if (!STORE_DOMAIN || !ADMIN_TOKEN) {
-  console.warn(
-    "[newsletter] Manca SHOPIFY_STORE_DOMAIN o SHOPIFY_ADMIN_API_ACCESS_TOKEN nelle env"
-  );
-}
+const IS_DEV = process.env.NODE_ENV !== "production";
 
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-/**
- * Crea un customer con consenso marketing.
- */
 async function createCustomer(email: string) {
   const url = `https://${STORE_DOMAIN}/admin/api/${API_VERSION}/customers.json`;
 
   const body = {
     customer: {
       email,
-      // Nuovo sistema di consensi marketing
       email_marketing_consent: {
-        state: "subscribed",          // subscribed | not_subscribed | unsubscribed
-        opt_in_level: "single_opt_in", // o confirmed_opt_in se usi double opt-in
+        state: "subscribed",
+        opt_in_level: "single_opt_in",
         consent_updated_at: new Date().toISOString(),
       },
     },
@@ -44,17 +36,9 @@ async function createCustomer(email: string) {
 
   const data = await res.json().catch(() => ({}));
 
-  // Se l'email esiste già, Shopify di solito risponde 422 con errore "Email has already been taken"
-  if (!res.ok) {
-    return { ok: false, status: res.status, data };
-  }
-
-  return { ok: true, status: res.status, data };
+  return { ok: res.ok, status: res.status, data };
 }
 
-/**
- * Cerca un customer per email
- */
 async function findCustomerByEmail(email: string) {
   const url = `https://${STORE_DOMAIN}/admin/api/${API_VERSION}/customers/search.json?query=email:${encodeURIComponent(
     email
@@ -68,18 +52,20 @@ async function findCustomerByEmail(email: string) {
     cache: "no-store",
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    console.error("[newsletter] search error", res.status, txt);
+    return null;
+  }
 
   const data = await res.json().catch(() => null);
-  if (!data || !Array.isArray(data.customers) || data.customers.length === 0)
+  if (!data || !Array.isArray(data.customers) || data.customers.length === 0) {
     return null;
+  }
 
-  return data.customers[0]; // prendiamo il primo match
+  return data.customers[0];
 }
 
-/**
- * Aggiorna consenso marketing per un customer esistente
- */
 async function updateCustomerMarketingConsent(customerId: number | string) {
   const url = `https://${STORE_DOMAIN}/admin/api/${API_VERSION}/customers/${customerId}.json`;
 
@@ -106,67 +92,75 @@ async function updateCustomerMarketingConsent(customerId: number | string) {
 
   const data = await res.json().catch(() => ({}));
 
-  if (!res.ok) {
-    return { ok: false, status: res.status, data };
-  }
-
-  return { ok: true, status: res.status, data };
+  return { ok: res.ok, status: res.status, data };
 }
 
-/**
- * Handler POST /api/subscribe
- */
 export async function POST(req: NextRequest) {
   try {
     if (!STORE_DOMAIN || !ADMIN_TOKEN) {
+      console.error("[newsletter] env mancanti", {
+        STORE_DOMAIN: !!STORE_DOMAIN,
+        ADMIN_TOKEN: !!ADMIN_TOKEN,
+      });
       return NextResponse.json(
         { error: "Shopify non configurato (env mancanti)" },
         { status: 500 }
       );
     }
 
-    const { email } = await req.json();
-    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const body = await req.json().catch(() => ({}));
+    const emailRaw = body?.email;
+    const email = String(emailRaw || "").trim().toLowerCase();
 
-    if (!normalizedEmail || !isValidEmail(normalizedEmail)) {
+    if (!email || !isValidEmail(email)) {
       return NextResponse.json(
         { error: "Email non valida" },
         { status: 400 }
       );
     }
 
-    // 1. Proviamo a creare il customer
-    const created = await createCustomer(normalizedEmail);
+    // 1) Prova a creare il customer
+    const created = await createCustomer(email);
 
     if (created.ok) {
       return NextResponse.json({ ok: true });
     }
 
-    // Se l'errore è "email già esistente", cerchiamo e aggiorniamo consenso
-    const errors = created.data?.errors || created.data?.customer?.errors;
+    console.error("[newsletter] createCustomer error", created.status, created.data);
+
+    // Se è un 422 per email già esistente, aggiorniamo il consenso
+    const rawErrors = created.data?.errors || created.data?.customer?.errors;
     const isDuplicate =
       created.status === 422 &&
-      JSON.stringify(errors || "").toLowerCase().includes("email");
+      JSON.stringify(rawErrors || "").toLowerCase().includes("email");
 
     if (isDuplicate) {
-      const existing = await findCustomerByEmail(normalizedEmail);
+      const existing = await findCustomerByEmail(email);
       if (existing?.id) {
         const updated = await updateCustomerMarketingConsent(existing.id);
         if (updated.ok) {
           return NextResponse.json({ ok: true });
         }
+        console.error(
+          "[newsletter] updateCustomer error",
+          updated.status,
+          updated.data
+        );
       }
     }
 
-    console.error("[newsletter] Shopify error", created);
     return NextResponse.json(
-      { error: "Impossibile iscrivere alla newsletter" },
+      IS_DEV
+        ? { error: "Shopify error", details: created }
+        : { error: "Impossibile iscrivere alla newsletter" },
       { status: 500 }
     );
   } catch (err) {
     console.error("[newsletter] generic error", err);
     return NextResponse.json(
-      { error: "Errore interno" },
+      IS_DEV
+        ? { error: "Errore interno", details: String(err) }
+        : { error: "Errore interno" },
       { status: 500 }
     );
   }
