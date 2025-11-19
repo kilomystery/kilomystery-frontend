@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN; // unica variabile usata
-const API_VERSION = process.env.SHOPIFY_API_VERSION || "2025-10";
+const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
 
 // ⚠️ PER DEBUG: lo forziamo a true così vediamo sempre i dettagli
 const IS_DEV = true;
