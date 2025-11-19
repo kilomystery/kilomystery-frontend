@@ -114,7 +114,7 @@ export default function RewardPage({
   const searchParams = useSearchParams();
   const rawKg = searchParams.get("kg");
   const orderedKg = rawKg ? Number(rawKg) || 0 : 0;
-  const orderId = searchParams.get("order_id") || ""; // ⚠️ in email mandiamo l'ID GraphQL
+  const orderId = searchParams.get("order_id") || ""; // ID GraphQL passato dall'email
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -228,7 +228,8 @@ export default function RewardPage({
      RENDER
   ----------------------------------------------------- */
 
-  const notEligible = !orderId || orderedKg < 10;
+  // Flow garantisce già che l'ordine è >= 10kg, quindi qui basta verificare che ci sia un orderId valido
+  const notEligible = !orderId;
 
   return (
     <main className="container py-8">
