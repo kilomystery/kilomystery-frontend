@@ -108,6 +108,7 @@ export default function RewardPage({
   params: { lang: string };
 }) {
   const sectors = useMemo(buildSectorsAlternated, []);
+<<<<<<< HEAD
   const N = sectors.length;       // 16 spicchi
   const STEP = 360 / N;           // 22.5°
 
@@ -123,7 +124,16 @@ export default function RewardPage({
     "";
 
   // kg sono solo informativi, NON blocchiamo più la ruota con questo
+=======
+  const N = sectors.length; // 16
+  const STEP = 360 / N; // 22.5°
+
+  const searchParams = useSearchParams();
+
+  // 👉 presi dal link della mail di Flow
+>>>>>>> 2f8fcac (Connect reward wheel to order id and update order notes)
   const orderedKg = Number(searchParams.get("kg") || "0");
+  const orderId = searchParams.get("order_id") || "";
 
   // blocchiamo la ruota solo se la pagina viene aperta senza alcun parametro ordine
   const notEligible = !hasOrderParam;
@@ -213,8 +223,12 @@ export default function RewardPage({
       setSpinsLeft(nextSpins);
       setSpinning(false);
 
+<<<<<<< HEAD
       // fine giri => invio nota a Shopify SE abbiamo un id ordine valido
+=======
+>>>>>>> 2f8fcac (Connect reward wheel to order id and update order notes)
       if (nextSpins <= 0) {
+        // 👉 chiamiamo il backend UNA VOLTA, con orderId
         if (!sentRef.current && orderId) {
           sentRef.current = true;
           fetch("/api/spin/init", {
@@ -240,6 +254,12 @@ export default function RewardPage({
      RENDER
   ----------------------------------------------------- */
 
+<<<<<<< HEAD
+=======
+  // se arriva qui senza orderId o kg < 10 → niente giro
+  const notEligible = !orderId || orderedKg < 10;
+
+>>>>>>> 2f8fcac (Connect reward wheel to order id and update order notes)
   return (
     <main className="container py-8">
       {/* Logo + claim */}

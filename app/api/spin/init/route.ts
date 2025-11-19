@@ -6,14 +6,16 @@ const API_VERSION = "2024-01";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
-    const checkoutId: string = body.checkoutId || "";
+
+    // 👉 ora prendiamo direttamente l'orderId passato dalla pagina reward
+    const orderId: string = body.orderId || "";
     const orderedKg: number = Number(body.orderedKg || 0);
     const bonusKg: number = Number(body.bonusKg || 0);
     const lang: string = body.lang || "it";
 
-    if (!checkoutId) {
+    if (!orderId) {
       return NextResponse.json(
-        { error: "Missing checkoutId" },
+        { error: "Missing orderId" },
         { status: 400 }
       );
     }
@@ -33,9 +35,10 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---------------------------------------------------------
-       1) TROVIAMO L'ORDINE TRAMITE checkout_token
+       1) PRENDIAMO I DATI DELL'ORDINE TRAMITE orderId
+       (orderId arriva da {{ order.id }} in Flow → è già un GID)
     --------------------------------------------------------- */
-    const findOrderRes = await fetch(
+    const orderRes = await fetch(
       `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
       {
         method: "POST",
@@ -45,30 +48,26 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({
           query: `
-            query OrderByCheckout($query: String!) {
-              orders(first: 1, query: $query) {
-                edges {
-                  node {
-                    id
-                    name
-                    note
-                    customer { email }
-                    email
-                  }
-                }
+            query GetOrder($id: ID!) {
+              order(id: $id) {
+                id
+                name
+                note
+                email
+                customer { email }
               }
             }
           `,
-          variables: { query: `checkout_token:${checkoutId}` },
+          variables: { id: orderId },
         }),
       }
     );
 
-    const findJson = await findOrderRes.json();
-    const orderNode = findJson?.data?.orders?.edges?.[0]?.node ?? null;
+    const orderJson = await orderRes.json();
+    const orderNode = orderJson?.data?.order ?? null;
 
     if (!orderNode) {
-      console.error("Order not found for checkoutId", checkoutId, findJson);
+      console.error("Order not found for id", orderId, orderJson);
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
@@ -82,7 +81,7 @@ export async function POST(req: NextRequest) {
 
     const lines: string[] = [];
     lines.push("🎡 Ruota Mistery Kilo:");
-    if (orderedKg) lines.push(`- Kg ordinati: ${orderedKg.toFixed(2)} kg`);
+    if (orderedKg) lines.push(`- Kg ordinati (flow): ${orderedKg.toFixed(2)} kg`);
     lines.push(`- Kg bonus vinti: ${bonusKg.toFixed(2)} kg`);
     if (orderedKg) {
       lines.push(
@@ -125,9 +124,9 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---------------------------------------------------------
-       3) TIMELINE COMMENT + EMAIL AL CLIENTE
+       3) COMMENTO IN TIMELINE + EMAIL AL CLIENTE
     --------------------------------------------------------- */
-    const customerEmail =
+    const customerEmail: string =
       orderNode.customer?.email || orderNode.email || "";
 
     if (customerEmail) {
