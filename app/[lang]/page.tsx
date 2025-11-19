@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ProductsTabs from "../components/ProductsTabs";
 import ContactForm from "../components/ContactForm";
+import SectionMarquee from "../components/SectionMarquee"; // 🔹 NUOVO IMPORT
 
 export default function HomePage({ params }: { params: { lang: string } }) {
   const { lang } = params;
@@ -67,6 +68,11 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           <ProductsTabs lang={lang as any} />
         </section>
 
+        {/* 🔹 MARQUEE TRA PRODOTTI E COME FUNZIONA */}
+        <section>
+          <SectionMarquee />
+        </section>
+
         {/* COME FUNZIONA */}
         <section id="come-funziona" className="space-y-6">
           <h2 className="text-2xl md:text-3xl font-extrabold">
@@ -112,22 +118,23 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        {/* SOSTENIBILITÀ */}
+        {/* SOSTENIBILITÀ (TITOLO CAMBIATO + EMOJI) */}
         <section className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-extrabold">
-            Perché è meglio per il pianeta
+          <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
+            <span>Il nostro impegno per la sostenibilità</span>
+            <span className="text-2xl">🌱🌍</span>
           </h2>
           <div className="card space-y-3">
             <p className="text-white/80">
               Le nostre mystery box nascono da{" "}
               <b>pacchi smarriti, resi non reclamati e stock fermi</b>. Invece
               di finire in discarica o in inceneritore, quei prodotti tornano in
-              circolo sotto forma di unboxing sorpresa.
+              circolo sotto forma di unboxing sorpresa. ♻️
             </p>
             <p className="text-white/70 text-sm">
               Così trasformiamo uno spreco in un gioco, riducendo l&apos;impatto
               ambientale legato allo smaltimento e alla produzione di nuova
-              merce.
+              merce, dando una <b>seconda vita</b> a ciò che esiste già. 🌿
             </p>
             <ul className="list-disc ps-5 space-y-1 text-white/70 text-sm">
               <li>Seconda vita ai pacchi: meno rifiuti da smaltire.</li>
@@ -140,7 +147,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        {/* FAQ */}
+                {/* FAQ */}
         <section className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-extrabold">FAQ</h2>
 
@@ -172,7 +179,111 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               Di solito 24–72h. Ricevi il tracking appena il pacco parte.
             </p>
           </details>
+
+          <details className="card">
+            <summary className="font-semibold cursor-pointer">
+              I prodotti sono nuovi o usati?
+            </summary>
+            <p className="text-white/70 mt-2">
+              I prodotti possono essere nuovi, usati o provenire da resi e
+              stock fermi. Possono presentare segni d&apos;uso o packaging non
+              perfetto, ma vengono selezionati per garantire un&apos;esperienza
+              di unboxing interessante.
+            </p>
+          </details>
+
+          <details className="card">
+            <summary className="font-semibold cursor-pointer">
+              Il valore della box è sempre superiore al prezzo?
+            </summary>
+            <p className="text-white/70 mt-2">
+              L&apos;esperienza è pensata come una mystery: il valore percepito
+              può variare da box a box. In media puntiamo a offrire un rapporto
+              qualità/prezzo vantaggioso, ma non possiamo garantire un valore
+              minimo preciso per ogni singola box.
+            </p>
+          </details>
+
+          <details className="card">
+            <summary className="font-semibold cursor-pointer">
+              Posso ritirare la box a un evento pop-up?
+            </summary>
+            <p className="text-white/70 mt-2">
+              In alcuni eventi è possibile acquistare direttamente in loco le
+              mystery box. Controlla sempre la pagina eventi per i dettagli
+              aggiornati sulle modalità di vendita.
+            </p>
+          </details>
         </section>
+
+
+        
+        {/* 🔹 SEZIONE EVENTI PRIMA DI CONTATTACI */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
+                <span>Scopri i nostri prossimi eventi pop-up</span>
+                <span className="text-2xl">📍🎪</span>
+              </h2>
+              <p className="text-white/70 text-sm md:text-base mt-1 max-w-xl">
+                Vieni a trovarci dal vivo: eventi pop-up, fiere e corner
+                temporanei dove puoi vedere le mystery box, parlare con il team
+                e vivere l&apos;atmosfera della community KiloMystery. ✨
+              </p>
+            </div>
+
+            <a
+              href="https://www.kilomystery.com/it/events"
+              className="btn btn-brand btn-sm md:btn-lg"
+            >
+              Vedi calendario eventi
+            </a>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3 text-sm text-white/75">
+            <div className="card">
+              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
+                Pop-up in città
+              </p>
+              <p className="font-semibold">
+                Tappe nelle principali città italiane 🇮🇹
+              </p>
+              <p className="text-xs text-white/60 mt-1">
+                Scopri quando saremo vicino a te, passa al corner e scopri da
+                vicino il mondo KiloMystery.
+              </p>
+            </div>
+
+            <div className="card">
+              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
+                Area sostenibilità
+              </p>
+              <p className="font-semibold">
+                Scopri come recuperiamo pacchi e stock ♻️
+              </p>
+              <p className="text-xs text-white/60 mt-1">
+                Uno spazio dedicato per raccontarti come funzionano i lotti,
+                perché evitiamo sprechi e come funziona l&apos;economia
+                circolare dietro le box.
+              </p>
+            </div>
+
+            <div className="card">
+              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
+                Community
+              </p>
+              <p className="font-semibold">
+                Incontra altri appassionati di mystery box 🤝
+              </p>
+              <p className="text-xs text-white/60 mt-1">
+                Condividi l&apos;esperienza, scopri cosa hanno trovato gli
+                altri, scatta foto con la tua box e porta a casa un ricordo.
+              </p>
+            </div>
+          </div>
+        </section>
+
 
         {/* CONTATTACI */}
         <section className="space-y-4">

@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
+const API_VERSION = "2024-01";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
 
-    const rawOrderId: string = body.orderId || "";
+    const orderName: string = (body.orderName || "").trim(); // es. "#1001"
     const orderedKg: number = Number(body.orderedKg || 0);
     const bonusKg: number = Number(body.bonusKg || 0);
     const lang: string = body.lang || "it";
 
-    if (!rawOrderId) {
+    if (!orderName) {
       return NextResponse.json(
-        { error: "Missing orderId" },
+        { error: "Missing orderName" },
         { status: 400 }
       );
     }
-
-    // Se l'ID non è già un GID, lo trasformiamo.
-    const orderId = rawOrderId.startsWith("gid://")
-      ? rawOrderId
-      : `gid://shopify/Order/${rawOrderId}`;
 
     const domain = process.env.SHOPIFY_STORE_DOMAIN;
     const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
@@ -37,60 +32,44 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* ---------------------------------------------------------
-       1) RECUPERIAMO L'ORDINE PER ID (GraphQL)
-    --------------------------------------------------------- */
+    // ---------------------------------------------------------
+    // 1) CERCHIAMO L'ORDINE PER NOME (es. "#1001")
+    // ---------------------------------------------------------
 
-    const getOrderRes = await fetch(
-      `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
+    // Shopify vuole il name con il #, se manca lo aggiungiamo
+    const nameForQuery = orderName.startsWith("#")
+      ? orderName
+      : `#${orderName}`;
+
+    const restRes = await fetch(
+      `https://${domain}/admin/api/${API_VERSION}/orders.json?name=${encodeURIComponent(
+        nameForQuery
+      )}`,
       {
-        method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-Shopify-Access-Token": token,
         },
-        body: JSON.stringify({
-          query: `
-            query GetOrder($id: ID!) {
-              order(id: $id) {
-                id
-                name
-                note
-                email
-                customer { email }
-              }
-            }
-          `,
-          variables: { id: orderId },
-        }),
       }
     );
 
-    if (!getOrderRes.ok) {
-      const txt = await getOrderRes.text().catch(() => "");
-      console.error("GetOrder HTTP error", getOrderRes.status, txt);
-      return NextResponse.json(
-        { error: "Shopify order fetch failed" },
-        { status: 502 }
-      );
-    }
+    const restJson = await restRes.json().catch(() => null);
+    const order = restJson?.orders?.[0];
 
-    const getOrderJson = await getOrderRes.json();
-    const orderNode = getOrderJson?.data?.order ?? null;
-
-    if (!orderNode) {
-      console.error("Order not found for orderId", orderId, getOrderJson);
+    if (!order || !order.admin_graphql_api_id) {
+      console.error("Order not found by name", nameForQuery, restJson);
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
       );
     }
 
-    /* ---------------------------------------------------------
-       2) NOTA INTERNA NELL'ORDINE
-    --------------------------------------------------------- */
+    const orderGid: string = order.admin_graphql_api_id;
+    const baseNote: string = order.note || "";
 
-    const baseNote: string = orderNode.note || "";
+    // ---------------------------------------------------------
+    // 2) NOTA INTERNA NELL'ORDINE
+    // ---------------------------------------------------------
 
     const lines: string[] = [];
     lines.push("🎡 Ruota Mistery Kilo:");
@@ -118,18 +97,18 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           query: `
             mutation UpdateNote($id: ID!, $note: String) {
-              orderUpdate(input: { id: $id, note: $note }) {
+              orderUpdate(id: $id, input: { note: $note }) {
                 order { id }
                 userErrors { field message }
               }
             }
           `,
-          variables: { id: orderNode.id, note: newNote },
+          variables: { id: orderGid, note: newNote },
         }),
       }
     );
 
-    const updateNoteJson = await updateNoteRes.json();
+    const updateNoteJson = await updateNoteRes.json().catch(() => null);
     if (updateNoteJson?.data?.orderUpdate?.userErrors?.length) {
       console.error(
         "orderUpdate errors",
@@ -137,12 +116,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    /* ---------------------------------------------------------
-       3) TIMELINE COMMENT + EMAIL AL CLIENTE (opzionale)
-    --------------------------------------------------------- */
+    // ---------------------------------------------------------
+    // 3) TIMELINE COMMENT + EMAIL AL CLIENTE (OPZIONALE)
+    //    (se vuoi, possiamo anche toglierlo)
+    // ---------------------------------------------------------
 
-    const customerEmail: string =
-      orderNode.customer?.email || orderNode.email || "";
+    const customerEmail =
+      order.customer?.email || order.email || "";
 
     if (customerEmail) {
       const message =
@@ -174,14 +154,14 @@ export async function POST(req: NextRequest) {
               }
             `,
             variables: {
-              id: orderNode.id,
+              id: orderGid,
               message,
             },
           }),
         }
       );
 
-      const notifyJson = await notifyRes.json();
+      const notifyJson = await notifyRes.json().catch(() => null);
       if (
         notifyJson?.data?.orderTimelineCommentCreate?.userErrors?.length
       ) {
