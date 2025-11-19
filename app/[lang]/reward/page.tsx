@@ -114,7 +114,7 @@ export default function RewardPage({
   const searchParams = useSearchParams();
   const rawKg = searchParams.get("kg");
   const orderedKg = rawKg ? Number(rawKg) || 0 : 0;
-  const orderId = searchParams.get("order_id") || "";
+  const orderId = searchParams.get("order_id") || ""; // ⚠️ in email mandiamo l'ID GraphQL
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -251,8 +251,7 @@ export default function RewardPage({
         <p className="mx-auto mt-6 max-w-2xl text-center text-white/80">
           Nessun giro disponibile per questo ordine.
           <br />
-          Se pensi che ci sia un errore, contatta il supporto{" "}
-          <b>KiloMystery</b>.
+          Se pensi che ci sia un errore, contatta il supporto <b>KiloMystery</b>.
         </p>
       ) : (
         <>

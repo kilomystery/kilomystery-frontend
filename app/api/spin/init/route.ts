@@ -1,22 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const API_VERSION = "2024-01";
+const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
 
-    const orderId: string = body.orderId || "";
+    const rawOrderId: string = body.orderId || "";
     const orderedKg: number = Number(body.orderedKg || 0);
     const bonusKg: number = Number(body.bonusKg || 0);
     const lang: string = body.lang || "it";
 
-    if (!orderId) {
+    if (!rawOrderId) {
       return NextResponse.json(
         { error: "Missing orderId" },
         { status: 400 }
       );
     }
+
+    // Se l'ID non è già un GID, lo trasformiamo.
+    const orderId = rawOrderId.startsWith("gid://")
+      ? rawOrderId
+      : `gid://shopify/Order/${rawOrderId}`;
 
     const domain = process.env.SHOPIFY_STORE_DOMAIN;
     const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
@@ -33,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---------------------------------------------------------
-       1) RECUPERIAMO L'ORDINE PER ID
+       1) RECUPERIAMO L'ORDINE PER ID (GraphQL)
     --------------------------------------------------------- */
 
     const getOrderRes = await fetch(
@@ -51,8 +56,8 @@ export async function POST(req: NextRequest) {
                 id
                 name
                 note
-                customer { email }
                 email
+                customer { email }
               }
             }
           `,
@@ -60,6 +65,15 @@ export async function POST(req: NextRequest) {
         }),
       }
     );
+
+    if (!getOrderRes.ok) {
+      const txt = await getOrderRes.text().catch(() => "");
+      console.error("GetOrder HTTP error", getOrderRes.status, txt);
+      return NextResponse.json(
+        { error: "Shopify order fetch failed" },
+        { status: 502 }
+      );
+    }
 
     const getOrderJson = await getOrderRes.json();
     const orderNode = getOrderJson?.data?.order ?? null;
@@ -73,7 +87,7 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---------------------------------------------------------
-       2) NOTA INTERNA NELL'ORDINE (PER VOI)
+       2) NOTA INTERNA NELL'ORDINE
     --------------------------------------------------------- */
 
     const baseNote: string = orderNode.note || "";
@@ -104,7 +118,7 @@ export async function POST(req: NextRequest) {
         body: JSON.stringify({
           query: `
             mutation UpdateNote($id: ID!, $note: String) {
-              orderUpdate(id: $id, input: { note: $note }) {
+              orderUpdate(input: { id: $id, note: $note }) {
                 order { id }
                 userErrors { field message }
               }
@@ -124,10 +138,10 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---------------------------------------------------------
-       3) TIMELINE COMMENT + EMAIL AL CLIENTE (OPZIONALE)
+       3) TIMELINE COMMENT + EMAIL AL CLIENTE (opzionale)
     --------------------------------------------------------- */
 
-    const customerEmail =
+    const customerEmail: string =
       orderNode.customer?.email || orderNode.email || "";
 
     if (customerEmail) {
