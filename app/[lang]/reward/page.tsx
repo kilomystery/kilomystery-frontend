@@ -35,19 +35,19 @@ function buildSectorsAlternated(): Sector[] {
   const N = 16;
   const out = new Array<Nullable<Sector>>(N).fill(null);
 
-  // 1) metto gli 0 kg sugli indici pari
+  // 1) piazzo gli 0 kg sugli indici pari
   let zerosToPlace = SPEC.zeros;
   for (let i = 0; i < N && zerosToPlace > 0; i += 2) {
     out[i] = { label: "0 kg", color: COLORS.zero };
     zerosToPlace--;
   }
 
-  // 2) indici liberi
+  // 2) slot liberi
   const freeIdx: number[] = [];
   for (let i = 1; i < N; i += 2) freeIdx.push(i);
   for (let i = 0; i < N; i += 2) if (!out[i]) freeIdx.push(i);
 
-  // 3) distribuisco gli altri premi
+  // 3) round robin degli altri premi
   const bucket: Array<{ label: string; color: string; left: number }> = [
     { label: "0.5 kg", color: COLORS.half, left: SPEC.half },
     { label: "1 kg", color: COLORS.one, left: SPEC.one },
@@ -109,19 +109,15 @@ export default function RewardPage({
   params: { lang: string };
 }) {
   const sectors = useMemo(buildSectorsAlternated, []);
-  const N = sectors.length;
-  const STEP = 360 / N;
+  const N = sectors.length; // 16
+  const STEP = 360 / N; // 22.5°
 
   const searchParams = useSearchParams();
 
-  // 🔹 dalla mail manderemo ?order_id=XXXX
-  const orderId =
-    searchParams.get("order_id") ||
-    searchParams.get("checkout_id") ||
-    "";
-
-  // possiamo anche leggere i kg se un giorno li passiamo
-  const orderedKg = Number(searchParams.get("kg") || "0");
+  // 👉 ci fidiamo di Shopify Flow:
+  // se manda questa mail, l'ordine è già >= 10 kg.
+  const orderId = searchParams.get("order_id") || "";
+  const orderedKg = Number(searchParams.get("kg") || "0"); // solo per info, non per il blocco
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -137,7 +133,7 @@ export default function RewardPage({
   // popup riepilogo
   const [showSummary, setShowSummary] = useState(false);
 
-  // per non inviare due volte al backend
+  // per non mandare due volte la nota
   const sentRef = useRef(false);
 
   // layout ruota
@@ -208,8 +204,8 @@ export default function RewardPage({
       setSpinsLeft(nextSpins);
       setSpinning(false);
 
-      // quando non ci sono più giri → contatta backend
       if (nextSpins <= 0) {
+        // 👉 chiamiamo il backend UNA VOLTA
         if (!sentRef.current && orderId) {
           sentRef.current = true;
           fetch("/api/spin/init", {
@@ -235,7 +231,7 @@ export default function RewardPage({
      RENDER
   ----------------------------------------------------- */
 
-  // 👇 ADESSO BLOCCO SOLO SE NON C'È orderId
+  // 👉 blocchiamo SOLO se proprio non c'è l'orderId
   const notEligible = !orderId;
 
   return (
@@ -259,7 +255,8 @@ export default function RewardPage({
         <p className="mx-auto mt-6 max-w-2xl text-center text-white/80">
           Nessun giro disponibile per questo ordine.
           <br />
-          Se pensi che ci sia un errore, contatta il supporto KiloMystery.
+          Se pensi che ci sia un errore, contatta il supporto{" "}
+          <b>KiloMystery</b>.
         </p>
       ) : (
         <>
