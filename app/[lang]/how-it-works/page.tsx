@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 
@@ -22,24 +23,24 @@ export default function HowItWorks({ params }: { params: { lang: string } }) {
           <p className="text-white/70 text-lg">
             Le nostre box trasformano stock fermi, resi e pacchi smarriti
             in una sorpresa emozionante: scegli il peso, ricevi a casa,
-            spacchetti e scopri cosa hai trovato. ♻️🎁
+            spacchetti e scopri cosa contiene. ♻️🎁
           </p>
         </section>
 
-        {/* MAIN STEPS */}
+        {/* STEP PRINCIPALI */}
         <section className="grid gap-6 md:grid-cols-3">
           {/* STEP 1 */}
           <div className="card text-center p-6 space-y-3">
             <div className="text-5xl">🧪</div>
             <h3 className="text-xl font-extrabold">1. Scegli il peso</h3>
             <p className="text-white/70">
-              Seleziona Standard o Premium e scegli tra 1 kg e 10 kg.
-              Ogni box è sigillata, tracciata e con ID lotto.
+              Seleziona Standard o Premium e scegli tra 1 kg e 10 kg. Ogni box
+              è sigillata, tracciata e collegata a un ID lotto.
             </p>
-            <ul className="text-white/60 text-sm space-y-1 list-disc ps-5 text-left">
-              <li>Nessun contenuto visibile</li>
-              <li>Valore variabile, sorpresa garantita</li>
-              <li>Proviene da stock reali</li>
+            <ul className="text-white/60 text-sm list-disc ps-5 space-y-1 text-left">
+              <li>Nessun spoiler sul contenuto.</li>
+              <li>Lotti reali da stock, resi e pacchi smarriti.</li>
+              <li>Preparazione e pesatura interna.</li>
             </ul>
           </div>
 
@@ -48,13 +49,13 @@ export default function HowItWorks({ params }: { params: { lang: string } }) {
             <div className="text-5xl">🔐</div>
             <h3 className="text-xl font-extrabold">2. Paga in sicurezza</h3>
             <p className="text-white/70">
-              Paghi tramite i nostri metodi sicuri (Stripe, PayPal o carta).
-              Ricevi subito la conferma dell'ordine via email.
+              Paghi con metodi sicuri e ricevi subito una mail con il riepilogo
+              dell'ordine.
             </p>
-            <ul className="text-white/60 text-sm space-y-1 list-disc ps-5 text-left">
-              <li>Metodo di pagamento cifrato</li>
-              <li>Assistenza disponibile 7 giorni su 7</li>
-              <li>Gestione resi trasparente</li>
+            <ul className="text-white/60 text-sm list-disc ps-5 space-y-1 text-left">
+              <li>Transazioni sicure.</li>
+              <li>Riepilogo ordine chiaro.</li>
+              <li>Assistenza reale e veloce.</li>
             </ul>
           </div>
 
@@ -63,39 +64,46 @@ export default function HowItWorks({ params }: { params: { lang: string } }) {
             <div className="text-5xl">🚚</div>
             <h3 className="text-xl font-extrabold">3. Traccia e ricevi</h3>
             <p className="text-white/70">
-              Spedizione tracciata entro 24–72h (di solito).  
-              Appena parte, ricevi il codice tracking.
+              Spedizione tracciata in 24–72h, di solito. Ricevi il codice di
+              tracking appena il pacco parte.
             </p>
-            <ul className="text-white/60 text-sm space-y-1 list-disc ps-5 text-left">
-              <li>Tracking completo</li>
-              <li>Imballo protetto</li>
-              <li>Consegna in tutta Italia 🇮🇹</li>
+            <ul className="text-white/60 text-sm list-disc ps-5 space-y-1 text-left">
+              <li>Tracking attivo fino alla consegna.</li>
+              <li>Imballo sicuro.</li>
+              <li>Consegna in tutta Italia 🇮🇹.</li>
             </ul>
           </div>
         </section>
 
-        {/* INFOGRAFICA */}
+        {/* PILASTRI EXTRA */}
         <section className="grid gap-6 md:grid-cols-3">
           <div className="card p-5 space-y-2">
-            <h4 className="font-bold text-emerald-200">♻️ Economia circolare</h4>
+            <h4 className="font-bold text-emerald-200 text-sm">
+              ♻️ Economia circolare
+            </h4>
             <p className="text-white/70 text-sm">
-              Riduciamo gli sprechi recuperando pacchi smarriti e stock che
-              altrimenti finirebbero distrutti.
+              Recuperiamo stock fermi, resi e pacchi smarriti invece di farli
+              finire nello smaltimento classico.
             </p>
           </div>
 
           <div className="card p-5 space-y-2">
-            <h4 className="font-bold text-emerald-200">🎯 Valore misto e reale</h4>
+            <h4 className="font-bold text-emerald-200 text-sm">
+              🎯 Valore misterioso
+            </h4>
             <p className="text-white/70 text-sm">
-              Ogni box è diversa, con contenuti casuali provenienti da lotti veri.
+              Ogni box è diversa: l'esperienza è quella della sorpresa e
+              dell'unboxing.
             </p>
           </div>
 
           <div className="card p-5 space-y-2">
-            <h4 className="font-bold text-emerald-200">📦 Sigillato & tracciato</h4>
+            <h4 className="font-bold text-emerald-200 text-sm">
+              📦 Zero spoiler
+            </h4>
             <p className="text-white/70 text-sm">
-              Non sappiamo neanche noi cosa contiene ogni singolo pacco.
-              È questo il divertimento.
+              Non apriamo e non scegliamo cosa inserire: lavoriamo sui lotti,
+              non sui singoli pezzi.
             </p>
           </div>
         </section>
