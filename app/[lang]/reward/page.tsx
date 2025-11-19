@@ -35,19 +35,19 @@ function buildSectorsAlternated(): Sector[] {
   const N = 16;
   const out = new Array<Nullable<Sector>>(N).fill(null);
 
-  // 1) piazzo gli 0 kg sugli indici pari
+  // 1) metto gli 0 kg sugli indici pari
   let zerosToPlace = SPEC.zeros;
   for (let i = 0; i < N && zerosToPlace > 0; i += 2) {
     out[i] = { label: "0 kg", color: COLORS.zero };
     zerosToPlace--;
   }
 
-  // 2) slot liberi
+  // 2) indici liberi
   const freeIdx: number[] = [];
   for (let i = 1; i < N; i += 2) freeIdx.push(i);
   for (let i = 0; i < N; i += 2) if (!out[i]) freeIdx.push(i);
 
-  // 3) round robin degli altri premi
+  // 3) distribuisco gli altri premi
   const bucket: Array<{ label: string; color: string; left: number }> = [
     { label: "0.5 kg", color: COLORS.half, left: SPEC.half },
     { label: "1 kg", color: COLORS.one, left: SPEC.one },
@@ -109,17 +109,19 @@ export default function RewardPage({
   params: { lang: string };
 }) {
   const sectors = useMemo(buildSectorsAlternated, []);
-  const N = sectors.length; // 16
-  const STEP = 360 / N; // 22.5°
+  const N = sectors.length;
+  const STEP = 360 / N;
 
   const searchParams = useSearchParams();
 
-  // 🔹 leggiamo i parametri dalla URL
-  const orderId = searchParams.get("order_id") || "";
+  // 🔹 dalla mail manderemo ?order_id=XXXX
+  const orderId =
+    searchParams.get("order_id") ||
+    searchParams.get("checkout_id") ||
+    "";
 
-  const rawKgParam = searchParams.get("kg") || "0"; // arriva in grammi
-  const grams = Number(rawKgParam);
-  const orderedKg = !isNaN(grams) && grams > 0 ? grams / 1000 : 0;
+  // possiamo anche leggere i kg se un giorno li passiamo
+  const orderedKg = Number(searchParams.get("kg") || "0");
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -135,7 +137,7 @@ export default function RewardPage({
   // popup riepilogo
   const [showSummary, setShowSummary] = useState(false);
 
-  // per non mandare due volte la nota (quando in futuro collegheremo l’Admin API)
+  // per non inviare due volte al backend
   const sentRef = useRef(false);
 
   // layout ruota
@@ -206,11 +208,10 @@ export default function RewardPage({
       setSpinsLeft(nextSpins);
       setSpinning(false);
 
-      // 👉 in futuro qui potremo chiamare /api/spin/init con orderId e bonusKg
+      // quando non ci sono più giri → contatta backend
       if (nextSpins <= 0) {
         if (!sentRef.current && orderId) {
           sentRef.current = true;
-          // per ora la chiamata è opzionale, così non rompiamo nulla
           fetch("/api/spin/init", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -234,8 +235,8 @@ export default function RewardPage({
      RENDER
   ----------------------------------------------------- */
 
-  // Eligibile se ha almeno 10 kg (non blocco più per l’id mancante)
-  const notEligible = orderedKg < 10;
+  // 👇 ADESSO BLOCCO SOLO SE NON C'È orderId
+  const notEligible = !orderId;
 
   return (
     <main className="container py-8">
@@ -258,16 +259,15 @@ export default function RewardPage({
         <p className="mx-auto mt-6 max-w-2xl text-center text-white/80">
           Nessun giro disponibile per questo ordine.
           <br />
-          La ruota si attiva solo per ordini da <b>10 kg</b> o più.
+          Se pensi che ci sia un errore, contatta il supporto KiloMystery.
         </p>
       ) : (
         <>
           <p className="mx-auto mt-4 max-w-3xl text-center text-white/80">
-            Hai effettuato un ordine di circa{" "}
-            <b>{orderedKg.toFixed(1)} kg</b>. Gira la ruota{" "}
-            <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi per il tuo
-            ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e ottieni un
-            altro giro). Se esce <b>+1 spin</b> ottieni un altro giro gratuito.
+            Gira la ruota <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi
+            per il tuo ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e
+            ottieni un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro
+            gratuito.
           </p>
 
           {/* Stat boxes */}
