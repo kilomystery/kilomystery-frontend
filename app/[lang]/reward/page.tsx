@@ -1,3 +1,4 @@
+// app/[lang]/reward/page.tsx
 "use client";
 
 import { useMemo, useRef, useState } from "react";
@@ -16,7 +17,7 @@ const COLORS = {
   one: "#22D3EE", // 1 kg
   two: "#8B5CF6", // 2 kg
   spin: "#EC4899", // +1 spin
-  x2: "#F97316",  // X2
+  x2: "#F97316", // X2
 };
 
 const SPEC = {
@@ -49,10 +50,10 @@ function buildSectorsAlternated(): Sector[] {
   // 3) round robin degli altri premi
   const bucket: Array<{ label: string; color: string; left: number }> = [
     { label: "0.5 kg", color: COLORS.half, left: SPEC.half },
-    { label: "1 kg",   color: COLORS.one,  left: SPEC.one },
-    { label: "2 kg",   color: COLORS.two,  left: SPEC.two },
+    { label: "1 kg", color: COLORS.one, left: SPEC.one },
+    { label: "2 kg", color: COLORS.two, left: SPEC.two },
     { label: "+1 spin", color: COLORS.spin, left: SPEC.spin },
-    { label: "X2",      color: COLORS.x2,   left: SPEC.x2 },
+    { label: "X2", color: COLORS.x2, left: SPEC.x2 },
   ];
 
   let p = 0;
@@ -108,35 +109,15 @@ export default function RewardPage({
   params: { lang: string };
 }) {
   const sectors = useMemo(buildSectorsAlternated, []);
-<<<<<<< HEAD
-  const N = sectors.length;       // 16 spicchi
-  const STEP = 360 / N;           // 22.5°
+  const N = sectors.length;
+  const STEP = 360 / N;
 
   const searchParams = useSearchParams();
 
-  // supportiamo sia order_id che checkout_id per sicurezza
-  const hasOrderParam =
-    searchParams.has("order_id") || searchParams.has("checkout_id");
-
-  const orderId =
-    searchParams.get("order_id") ||
-    searchParams.get("checkout_id") ||
-    "";
-
-  // kg sono solo informativi, NON blocchiamo più la ruota con questo
-=======
-  const N = sectors.length; // 16
-  const STEP = 360 / N; // 22.5°
-
-  const searchParams = useSearchParams();
-
-  // 👉 presi dal link della mail di Flow
->>>>>>> 2f8fcac (Connect reward wheel to order id and update order notes)
+  // kg dall'URL (es. ?kg=10)
   const orderedKg = Number(searchParams.get("kg") || "0");
-  const orderId = searchParams.get("order_id") || "";
-
-  // blocchiamo la ruota solo se la pagina viene aperta senza alcun parametro ordine
-  const notEligible = !hasOrderParam;
+  // order_id può essere vuoto se la mail non lo passa correttamente
+  const orderId = (searchParams.get("order_id") || "").trim();
 
   // stato ruota
   const [spinDeg, setSpinDeg] = useState(0);
@@ -182,7 +163,7 @@ export default function RewardPage({
     const current = norm(spinDeg);
     const align = norm(pointer - targetCenter - current);
 
-    const extraSpins = 6 + Math.floor(Math.random() * 2); // 6–7 giri
+    const extraSpins = 6 + Math.floor(Math.random() * 2);
     const delta = extraSpins * 360 + align;
     const finalDeg = spinDeg + delta;
 
@@ -223,19 +204,15 @@ export default function RewardPage({
       setSpinsLeft(nextSpins);
       setSpinning(false);
 
-<<<<<<< HEAD
-      // fine giri => invio nota a Shopify SE abbiamo un id ordine valido
-=======
->>>>>>> 2f8fcac (Connect reward wheel to order id and update order notes)
       if (nextSpins <= 0) {
-        // 👉 chiamiamo il backend UNA VOLTA, con orderId
-        if (!sentRef.current && orderId) {
+        // chiamiamo il backend UNA VOLTA
+        if (!sentRef.current) {
           sentRef.current = true;
           fetch("/api/spin/init", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              orderId,      // qui serve il vero {{ order.id }} nel link della mail
+              orderId: orderId || null,
               orderedKg,
               bonusKg: nextWonKg,
               lang: params?.lang ?? "it",
@@ -254,12 +231,9 @@ export default function RewardPage({
      RENDER
   ----------------------------------------------------- */
 
-<<<<<<< HEAD
-=======
-  // se arriva qui senza orderId o kg < 10 → niente giro
-  const notEligible = !orderId || orderedKg < 10;
+  // 👉 ADESSO usiamo SOLO i kg per decidere se mostrare la ruota
+  const notEligible = isNaN(orderedKg) || orderedKg < 10;
 
->>>>>>> 2f8fcac (Connect reward wheel to order id and update order notes)
   return (
     <main className="container py-8">
       {/* Logo + claim */}
@@ -287,7 +261,7 @@ export default function RewardPage({
       ) : (
         <>
           <p className="mx-auto mt-4 max-w-3xl text-center text-white/80">
-            Gira la ruota <b>KiloMystery</b> e vinci <b>kg bonus</b> aggiuntivi
+            Gira la ruota <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi
             per il tuo ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e
             ottieni un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro
             gratuito.
@@ -491,14 +465,6 @@ export default function RewardPage({
                     </>
                   )}
                 </p>
-
-                {!orderId && (
-                  <p className="mt-3 text-xs text-white/50">
-                    Nota: non siamo riusciti ad associare automaticamente questo
-                    giro a un ordine. Se pensi che sia un errore, contatta il
-                    supporto KiloMystery indicando il numero ordine.
-                  </p>
-                )}
 
                 <div className="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
                   <a

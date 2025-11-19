@@ -7,18 +7,13 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
 
-    // 👉 ora prendiamo direttamente l'orderId passato dalla pagina reward
-    const orderId: string = body.orderId || "";
+    const rawOrderId = body.orderId;
+    const orderId: string =
+      typeof rawOrderId === "string" ? rawOrderId.trim() : "";
+
     const orderedKg: number = Number(body.orderedKg || 0);
     const bonusKg: number = Number(body.bonusKg || 0);
     const lang: string = body.lang || "it";
-
-    if (!orderId) {
-      return NextResponse.json(
-        { error: "Missing orderId" },
-        { status: 400 }
-      );
-    }
 
     const domain = process.env.SHOPIFY_STORE_DOMAIN;
     const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
@@ -34,11 +29,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Se non abbiamo orderId, non blocchiamo il gioco:
+    // la ruota ha già girato, semplicemente non aggiorniamo l'ordine.
+    if (!orderId) {
+      console.warn(
+        "spin/init chiamato SENZA orderId. Salto aggiornamento ordine."
+      );
+      return NextResponse.json({
+        ok: true,
+        skipped: "missing-order-id",
+      });
+    }
+
     /* ---------------------------------------------------------
-       1) PRENDIAMO I DATI DELL'ORDINE TRAMITE orderId
-       (orderId arriva da {{ order.id }} in Flow → è già un GID)
+       1) RECUPERIAMO L'ORDINE PER ID
     --------------------------------------------------------- */
-    const orderRes = await fetch(
+    const findOrderRes = await fetch(
       `https://${domain}/admin/api/${API_VERSION}/graphql.json`,
       {
         method: "POST",
@@ -53,8 +59,8 @@ export async function POST(req: NextRequest) {
                 id
                 name
                 note
-                email
                 customer { email }
+                email
               }
             }
           `,
@@ -63,11 +69,11 @@ export async function POST(req: NextRequest) {
       }
     );
 
-    const orderJson = await orderRes.json();
-    const orderNode = orderJson?.data?.order ?? null;
+    const findJson = await findOrderRes.json();
+    const orderNode = findJson?.data?.order ?? null;
 
     if (!orderNode) {
-      console.error("Order not found for id", orderId, orderJson);
+      console.error("Order not found for orderId", orderId, findJson);
       return NextResponse.json(
         { error: "Order not found" },
         { status: 404 }
@@ -75,13 +81,13 @@ export async function POST(req: NextRequest) {
     }
 
     /* ---------------------------------------------------------
-       2) NOTA INTERNA NELL'ORDINE (PER VOI)
+       2) NOTA INTERNA NELL'ORDINE
     --------------------------------------------------------- */
     const baseNote: string = orderNode.note || "";
 
     const lines: string[] = [];
     lines.push("🎡 Ruota Mistery Kilo:");
-    if (orderedKg) lines.push(`- Kg ordinati (flow): ${orderedKg.toFixed(2)} kg`);
+    if (orderedKg) lines.push(`- Kg ordinati: ${orderedKg.toFixed(2)} kg`);
     lines.push(`- Kg bonus vinti: ${bonusKg.toFixed(2)} kg`);
     if (orderedKg) {
       lines.push(
@@ -126,7 +132,7 @@ export async function POST(req: NextRequest) {
     /* ---------------------------------------------------------
        3) COMMENTO IN TIMELINE + EMAIL AL CLIENTE
     --------------------------------------------------------- */
-    const customerEmail: string =
+    const customerEmail =
       orderNode.customer?.email || orderNode.email || "";
 
     if (customerEmail) {
