@@ -12,11 +12,95 @@ type Lang = 'it' | 'en' | 'es' | 'fr' | 'de';
 type TabTier = 'std' | 'prm'; // solo per i tab UI (Standard/Premium)
 
 const LABELS: Record<Lang, any> = {
-  it: { standard: 'Standard', premium: 'Premium', add: 'Aggiungi al carrello', kg: 'kg', perkg: '€/kg' },
-  en: { standard: 'Standard', premium: 'Premium', add: 'Add to cart', kg: 'kg', perkg: '€/kg' },
-  es: { standard: 'Standard', premium: 'Premium', add: 'Añadir al carrito', kg: 'kg', perkg: '€/kg' },
-  fr: { standard: 'Standard', premium: 'Premium', add: 'Ajouter au panier', kg: 'kg', perkg: '€/kg' },
-  de: { standard: 'Standard', premium: 'Premium', add: 'In den Warenkorb', kg: 'kg', perkg: '€/kg' },
+  it: {
+    standard: 'Standard',
+    premium: 'Premium',
+    add: 'Aggiungi al carrello',
+    kg: 'kg',
+    perkg: '€/kg',
+    sectionTitleMain: 'Pesa il mistero,',
+    sectionTitleAccent: 'spacchetta la sorpresa!',
+    sectionSubtitle1: 'Standard o Premium? 1 kg o 10 kg? Scegli tu.',
+    sectionSubtitle2:
+      'Ogni box recupera pacchi che altrimenti finirebbero nello smaltimento: meno rifiuti, meno CO₂, più valore estratto da ciò che esiste già.',
+    bullet1: 'Contenuto misto – sorpresa',
+    bullet2: 'Peso netto (toll. ±3%)',
+    bullet3: 'Sigillo con ID lotto e data',
+    badgeStd: 'Perfetta per iniziare',
+    badgePrm: 'Per chi vuole il massimo',
+  },
+  en: {
+    standard: 'Standard',
+    premium: 'Premium',
+    add: 'Add to cart',
+    kg: 'kg',
+    perkg: '€/kg',
+    sectionTitleMain: 'Weigh the mystery,',
+    sectionTitleAccent: 'unbox the surprise!',
+    sectionSubtitle1:
+      'Standard or Premium? 1 kg or 10 kg? You decide.',
+    sectionSubtitle2:
+      'Each box gives a second life to parcels that would otherwise be discarded: less waste, less CO₂, more value from what already exists.',
+    bullet1: 'Mixed contents – pure surprise',
+    bullet2: 'Net weight (±3% tolerance)',
+    bullet3: 'Seal with batch ID and date',
+    badgeStd: 'Perfect to start',
+    badgePrm: 'For those who want more',
+  },
+  es: {
+    standard: 'Standard',
+    premium: 'Premium',
+    add: 'Añadir al carrito',
+    kg: 'kg',
+    perkg: '€/kg',
+    sectionTitleMain: 'Pesa el misterio,',
+    sectionTitleAccent: '¡desempaqueta la sorpresa!',
+    sectionSubtitle1:
+      '¿Standard o Premium? ¿1 kg o 10 kg? Tú eliges.',
+    sectionSubtitle2:
+      'Cada caja recupera paquetes que de otro modo acabarían desechados: menos residuos, menos CO₂ y más valor extraído de lo que ya existe.',
+    bullet1: 'Contenido mixto – sorpresa',
+    bullet2: 'Peso neto (tolerancia ±3%)',
+    bullet3: 'Precinto con ID de lote y fecha',
+    badgeStd: 'Perfecta para empezar',
+    badgePrm: 'Para quienes quieren más',
+  },
+  fr: {
+    standard: 'Standard',
+    premium: 'Premium',
+    add: 'Ajouter au panier',
+    kg: 'kg',
+    perkg: '€/kg',
+    sectionTitleMain: 'Pèse le mystère,',
+    sectionTitleAccent: 'déballes la surprise !',
+    sectionSubtitle1:
+      'Standard ou Premium ? 1 kg ou 10 kg ? À toi de choisir.',
+    sectionSubtitle2:
+      'Chaque box redonne vie à des colis qui auraient fini jetés : moins de déchets, moins de CO₂, plus de valeur extraite de l’existant.',
+    bullet1: 'Contenu varié – surprise',
+    bullet2: 'Poids net (tolérance ±3 %)',
+    bullet3: 'Scellé avec ID de lot et date',
+    badgeStd: 'Parfait pour commencer',
+    badgePrm: 'Pour ceux qui en veulent plus',
+  },
+  de: {
+    standard: 'Standard',
+    premium: 'Premium',
+    add: 'In den Warenkorb',
+    kg: 'kg',
+    perkg: '€/kg',
+    sectionTitleMain: 'Wiege das Geheimnis,',
+    sectionTitleAccent: 'pack die Überraschung aus!',
+    sectionSubtitle1:
+      'Standard oder Premium? 1 kg oder 10 kg? Du entscheidest.',
+    sectionSubtitle2:
+      'Jede Box rettet Pakete, die sonst entsorgt würden: weniger Müll, weniger CO₂ und mehr Wert aus dem, was schon da ist.',
+    bullet1: 'Gemischter Inhalt – Überraschung',
+    bullet2: 'Nettogewicht (Toleranz ±3 %)',
+    bullet3: 'Siegel mit Posten-ID und Datum',
+    badgeStd: 'Perfekt zum Start',
+    badgePrm: 'Für alle, die mehr wollen',
+  },
 };
 
 const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
@@ -31,33 +115,50 @@ function priceForKg(weight: number, tier: TabTier) {
   return { perKg, total: +(perKg * weight).toFixed(2) };
 }
 
-/** CO₂ indicativa evitata per kg (stima) */
-const co2ByKg: Record<Kg, string> = {
-  1: '≈0,25 kg di CO₂ evitati',
-  2: '≈0,5 kg di CO₂ evitati',
-  3: '≈0,75 kg di CO₂ evitati',
-  5: '≈1,25 kg di CO₂ evitati',
-  10: '≈2,5 kg di CO₂ evitati',
+/** CO₂ indicativa evitata per kg (stima), per lingua */
+const co2ByKg: Record<Lang, Record<Kg, string>> = {
+  it: {
+    1: '≈0,25 kg di CO₂ evitati',
+    2: '≈0,5 kg di CO₂ evitati',
+    3: '≈0,75 kg di CO₂ evitati',
+    5: '≈1,25 kg di CO₂ evitati',
+    10: '≈2,5 kg di CO₂ evitati',
+  },
+  en: {
+    1: '≈0.25 kg of CO₂ avoided',
+    2: '≈0.5 kg of CO₂ avoided',
+    3: '≈0.75 kg of CO₂ avoided',
+    5: '≈1.25 kg of CO₂ avoided',
+    10: '≈2.5 kg of CO₂ avoided',
+  },
+  es: {
+    1: '≈0,25 kg de CO₂ evitados',
+    2: '≈0,5 kg de CO₂ evitados',
+    3: '≈0,75 kg de CO₂ evitados',
+    5: '≈1,25 kg de CO₂ evitados',
+    10: '≈2,5 kg de CO₂ evitados',
+  },
+  fr: {
+    1: '≈0,25 kg de CO₂ évités',
+    2: '≈0,5 kg de CO₂ évités',
+    3: '≈0,75 kg de CO₂ évités',
+    5: '≈1,25 kg de CO₂ évités',
+    10: '≈2,5 kg de CO₂ évités',
+  },
+  de: {
+    1: '≈0,25 kg CO₂ eingespart',
+    2: '≈0,5 kg CO₂ eingespart',
+    3: '≈0,75 kg CO₂ eingespart',
+    5: '≈1,25 kg CO₂ eingespart',
+    10: '≈2,5 kg CO₂ eingespart',
+  },
 };
 
-/** Gradients coerenti con background verde/midnight */
-const silverCards = [
-  'from-[#e3e8ea]/90 to-[#b7c0c6]/90',
-  'from-[#d7dde2]/90 to-[#a9b1b7]/90',
-  'from-[#e6e6e6]/90 to-[#bfbfbf]/90',
-];
-
-const goldCards = [
-  'from-[#f6e27a]/90 to-[#d4af37]/90',
-  'from-[#f9e79f]/90 to-[#c9a14b]/90',
-  'from-[#f7d774]/90 to-[#d4b35a]/90',
-];
-
-/** Bottoni */
-const silverBtn =
-  'bg-gradient-to-r from-[#f0f2f5] to-[#c9d0d6] text-[#0f1216] font-extrabold rounded-xl px-5 py-3 shadow-[0_10px_30px_rgba(180,190,200,.25)] ring-1 ring-white/40 hover:shadow-[0_16px_40px_rgba(180,190,200,.35)] transition';
-const goldBtn =
-  'bg-gradient-to-r from-[#f6e27a] to-[#d4af37] text-[#1a1a1a] font-extrabold rounded-xl px-5 py-3 shadow-[0_10px_30px_rgba(212,175,55,.25)] ring-1 ring-yellow-100/60 hover:shadow-[0_16px_40px_rgba(212,175,55,.35)] transition';
+const euro = (n: number) =>
+  n.toLocaleString('it-IT', {
+    style: 'currency',
+    currency: 'EUR',
+  });
 
 export default function ProductsTabs({ lang = 'it' as Lang }) {
   const [tab, setTab] = useState<TabTier>('std');
@@ -65,26 +166,29 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
 
   const supported = ['it', 'en', 'es', 'fr', 'de'] as const;
   const normalized = String(lang).toLowerCase();
-  const safeLang: Lang = (supported as readonly string[]).includes(normalized as any)
+  const safeLang: Lang = (supported as readonly string[]).includes(
+    normalized as any,
+  )
     ? (normalized as Lang)
     : 'it';
 
   const L = LABELS[safeLang];
 
   // kind “umano” per UI
-  const currentKind: 'Standard' | 'Premium' = tab === 'std' ? 'Standard' : 'Premium';
+  const currentKind: 'Standard' | 'Premium' =
+    tab === 'std' ? 'Standard' : 'Premium';
 
-  /** 
-   * Ora passiamo *shopifyId* e *qty* al carrello.
-   */
-  function handleAddToCart(kind: 'Standard' | 'Premium', kg: Kg, perKg: number) {
+  function handleAddToCart(
+    kind: 'Standard' | 'Premium',
+    kg: Kg,
+    perKg: number,
+  ) {
     const tier: Tier = kind === 'Standard' ? 'standard' : 'premium';
 
-    // Shopify variant ID da SHOPIFY_VARIANTS
     const shopifyId = SHOPIFY_VARIANTS[tier][kg];
 
     addItem({
-      id: `${tier}-${kg}`,     // id interno carrello
+      id: `${tier}-${kg}`, // id interno carrello
       title: `${kind} · ${kg} kg`,
       tier,
       weightKg: kg,
@@ -99,14 +203,12 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
       {/* Titolo sezione */}
       <div className="text-center max-w-2xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-extrabold mb-2">
-          Pesa il mistero, <span className="text-white/80">spacchetta la sorpresa!</span>
+          {L.sectionTitleMain}{' '}
+          <span className="text-white/80">{L.sectionTitleAccent}</span>
         </h2>
-        <p className="text-white/70">
-          Standard o Premium? 1 kg o 10 kg? Scegli tu.
-        </p>
+        <p className="text-white/70">{L.sectionSubtitle1}</p>
         <p className="text-white/70 mt-2 text-sm md:text-base">
-          Ogni box recupera pacchi che altrimenti finirebbero nello smaltimento: meno rifiuti,
-          meno CO₂, più valore estratto da ciò che esiste già.
+          {L.sectionSubtitle2}
         </p>
       </div>
 
@@ -138,88 +240,111 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
 
       {/* Grid prodotti */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {WEIGHTS.map((w, i) => {
+        {WEIGHTS.map((w) => {
           const { perKg, total } = priceForKg(w, tab);
-          const src = `/videos/packs/${tab === 'std' ? 'std' : 'prm'}-${w}.mp4`;
-          const gradient =
-            tab === 'std'
-              ? `bg-gradient-to-br ${silverCards[i % silverCards.length]}`
-              : `bg-gradient-to-br ${goldCards[i % goldCards.length]}`;
-
+          const src = `/videos/packs/${
+            tab === 'std' ? 'std' : 'prm'
+          }-${w}.mp4`;
           const kg = w as Kg;
+          const isStd = tab === 'std';
+
+          const co2Text = co2ByKg[safeLang][kg];
 
           return (
             <article
               key={`${tab}-${w}`}
               id={tab === 'std' && w === 10 ? 'buy-standard-10' : undefined}
-              className={[
-                'relative rounded-2xl border',
-                'border-white/10',
-                gradient,
-                'before:absolute before:inset-0 before:bg-[#0f1216]/40 before:rounded-2xl before:pointer-events-none',
-                'shadow-[0_20px_60px_rgba(0,0,0,.25)] hover:shadow-[0_30px_80px_rgba(0,0,0,.35)]',
-                'transition-transform duration-200 hover:-translate-y-0.5',
-                'p-4',
-              ].join(' ')}
+              className={`card ${
+                isStd ? 'card--standard' : 'card--premium'
+              }`}
             >
-              {/* video */}
-              <div className="relative rounded-xl overflow-hidden border border-white/20 bg-black">
-                <video
-                  className="block w-full h-full object-cover aspect-[16/9] drop-shadow-[0_24px_40px_rgba(0,0,0,.45)]"
-                  src={src}
-                  muted
-                  autoPlay
-                  loop
-                  playsInline
-                />
-                <div className="pointer-events-none absolute inset-0 ring-1 ring-white/15 rounded-xl" />
+              {/* badge */}
+              <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
+                <span>
+                  {isStd ? L.badgeStd : L.badgePrm}
+                </span>
+                <span
+                  className={`pill ${
+                    isStd ? 'pill--std' : 'pill--prm'
+                  }`}
+                >
+                  {w} {L.kg} ·{' '}
+                  {isStd ? L.standard : L.premium}
+                </span>
+              </div>
+
+              {/* video stile products page */}
+              <div
+                className={`media-wrap ${
+                  isStd ? 'media-wrap--std' : 'media-wrap--prm'
+                }`}
+              >
+                <div className="ratio-16-9">
+                  <video
+                    className="media rounded-[12px] object-cover"
+                    src={src}
+                    muted
+                    autoPlay
+                    loop
+                    playsInline
+                    preload="metadata"
+                  />
+                </div>
               </div>
 
               {/* testo + prezzo */}
-              <div className="mt-4 relative z-10">
-                <div className="flex items-start justify-between gap-3">
-                  <h3
-                    className={[
-                      'text-lg font-extrabold tracking-tight',
-                      tab === 'prm'
-                        ? 'text-[#1a1a1a] drop-shadow-[0_1px_0_rgba(255,255,255,.35)]'
-                        : 'text-[#0f1216]',
-                    ].join(' ')}
-                  >
-                    {tab === 'std' ? L?.standard || 'Standard' : L?.premium || 'Premium'} · {w}{' '}
-                    {L?.kg || 'kg'}
-                  </h3>
+              <div className="mt-4 flex items-start justify-between gap-4">
+                <h3 className="product-title text-xl">
+                  {isStd ? L.standard : L.premium}{' '}
+                  <span className="dot" /> {w} {L.kg}
+                </h3>
 
-                  <div className="text-right">
-                    <div
-                      className={[
-                        'text-2xl md:text-3xl font-extrabold',
-                        tab === 'prm' ? 'text-[#1a1a1a]' : 'text-[#0f1216]',
-                      ].join(' ')}
-                    >
-                      {total.toFixed(2)} €
-                    </div>
-                    <div className="text-black/60 text-sm">
-                      ({perKg.toFixed(2)} {L?.perkg || '€/kg'})
-                    </div>
+                <div className="text-right space-y-1">
+                  <div
+                    className={`price-figure ${
+                      isStd
+                        ? 'price-figure--std'
+                        : 'price-figure--prm'
+                    } text-3xl`}
+                  >
+                    {euro(total)}
                   </div>
+                  <div className="price-perkg">
+                    ({perKg.toFixed(2)} {L.perkg || '€/kg'})
+                  </div>
+                  {co2Text && (
+                    <div className="text-[0.7rem] text-emerald-200/90">
+                      ♻ {co2Text}
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                <ul className="mt-3 text-black/70 text-sm space-y-1">
-                  <li>Contenuto misto – sorpresa</li>
-                  <li>Peso netto (toll. ±3%)</li>
-                  <li>Sigillo con ID lotto e data</li>
-                  <li>{co2ByKg[kg]}</li>
-                </ul>
+              {/* bullets */}
+              <ul className="bullets mt-3 space-y-1">
+                <li>{L.bullet1}</li>
+                <li>{L.bullet2}</li>
+                <li>{L.bullet3}</li>
+                <li>{co2Text}</li>
+              </ul>
 
-                <div className="mt-4">
-                  <button
-                    className={tab === 'prm' ? goldBtn : silverBtn}
-                    onClick={() => handleAddToCart(currentKind, kg, perKg)}
-                  >
-                    {L?.add || 'Aggiungi al carrello'}
-                  </button>
-                </div>
+              {/* bottone */}
+              <div className="mt-4">
+                <button
+                  className={`btn w-full ${
+                    isStd ? 'btn-silver' : 'btn-gold'
+                  }`}
+                  onClick={() =>
+                    handleAddToCart(
+                      currentKind,
+                      kg,
+                      perKg,
+                    )
+                  }
+                  type="button"
+                >
+                  {L?.add || 'Aggiungi al carrello'}
+                </button>
               </div>
             </article>
           );
