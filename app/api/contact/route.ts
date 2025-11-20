@@ -1,4 +1,3 @@
-// app/api/contact/route.ts
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
@@ -20,19 +19,13 @@ export async function POST(req: Request) {
       );
     }
 
-    // oggetto “di default” se il campo subject è vuoto
-    const effectiveSubject =
-      subject || "Nuovo messaggio dal sito KiloMystery";
-
-    // per evitare problemi di typing con reply_to usiamo `as any`
     await resend.emails.send({
-      from: "Support KiloMystery <support@kilomystery.com>",
-      to: ["gestionekilomystery@gmail.com"],
-      // così quando clicchi "Rispondi" rispondi al cliente
-      reply_to: email,
-      subject: effectiveSubject,
+      from: "support@kilomystery.com",
+      to: "gestionekilomystery@gmail.com",
+      replyt_o: [email],   // ← IMPORTANTISSIMO: DEVE ESSERE UN ARRAY
+      subject: subject || "Nuovo messaggio dal sito KiloMystery",
       text: `
-Nuovo messaggio dal sito KiloMystery
+Nuovo messaggio dal sito KiloMystery:
 
 Nome: ${name}
 Email: ${email}
@@ -42,15 +35,11 @@ Oggetto: ${subject || "(nessuno)"}
 Messaggio:
 ${message}
       `,
-      // se vuoi, puoi aggiungere qui anche html: "<p>…</p>"
-    } as any);
+    });
 
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Contact API error:", err);
-    return NextResponse.json(
-      { error: "Server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
