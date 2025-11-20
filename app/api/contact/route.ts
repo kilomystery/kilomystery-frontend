@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-// Client Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
@@ -21,8 +20,15 @@ export async function POST(req: Request) {
     }
 
     await resend.emails.send({
-      from: "KiloMystery <onboarding@resend.dev>",
-      to: "kilomystery2025@gmail.com",
+      // mittente: dominio gestito da Resend (subdominio "send")
+      from: "KiloMystery Support <support@send.kilomystery.com>",
+
+      // destinatario interno: la casella che vuoi leggere tu
+      to: ["support@kilomystery.com"],
+
+      // così quando clicchi "Rispondi" va al cliente
+      replyTo: email,
+
       subject: subject || "Nuovo messaggio dal sito KiloMystery",
       text: `
 Nuovo messaggio dal sito:
@@ -40,6 +46,9 @@ ${message}
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Contact API error:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Server error" },
+      { status: 500 }
+    );
   }
 }
