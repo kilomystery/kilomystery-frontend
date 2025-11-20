@@ -1,15 +1,61 @@
 "use client";
 
-const items = [
-  "🎁 Mystery box al kg",
-  "KILOMYSTERY.COM",
-  "🚚 Spedizione tracciata",
-  "🔒 Pagamenti sicuri",
-  "♻️ Seconda vita ai pacchi",
-  "🇮🇹 Spedizione in tutta Italia",
-];
+type Lang = "it" | "en" | "es" | "fr" | "de";
 
-export default function SectionMarquee() {
+const LABELS: Record<Lang, string[]> = {
+  it: [
+    "🎁 Mystery box al kg",
+    "KILOMYSTERY.COM",
+    "🚚 Spedizione tracciata",
+    "🔒 Pagamenti sicuri",
+    "♻️ Seconda vita ai pacchi",
+    "🇮🇹 Spedizione in tutta Italia",
+  ],
+  en: [
+    "🎁 Mystery boxes by the kilo",
+    "KILOMYSTERY.COM",
+    "🚚 Tracked shipping",
+    "🔒 Secure payments",
+    "♻️ Second life for parcels",
+    "🇮🇹 Shipping across Italy",
+  ],
+  es: [
+    "🎁 Mystery box al kilo",
+    "KILOMYSTERY.COM",
+    "🚚 Envío con seguimiento",
+    "🔒 Pagos seguros",
+    "♻️ Segunda vida para los paquetes",
+    "🇮🇹 Envíos a toda Italia",
+  ],
+  fr: [
+    "🎁 Mystery box au kilo",
+    "KILOMYSTERY.COM",
+    "🚚 Livraison suivie",
+    "🔒 Paiements sécurisés",
+    "♻️ Seconde vie pour les colis",
+    "🇮🇹 Livraison dans toute l’Italie",
+  ],
+  de: [
+    "🎁 Mystery Box zum Kilo-Preis",
+    "KILOMYSTERY.COM",
+    "🚚 Versand mit Tracking",
+    "🔒 Sichere Zahlungen",
+    "♻️ Zweites Leben für Pakete",
+    "🇮🇹 Versand in ganz Italien",
+  ],
+};
+
+export default function SectionMarquee({ lang = "it" as Lang }) {
+  const supported = ["it", "en", "es", "fr", "de"] as const;
+  const normalized = String(lang).toLowerCase();
+  const safeLang: Lang = (supported as readonly string[]).includes(
+    normalized as any
+  )
+    ? (normalized as Lang)
+    : "it";
+
+  const items = LABELS[safeLang];
+
   return (
     <div className="relative overflow-hidden rounded-full border border-white/10 bg-gradient-to-r from-white/10 via-transparent to-white/10 py-2">
       {/* Overlay leggero per glow */}
@@ -18,13 +64,19 @@ export default function SectionMarquee() {
       <div className="marquee-outer relative">
         <div className="marquee-inner">
           {items.map((text, i) => (
-            <span key={`set1-${i}`} className="mx-6 text-xs sm:text-sm tracking-wide font-semibold">
+            <span
+              key={`set1-${i}`}
+              className="mx-6 text-xs sm:text-sm tracking-wide font-semibold"
+            >
               {text}
             </span>
           ))}
           {/* seconda copia per loop continuo */}
           {items.map((text, i) => (
-            <span key={`set2-${i}`} className="mx-6 text-xs sm:text-sm tracking-wide font-semibold">
+            <span
+              key={`set2-${i}`}
+              className="mx-6 text-xs sm:text-sm tracking-wide font-semibold"
+            >
               {text}
             </span>
           ))}
