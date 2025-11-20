@@ -89,11 +89,9 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Le nostre mystery box nascono da pacchi smarriti, resi non reclamati e stock fermi. Invece di finire in discarica o in inceneritore, quei prodotti tornano in circolo sotto forma di unboxing sorpresa. ♻️",
     sustainP2:
       "Così trasformiamo uno spreco in un gioco, riducendo l'impatto ambientale legato allo smaltimento e alla produzione di nuova merce, dando una seconda vita a ciò che esiste già. 🌿",
-    sustainBullet1:
-      "Seconda vita ai pacchi: meno rifiuti da smaltire.",
+    sustainBullet1: "Seconda vita ai pacchi: meno rifiuti da smaltire.",
     sustainBullet2: "CO₂ evitata rispetto a discarica e incenerimento.",
-    sustainBullet3:
-      "Packaging essenziale e riciclabile dove possibile.",
+    sustainBullet3: "Packaging essenziale e riciclabile dove possibile.",
     sustainBullet4:
       "Lotti tracciati: sai sempre da dove arriva ciò che spacchetti.",
 
@@ -105,8 +103,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     faq2A:
       "No, ma puoi scegliere peso e tipologia (Standard/Premium). La selezione è curata per varietà e qualità.",
     faq3Q: "Tempi di spedizione?",
-    faq3A:
-      "Di solito 24–72h. Ricevi il tracking appena il pacco parte.",
+    faq3A: "Di solito 24–72h. Ricevi il tracking appena il pacco parte.",
     faq4Q: "I prodotti sono nuovi o usati?",
     faq4A:
       "I prodotti possono essere nuovi, usati o provenire da resi e stock fermi. Possono presentare segni d'uso o packaging non perfetto, ma vengono selezionati per garantire un'esperienza di unboxing interessante.",
@@ -130,8 +127,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     eventsCard2Text:
       "Uno spazio dedicato per raccontarti come funzionano i lotti, perché evitiamo sprechi e come funziona l'economia circolare dietro le box.",
     eventsCard3Kicker: "Community",
-    eventsCard3Title:
-      "Incontra altri appassionati di mystery box 🤝",
+    eventsCard3Title: "Incontra altri appassionati di mystery box 🤝",
     eventsCard3Text:
       "Condividi l'esperienza, scopri cosa hanno trovato gli altri, scatta foto con la tua box e porta a casa un ricordo.",
 
@@ -166,12 +162,9 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Our mystery boxes come from lost parcels, unclaimed returns and idle stock. Instead of ending up in landfill or incinerators, these products re-enter circulation as surprise unboxings. ♻️",
     sustainP2:
       "This way we turn waste into a game, reducing the environmental impact linked to disposal and new production by giving a second life to what already exists. 🌿",
-    sustainBullet1:
-      "Second life for parcels: less waste to dispose of.",
-    sustainBullet2:
-      "CO₂ avoided compared to landfill and incineration.",
-    sustainBullet3:
-      "Essential, recyclable packaging wherever possible.",
+    sustainBullet1: "Second life for parcels: less waste to dispose of.",
+    sustainBullet2: "CO₂ avoided compared to landfill and incineration.",
+    sustainBullet3: "Essential, recyclable packaging wherever possible.",
     sustainBullet4:
       "Traceable batches: you always know where what you unbox comes from.",
 
@@ -188,8 +181,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     faq4Q: "Are the products new or used?",
     faq4A:
       "Products may be new, used or come from returns and idle stock. They may show signs of use or imperfect packaging, but we select them to ensure an interesting unboxing experience.",
-    faq5Q:
-      "Is the value of the box always higher than the price?",
+    faq5Q: "Is the value of the box always higher than the price?",
     faq5A:
       "The experience is designed as a mystery: perceived value can vary from box to box. On average we aim to offer a good value for money, but we cannot guarantee a precise minimum value for every single box.",
     faq6Q: "Can I pick up a box at a pop-up event?",
@@ -201,18 +193,15 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Come and meet us in person: pop-up events, fairs and temporary corners where you can see the mystery boxes, talk to the team and feel the KiloMystery community vibe. ✨",
     eventsCta: "View events calendar",
     eventsCard1Kicker: "City pop-ups",
-    eventsCard1Title:
-      "Stops in major Italian cities 🇮🇹",
+    eventsCard1Title: "Stops in major Italian cities 🇮🇹",
     eventsCard1Text:
       "Find out when we’ll be near you, drop by the corner and discover the KiloMystery world up close.",
     eventsCard2Kicker: "Sustainability area",
-    eventsCard2Title:
-      "See how we recover parcels and stock ♻️",
+    eventsCard2Title: "See how we recover parcels and stock ♻️",
     eventsCard2Text:
       "A dedicated space where we explain how batches work, why we avoid waste and how the circular economy behind the boxes works.",
     eventsCard3Kicker: "Community",
-    eventsCard3Title:
-      "Meet other mystery box fans 🤝",
+    eventsCard3Title: "Meet other mystery box fans 🤝",
     eventsCard3Text:
       "Share the experience, see what others found, take photos with your box and go home with a memory.",
 
@@ -240,11 +229,9 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     howCard2Bullet1: "Confirmación inmediata",
     howCard2Bullet2: "Atención dedicada",
     howCard3Title: "Envío con seguimiento",
-    howCard3Subtitle:
-      "Seguimiento normalmente en 24–72 horas.",
+    howCard3Subtitle: "Seguimiento normalmente en 24–72 horas.",
     howCard3Bullet1: "Embalaje seguro",
-    howCard3Bullet2:
-      "La sorpresa llega al abrir la caja",
+    howCard3Bullet2: "La sorpresa llega al abrir la caja",
 
     sustainTitle: "Nuestro compromiso con la sostenibilidad",
     sustainP1:
@@ -277,13 +264,11 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "¿El valor de la caja es siempre superior al precio?",
     faq5A:
       "La experiencia está pensada como una mystery: el valor percibido puede variar de una caja a otra. De media buscamos ofrecer una buena relación calidad/precio, pero no podemos garantizar un valor mínimo fijo para cada caja.",
-    faq6Q:
-      "¿Puedo recoger la caja en un evento pop-up?",
+    faq6Q: "¿Puedo recoger la caja en un evento pop-up?",
     faq6A:
       "En algunos eventos es posible comprar las mystery box directamente allí. Consulta siempre la página de eventos para ver los detalles actualizados sobre las modalidades de venta.",
 
-    eventsTitle:
-      "Descubre nuestros próximos eventos pop-up",
+    eventsTitle: "Descubre nuestros próximos eventos pop-up",
     eventsSubtitle:
       "Ven a conocernos en persona: eventos pop-up, ferias y corners temporales donde puedes ver las mystery box, hablar con el equipo y vivir el ambiente de la comunidad KiloMystery. ✨",
     eventsCta: "Ver calendario de eventos",
@@ -330,8 +315,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     howCard3Subtitle:
       "Numéro de suivi en général sous 24–72 h.",
     howCard3Bullet1: "Emballage sécurisé",
-    howCard3Bullet2:
-      "La surprise commence à l’ouverture",
+    howCard3Bullet2: "La surprise commence à l’ouverture",
 
     sustainTitle: "Notre engagement pour la durabilité",
     sustainP1:
@@ -357,8 +341,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     faq3Q: "Quels sont les délais de livraison ?",
     faq3A:
       "En général 24–72 h. Tu reçois le numéro de suivi dès que le colis est expédié.",
-    faq4Q:
-      "Les produits sont-ils neufs ou d’occasion ?",
+    faq4Q: "Les produits sont-ils neufs ou d’occasion ?",
     faq4A:
       "Les produits peuvent être neufs, d’occasion ou issus de retours et de stocks dormants. Ils peuvent présenter des marques d’usage ou un emballage imparfait, mais ils sont sélectionnés pour garantir une expérience d’unboxing intéressante.",
     faq5Q:
@@ -370,8 +353,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     faq6A:
       "Lors de certains événements, il est possible d’acheter les mystery box sur place. Consulte toujours la page événements pour les détails à jour sur les modalités de vente.",
 
-    eventsTitle:
-      "Découvre nos prochains événements pop-up",
+    eventsTitle: "Découvre nos prochains événements pop-up",
     eventsSubtitle:
       "Viens nous voir en vrai : événements pop-up, salons et corners temporaires où tu peux découvrir les mystery box, parler avec l’équipe et vivre l’ambiance de la communauté KiloMystery. ✨",
     eventsCta: "Voir le calendrier des événements",
@@ -418,8 +400,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     howCard3Subtitle:
       "Sendungsverfolgung in der Regel innerhalb von 24–72 Stunden.",
     howCard3Bullet1: "Sichere Verpackung",
-    howCard3Bullet2:
-      "Die Überraschung beginnt beim Auspacken",
+    howCard3Bullet2: "Die Überraschung beginnt beim Auspacken",
 
     sustainTitle: "Unser Engagement für Nachhaltigkeit",
     sustainP1:
@@ -445,21 +426,17 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     faq3Q: "Wie lange dauert der Versand?",
     faq3A:
       "In der Regel 24–72 Stunden. Du erhältst die Sendungsnummer, sobald das Paket auf dem Weg ist.",
-    faq4Q:
-      "Sind die Produkte neu oder gebraucht?",
+    faq4Q: "Sind die Produkte neu oder gebraucht?",
     faq4A:
       "Die Produkte können neu, gebraucht oder aus Retouren und ruhenden Beständen sein. Sie können Gebrauchsspuren oder eine nicht perfekte Verpackung aufweisen, werden aber so ausgewählt, dass das Unboxing spannend bleibt.",
-    faq5Q:
-      "Ist der Wert der Box immer höher als der Preis?",
+    faq5Q: "Ist der Wert der Box immer höher als der Preis?",
     faq5A:
       "Die Erfahrung ist als Mystery gedacht: Der wahrgenommene Wert kann von Box zu Box variieren. Im Durchschnitt zielen wir auf ein faires Preis-Leistungs-Verhältnis ab, können aber keinen festen Mindestwert pro Box garantieren.",
-    faq6Q:
-      "Kann ich die Box auf einem Pop-up-Event abholen?",
+    faq6Q: "Kann ich die Box auf einem Pop-up-Event abholen?",
     faq6A:
       "Auf einigen Events kannst du Mystery Boxen direkt vor Ort kaufen. Sieh dir dafür immer die Event-Seite mit den aktuellen Verkaufs-Infos an.",
 
-    eventsTitle:
-      "Entdecke unsere nächsten Pop-up-Events",
+    eventsTitle: "Entdecke unsere nächsten Pop-up-Events",
     eventsSubtitle:
       "Komm vorbei und triff uns live: Pop-up-Events, Messen und temporäre Corner, bei denen du die Mystery Boxen sehen, mit dem Team sprechen und die KiloMystery-Community erleben kannst. ✨",
     eventsCta: "Eventkalender ansehen",
@@ -469,13 +446,11 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     eventsCard1Text:
       "Finde heraus, wann wir in deiner Nähe sind, besuche unseren Corner und entdecke die Welt von KiloMystery aus nächster Nähe.",
     eventsCard2Kicker: "Nachhaltigkeitsbereich",
-    eventsCard2Title:
-      "So retten wir Pakete und Lagerbestände ♻️",
+    eventsCard2Title: "So retten wir Pakete und Lagerbestände ♻️",
     eventsCard2Text:
       "Ein eigener Bereich, in dem wir erklären, wie die Posten funktionieren, warum wir Abfall vermeiden und wie die Kreislaufwirtschaft hinter den Boxen aussieht.",
     eventsCard3Kicker: "Community",
-    eventsCard3Title:
-      "Triff andere Mystery-Box-Fans 🤝",
+    eventsCard3Title: "Triff andere Mystery-Box-Fans 🤝",
     eventsCard3Text:
       "Teile deine Erfahrungen, sieh, was andere gefunden haben, mach Fotos mit deiner Box und nimm eine Erinnerung mit nach Hause.",
 
@@ -506,6 +481,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               width={320}
               height={180}
               className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+              priority
             />
           </div>
 
@@ -521,7 +497,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
             {t.heroSubtitle}
           </p>
 
-          {/* CTA pill “stilosi” (solo Tailwind inline) */}
+          {/* CTA pill */}
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a
               href={`/${lang}/products`}
@@ -550,8 +526,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           <ProductsTabs lang={lang as any} />
         </section>
 
-        {/* 🔹 MARQUEE TRA PRODOTTI E COME FUNZIONA */}
-        {/* DOPO */}
+        {/* MARQUEE TRA PRODOTTI E COME FUNZIONA */}
         <section>
           <SectionMarquee lang={lang as any} />
         </section>
@@ -568,9 +543,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               <h3 className="mt-2 text-lg font-extrabold">
                 {t.howCard1Title}
               </h3>
-              <p className="text-white/70">
-                {t.howCard1Subtitle}
-              </p>
+              <p className="text-white/70">{t.howCard1Subtitle}</p>
               <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
                 <li>{t.howCard1Bullet1}</li>
                 <li>{t.howCard1Bullet2}</li>
@@ -582,9 +555,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               <h3 className="mt-2 text-lg font-extrabold">
                 {t.howCard2Title}
               </h3>
-              <p className="text-white/70">
-                {t.howCard2Subtitle}
-              </p>
+              <p className="text-white/70">{t.howCard2Subtitle}</p>
               <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
                 <li>{t.howCard2Bullet1}</li>
                 <li>{t.howCard2Bullet2}</li>
@@ -596,9 +567,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               <h3 className="mt-2 text-lg font-extrabold">
                 {t.howCard3Title}
               </h3>
-              <p className="text-white/70">
-                {t.howCard3Subtitle}
-              </p>
+              <p className="text-white/70">{t.howCard3Subtitle}</p>
               <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
                 <li>{t.howCard3Bullet1}</li>
                 <li>{t.howCard3Bullet2}</li>
@@ -615,9 +584,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           </h2>
           <div className="card space-y-3">
             <p className="text-white/80">{t.sustainP1}</p>
-            <p className="text-white/70 text-sm">
-              {t.sustainP2}
-            </p>
+            <p className="text-white/70 text-sm">{t.sustainP2}</p>
             <ul className="list-disc ps-5 space-y-1 text-white/70 text-sm">
               <li>{t.sustainBullet1}</li>
               <li>{t.sustainBullet2}</li>
@@ -637,58 +604,46 @@ export default function HomePage({ params }: { params: { lang: string } }) {
             <summary className="font-semibold cursor-pointer">
               {t.faq1Q}
             </summary>
-            <p className="text-white/70 mt-2">
-              {t.faq1A}
-            </p>
+            <p className="text-white/70 mt-2">{t.faq1A}</p>
           </details>
 
           <details className="card">
             <summary className="font-semibold cursor-pointer">
               {t.faq2Q}
             </summary>
-            <p className="text-white/70 mt-2">
-              {t.faq2A}
-            </p>
+            <p className="text-white/70 mt-2">{t.faq2A}</p>
           </details>
 
           <details className="card">
             <summary className="font-semibold cursor-pointer">
               {t.faq3Q}
             </summary>
-            <p className="text-white/70 mt-2">
-              {t.faq3A}
-            </p>
+            <p className="text-white/70 mt-2">{t.faq3A}</p>
           </details>
 
           <details className="card">
             <summary className="font-semibold cursor-pointer">
               {t.faq4Q}
             </summary>
-            <p className="text-white/70 mt-2">
-              {t.faq4A}
-            </p>
+            <p className="text-white/70 mt-2">{t.faq4A}</p>
           </details>
 
           <details className="card">
             <summary className="font-semibold cursor-pointer">
               {t.faq5Q}
             </summary>
-            <p className="text-white/70 mt-2">
-              {t.faq5A}
-            </p>
+            <p className="text-white/70 mt-2">{t.faq5A}</p>
           </details>
 
           <details className="card">
             <summary className="font-semibold cursor-pointer">
               {t.faq6Q}
             </summary>
-            <p className="text-white/70 mt-2">
-              {t.faq6A}
-            </p>
+            <p className="text-white/70 mt-2">{t.faq6A}</p>
           </details>
         </section>
 
-        {/* 🔹 SEZIONE EVENTI PRIMA DI CONTATTACI */}
+        {/* EVENTI */}
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -714,9 +669,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
                 {t.eventsCard1Kicker}
               </p>
-              <p className="font-semibold">
-                {t.eventsCard1Title}
-              </p>
+              <p className="font-semibold">{t.eventsCard1Title}</p>
               <p className="text-xs text-white/60 mt-1">
                 {t.eventsCard1Text}
               </p>
@@ -726,9 +679,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
                 {t.eventsCard2Kicker}
               </p>
-              <p className="font-semibold">
-                {t.eventsCard2Title}
-              </p>
+              <p className="font-semibold">{t.eventsCard2Title}</p>
               <p className="text-xs text-white/60 mt-1">
                 {t.eventsCard2Text}
               </p>
@@ -738,9 +689,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
               <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
                 {t.eventsCard3Kicker}
               </p>
-              <p className="font-semibold">
-                {t.eventsCard3Title}
-              </p>
+              <p className="font-semibold">{t.eventsCard3Title}</p>
               <p className="text-xs text-white/60 mt-1">
                 {t.eventsCard3Text}
               </p>
@@ -753,10 +702,8 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           <h2 className="text-2xl md:text-3xl font-extrabold">
             {t.contactTitle}
           </h2>
-          <p className="text-white/70">
-            {t.contactSubtitle}
+          <p className="text-white/70">{t.contactSubtitle}</p>
           <ContactForm lang={lang} />
-
         </section>
       </main>
 
