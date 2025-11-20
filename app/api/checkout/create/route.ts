@@ -5,12 +5,24 @@ const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.m
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 const API_VERSION = "2024-01";
 
+// mappa lingua frontend -> locale Shopify
+const SHOPIFY_LOCALE_MAP: Record<string, string> = {
+  it: "it",
+  en: "en",
+  es: "es",
+  fr: "fr",
+  de: "de",
+};
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const items = body?.items || [];
     const clientTotalKg = body?.totalKg;
     const returnUrl = body?.returnUrl;
+    const lang = body?.lang || "it"; // lingua dal frontend (es. "fr", "en", ...)
+
+    const locale = SHOPIFY_LOCALE_MAP[lang] || "it";
 
     // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
@@ -40,7 +52,9 @@ export async function POST(req: NextRequest) {
         ? clientTotalKg
         : items.reduce(
             (sum: number, i: any) =>
-              sum + (Number(i.weightKg ?? i.kg ?? 0) || 0) * (Number(i.qty ?? 1) || 1),
+              sum +
+              (Number(i.weightKg ?? i.kg ?? 0) || 0) *
+                (Number(i.qty ?? 1) || 1),
             0
           );
 
@@ -81,6 +95,7 @@ export async function POST(req: NextRequest) {
     const cartAttributes: { key: string; value: string }[] = [
       { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
       { key: "orderedKg", value: totalKg.toString() },
+      { key: "lang", value: String(lang) }, // info comoda anche lato Shopify
     ];
 
     if (returnUrl) {
@@ -156,8 +171,12 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 👉 aggiungiamo il locale all'URL del checkout
+    const checkoutUrl = new URL(cart.checkoutUrl);
+    checkoutUrl.searchParams.set("locale", locale);
+
     return NextResponse.json({
-      url: cart.checkoutUrl,
+      url: checkoutUrl.toString(),
     });
   } catch (err: any) {
     return NextResponse.json(
