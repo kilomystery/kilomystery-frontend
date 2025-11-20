@@ -500,9 +500,11 @@ export default function HomePage({ params }: { params: { lang: string } }) {
         <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 pt-10 md:pt-12">
           {/* LOGO */}
           <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
-            <img
+            <Image
               src="/hero/hero.svg"
               alt="KiloMistery"
+              width={320}
+              height={180}
               className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
             />
           </div>
@@ -549,11 +551,10 @@ export default function HomePage({ params }: { params: { lang: string } }) {
         </section>
 
         {/* 🔹 MARQUEE TRA PRODOTTI E COME FUNZIONA */}
-        // DOPO
-<section>
-  <SectionMarquee lang={lang as any} />
-</section>
-
+        {/* DOPO */}
+        <section>
+          <SectionMarquee lang={lang as any} />
+        </section>
 
         {/* COME FUNZIONA */}
         <section id="come-funziona" className="space-y-6">
@@ -606,7 +607,7 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        {/* SOSTENIBILITÀ (TITOLO CAMBIATO + EMOJI) */}
+        {/* SOSTENIBILITÀ */}
         <section className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
             <span>{t.sustainTitle}</span>
