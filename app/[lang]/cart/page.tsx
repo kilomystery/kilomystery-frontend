@@ -59,31 +59,38 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 };
 
 export default function CartPage({ params }: { params: { lang: string } }) {
-  const lang: Lang = normalizeLang(params?.lang);
-  const { items, setQty, removeItem, subtotal } = useCart();
+  const lang = normalizeLang(params?.lang);
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
+  const { items, setQty, removeItem, subtotal } = useCart();
+
   async function goToCheckout() {
-    if (!items.length) return;
+    if (items.length === 0) return;
+
+    const payload = {
+      items: items.map((i) => ({
+        shopifyId: i.shopifyId,
+        qty: i.qty,
+        kg: i.weightKg,
+        tier: i.tier,
+      })),
+      locale: lang,
+    };
 
     const res = await fetch("/api/checkout/create", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items,
-        totalKg: subtotal,
-        locale: lang,
-        returnUrl: `/${lang}/success`
-      }),
+      body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
+    const json = await res.json();
 
-    if (data?.url) {
-      window.location.href = data.url;
-    } else {
-      alert("Errore durante la creazione del checkout");
+    if (!res.ok || !json.url) {
+      alert("Errore durante la creazione del checkout.");
+      return;
     }
+
+    window.location.href = json.url;
   }
 
   return (
@@ -135,9 +142,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
                     <div className="mt-3 flex items-center gap-3">
                       <div className="inline-flex rounded-full border border-white/20 bg-white/10 overflow-hidden text-sm">
-                        <span className="px-3 py-1 text-white/60">
-                          {t.qtyLabel}
-                        </span>
+                        <span className="px-3 py-1 text-white/60">{t.qtyLabel}</span>
                         <button
                           className="px-3 py-1"
                           onClick={() => setQty(item.id, item.qty - 1)}
@@ -167,9 +172,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
             <div className="border-t border-white/10 pt-4 flex justify-between">
               <div className="text-white/60">{t.total}</div>
-              <div className="text-2xl font-extrabold">
-                {subtotal.toFixed(2)} €
-              </div>
+              <div className="text-2xl font-extrabold">{subtotal.toFixed(2)} €</div>
             </div>
 
             <button className="btn btn-brand px-6 py-3" onClick={goToCheckout}>
