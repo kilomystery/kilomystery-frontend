@@ -6,7 +6,6 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import CartIcon from "@/app/components/cart/CartIcon";
-; // 👈 usa il path reale del tuo file
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
 const SUPPORTED: Lang[] = ["it", "en", "es", "fr", "de"];
@@ -21,6 +20,70 @@ const LANGS = [
   { code: "fr", label: "FR", flag: "🇫🇷" },
   { code: "de", label: "DE", flag: "🇩🇪" },
 ] as const;
+
+type Labels = {
+  navProducts: string;
+  navHow: string;
+  navAbout: string;
+  navEvents: string;
+  ariaInstagram: string;
+  ariaTikTokDesktop: string;
+  ariaTikTokMobile: string;
+  ariaOpenMenu: string;
+};
+
+const HEADER_LABELS: Record<Lang, Labels> = {
+  it: {
+    navProducts: "Prodotti",
+    navHow: "Come funziona",
+    navAbout: "Chi siamo",
+    navEvents: "Eventi Pop-Up",
+    ariaInstagram: "Instagram",
+    ariaTikTokDesktop: "TikTok KiloMystery",
+    ariaTikTokMobile: "TikTok",
+    ariaOpenMenu: "Apri menu",
+  },
+  en: {
+    navProducts: "Products",
+    navHow: "How it works",
+    navAbout: "About us",
+    navEvents: "Pop-up events",
+    ariaInstagram: "Instagram",
+    ariaTikTokDesktop: "TikTok KiloMystery",
+    ariaTikTokMobile: "TikTok",
+    ariaOpenMenu: "Open menu",
+  },
+  es: {
+    navProducts: "Productos",
+    navHow: "Cómo funciona",
+    navAbout: "Quiénes somos",
+    navEvents: "Eventos pop-up",
+    ariaInstagram: "Instagram",
+    ariaTikTokDesktop: "TikTok KiloMystery",
+    ariaTikTokMobile: "TikTok",
+    ariaOpenMenu: "Abrir menú",
+  },
+  fr: {
+    navProducts: "Produits",
+    navHow: "Comment ça marche",
+    navAbout: "À propos",
+    navEvents: "Événements pop-up",
+    ariaInstagram: "Instagram",
+    ariaTikTokDesktop: "TikTok KiloMystery",
+    ariaTikTokMobile: "TikTok",
+    ariaOpenMenu: "Ouvrir le menu",
+  },
+  de: {
+    navProducts: "Produkte",
+    navHow: "So funktioniert’s",
+    navAbout: "Über uns",
+    navEvents: "Pop-up-Events",
+    ariaInstagram: "Instagram",
+    ariaTikTokDesktop: "TikTok KiloMystery",
+    ariaTikTokMobile: "TikTok",
+    ariaOpenMenu: "Menü öffnen",
+  },
+};
 
 function replaceLang(path: string, to: Lang) {
   if (!path || path === "/") return `/${to}`;
@@ -44,6 +107,7 @@ export default function Header({ lang = "it" as Lang }) {
   const [openLang, setOpenLang] = useState(false);
 
   const currentLang: Lang = SUPPORTED.includes(lang) ? lang : "it";
+  const labels = HEADER_LABELS[currentLang];
 
   const langLinks = useMemo(() => {
     const safePath = pathname || `/${currentLang}`;
@@ -74,16 +138,16 @@ export default function Header({ lang = "it" as Lang }) {
         {/* NAV DESKTOP */}
         <nav className="hidden md:flex items-center gap-4">
           <Link href={`/${currentLang}/products`} className="nav-btn">
-            Prodotti
+            {labels.navProducts}
           </Link>
           <Link href={`/${currentLang}/how-it-works`} className="nav-btn">
-            Come funziona
+            {labels.navHow}
           </Link>
           <Link href={`/${currentLang}/about`} className="nav-btn">
-            Chi siamo
+            {labels.navAbout}
           </Link>
           <Link href={`/${currentLang}/events`} className="nav-btn">
-            Eventi Pop-Up
+            {labels.navEvents}
           </Link>
 
           {/* SOCIAL + CARRELLO DESKTOP */}
@@ -93,7 +157,7 @@ export default function Header({ lang = "it" as Lang }) {
               href={INSTAGRAM_URL}
               target="_blank"
               rel="noreferrer"
-              aria-label="Instagram"
+              aria-label={labels.ariaInstagram}
               className="w-9 h-9 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition"
             >
               <svg
@@ -126,7 +190,7 @@ export default function Header({ lang = "it" as Lang }) {
               href={TIKTOK_URL}
               target="_blank"
               rel="noreferrer"
-              aria-label="TikTok KiloMystery"
+              aria-label={labels.ariaTikTokDesktop}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/5 hover:bg-white/10 transition"
             >
               <svg
@@ -165,14 +229,17 @@ export default function Header({ lang = "it" as Lang }) {
             </button>
 
             {openLang && (
-              <ul role="listbox" className="dropdown-menu right open">
+              <ul
+                role="listbox"
+                className="dropdown-menu right open absolute top-full mt-2 right-0 z-50 min-w-[140px] rounded-xl border border-white/15 bg-[#05070b] shadow-[0_18px_45px_rgba(0,0,0,.55)] py-1"
+              >
                 {LANGS.map((l) => (
                   <li key={l.code}>
                     <Link
                       role="option"
                       aria-selected={l.code === currentLang}
                       href={langLinks[l.code]}
-                      className="dropdown-item w-full flex items-center gap-2"
+                      className="dropdown-item w-full flex items-center gap-2 px-3 py-1.5"
                       onClick={() => setOpenLang(false)}
                     >
                       <span className="text-lg leading-none">{l.flag}</span>
@@ -195,7 +262,7 @@ export default function Header({ lang = "it" as Lang }) {
 
           {/* HAMBURGER */}
           <button
-            aria-label="Apri menu"
+            aria-label={labels.ariaOpenMenu}
             className="rounded-xl border border-[var(--border)] p-2"
             onClick={() => setOpen((v) => !v)}
           >
@@ -213,28 +280,28 @@ export default function Header({ lang = "it" as Lang }) {
               className="dropdown-item"
               onClick={() => setOpen(false)}
             >
-              Prodotti
+              {labels.navProducts}
             </Link>
             <Link
               href={`/${currentLang}/how-it-works`}
               className="dropdown-item"
               onClick={() => setOpen(false)}
             >
-              Come funziona
+              {labels.navHow}
             </Link>
             <Link
               href={`/${currentLang}/about`}
               className="dropdown-item"
               onClick={() => setOpen(false)}
             >
-              Chi siamo
+              {labels.navAbout}
             </Link>
             <Link
               href={`/${currentLang}/events`}
               className="dropdown-item"
               onClick={() => setOpen(false)}
             >
-              Eventi Pop-Up
+              {labels.navEvents}
             </Link>
 
             {/* SOCIAL ICONS MOBILE */}
@@ -243,7 +310,7 @@ export default function Header({ lang = "it" as Lang }) {
                 href={INSTAGRAM_URL}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="Instagram"
+                aria-label={labels.ariaInstagram}
                 className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition"
               >
                 <svg
@@ -275,7 +342,7 @@ export default function Header({ lang = "it" as Lang }) {
                 href={TIKTOK_URL}
                 target="_blank"
                 rel="noreferrer"
-                aria-label="TikTok"
+                aria-label={labels.ariaTikTokMobile}
                 className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition"
               >
                 <svg
