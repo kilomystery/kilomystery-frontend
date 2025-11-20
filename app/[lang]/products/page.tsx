@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable react/no-unescaped-entities */
+
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
@@ -20,12 +22,267 @@ function pricePerKg(kind: "Standard" | "Premium", kg: Kg) {
 const euro = (n: number) =>
   n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
-const co2ByKg: Record<Kg, string> = {
-  1: "≈0,25 kg di CO₂ evitati",
-  2: "≈0,5 kg di CO₂ evitati",
-  3: "≈0,75 kg di CO₂ evitati",
-  5: "≈1,25 kg di CO₂ evitati",
-  10: "≈2,5 kg di CO₂ evitati",
+type CopyKey =
+  | "heroTitleHighlight"
+  | "heroTitleRest"
+  | "heroSubtitle1"
+  | "heroSubtitle2"
+  | "trustShippingTitle"
+  | "trustShippingText"
+  | "trustPaymentsTitle"
+  | "trustPaymentsText"
+  | "trustSupportTitle"
+  | "trustSupportText"
+  | "standardDescription"
+  | "premiumDescription"
+  | "returnTitle"
+  | "returnText"
+  | "returnCta"
+  | "badgeStd"
+  | "badgePrm"
+  | "bullets1"
+  | "bullets2"
+  | "bullets3"
+  | "bullets4"
+  | "addToCart";
+
+type CopyPerLang = Record<CopyKey, string>;
+
+// 🔤 Testi per OGNI lingua (IT, EN, ES, FR, DE)
+const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
+  it: {
+    heroTitleHighlight: "Pesa il mistero",
+    heroTitleRest: "e spacchetta la sorpresa",
+    heroSubtitle1:
+      "Standard o Premium, da 1 a 10 kg: decidi quanto intensa sarà la tua sessione di unboxing. Ogni box è selezionata, sigillata e collegata a un lotto reale.",
+    heroSubtitle2:
+      "Non vendiamo “valore garantito”, ma un'esperienza di sorpresa che recupera pacchi esistenti e riduce sprechi e CO₂ lungo la filiera.",
+
+    trustShippingTitle: "Spedizione",
+    trustShippingText:
+      "Spediamo in tutta Italia con tracking attivo e tempi medi di 24–72h.",
+    trustPaymentsTitle: "Pagamenti sicuri",
+    trustPaymentsText:
+      "Paghi tramite provider affidabili, con riepilogo completo via email.",
+    trustSupportTitle: "Assistenza",
+    trustSupportText:
+      "Supporto diretto via email: nessun call center impersonale.",
+
+    standardDescription:
+      "Ideale per chi vuole provare l'esperienza KiloMystery con un mix bilanciato di prodotti e prezzo.",
+    premiumDescription:
+      "Per chi cerca un mix più spinto: lotti selezionati e maggiore probabilità di articoli di fascia medio–alta.",
+
+    returnTitle: "Politica resi",
+    returnText:
+      "Le box sono vendute come mystery sigillate: il reso non è previsto per semplice mancato gradimento, perché il contenuto è per definizione non conosciuto in anticipo. In etichetta trovi peso, lotto e tracciabilità per la massima trasparenza.",
+    returnCta: "Leggi la policy completa",
+
+    badgeStd: "Perfetta per iniziare",
+    badgePrm: "Per chi vuole il massimo",
+
+    bullets1: "Contenuto misto e misterioso da lotti reali.",
+    bullets2: "Peso netto con tolleranza ±3% su ogni box.",
+    bullets3: "Sigillo con ID lotto e data di preparazione.",
+    bullets4: "Nessun prodotto illegale o vietato.",
+
+    addToCart: "Aggiungi al carrello",
+  },
+
+  en: {
+    heroTitleHighlight: "Weigh the mystery",
+    heroTitleRest: "and unbox the surprise",
+    heroSubtitle1:
+      "Standard or Premium, from 1 to 10 kg: you decide how intense your unboxing session will be. Each box is selected, sealed and linked to a real batch.",
+    heroSubtitle2:
+      "We don’t sell “guaranteed value”, but a surprise experience that gives a second life to existing parcels and reduces waste and CO₂ in the logistics chain.",
+
+    trustShippingTitle: "Shipping",
+    trustShippingText:
+      "We ship all over Italy with tracking and average delivery times of 24–72 hours.",
+    trustPaymentsTitle: "Secure payments",
+    trustPaymentsText:
+      "Payments are processed via trusted providers, with a full order summary sent by email.",
+    trustSupportTitle: "Support",
+    trustSupportText:
+      "Direct support via email: no anonymous call centers.",
+
+    standardDescription:
+      "Ideal if you want to experience KiloMystery for the first time, with a balanced mix of products and price.",
+    premiumDescription:
+      "For those looking for a stronger mix: selected lots and a higher chance of medium–high range items.",
+
+    returnTitle: "Return policy",
+    returnText:
+      "Boxes are sold as sealed mystery boxes: returns are not provided for simple lack of satisfaction, because the content is by definition not known in advance. On the label you will find weight, batch and traceability for full transparency.",
+    returnCta: "Read the full policy",
+
+    badgeStd: "Perfect to start",
+    badgePrm: "For those who want more",
+
+    bullets1: "Mixed and mysterious content from real lots.",
+    bullets2: "Net weight with ±3% tolerance on every box.",
+    bullets3: "Seal with batch ID and preparation date.",
+    bullets4: "No illegal or prohibited products.",
+
+    addToCart: "Add to cart",
+  },
+
+  es: {
+    heroTitleHighlight: "Pesa el misterio",
+    heroTitleRest: "y abre la sorpresa",
+    heroSubtitle1:
+      "Standard o Premium, de 1 a 10 kg: tú decides cuán intensa será tu sesión de unboxing. Cada caja está seleccionada, precintada y vinculada a un lote real.",
+    heroSubtitle2:
+      "No vendemos “valor garantizado”, sino una experiencia de sorpresa que da una segunda vida a paquetes existentes y reduce residuos y CO₂ en la cadena logística.",
+
+    trustShippingTitle: "Envío",
+    trustShippingText:
+      "Enviamos a toda Italia con seguimiento activo y plazos medios de 24–72 h.",
+    trustPaymentsTitle: "Pagos seguros",
+    trustPaymentsText:
+      "Pagas a través de proveedores fiables, con un resumen completo del pedido por email.",
+    trustSupportTitle: "Soporte",
+    trustSupportText:
+      "Soporte directo por email: sin call centers anónimos.",
+
+    standardDescription:
+      "Ideal para quien quiere probar la experiencia KiloMystery con una mezcla equilibrada de productos y precio.",
+    premiumDescription:
+      "Para quien busca una mezcla más fuerte: lotes seleccionados y mayor probabilidad de artículos de gama media–alta.",
+
+    returnTitle: "Política de devoluciones",
+    returnText:
+      "Las cajas se venden como mystery boxes precintadas: no se aceptan devoluciones por simple falta de satisfacción, porque el contenido por definición no se conoce de antemano. En la etiqueta encontrarás peso, lote y trazabilidad para la máxima transparencia.",
+    returnCta: "Leer la política completa",
+
+    badgeStd: "Perfecta para empezar",
+    badgePrm: "Para quien quiere más",
+
+    bullets1: "Contenido mixto y misterioso procedente de lotes reales.",
+    bullets2: "Peso neto con una tolerancia de ±3% en cada caja.",
+    bullets3: "Precinto con ID de lote y fecha de preparación.",
+    bullets4: "Ningún producto ilegal o prohibido.",
+
+    addToCart: "Añadir al carrito",
+  },
+
+  fr: {
+    heroTitleHighlight: "Pèse le mystère",
+    heroTitleRest: "et déballe la surprise",
+    heroSubtitle1:
+      "Standard ou Premium, de 1 à 10 kg : tu décides de l’intensité de ta session d’unboxing. Chaque box est sélectionnée, scellée et liée à un lot réel.",
+    heroSubtitle2:
+      "Nous ne vendons pas une “valeur garantie”, mais une expérience de surprise qui donne une seconde vie à des colis existants et réduit les déchets et le CO₂ dans la chaîne logistique.",
+
+    trustShippingTitle: "Livraison",
+    trustShippingText:
+      "Nous expédions dans toute l’Italie avec suivi actif et délais moyens de 24–72 h.",
+    trustPaymentsTitle: "Paiements sécurisés",
+    trustPaymentsText:
+      "Paiements gérés via des prestataires de confiance, avec récapitulatif complet envoyé par email.",
+    trustSupportTitle: "Support",
+    trustSupportText:
+      "Support direct par email : aucun centre d’appel anonyme.",
+
+    standardDescription:
+      "Idéal pour découvrir KiloMystery avec un mélange équilibré de produits et de prix.",
+    premiumDescription:
+      "Pour ceux qui veulent un mix plus poussé : lots sélectionnés et plus grande probabilité d’articles de gamme moyenne–haute.",
+
+    returnTitle: "Politique de retours",
+    returnText:
+      "Les box sont vendues comme mystery box scellées : aucun retour n’est prévu en cas de simple insatisfaction, car le contenu n’est pas connu à l’avance. L’étiquette indique le poids, le lot et la traçabilité pour une transparence maximale.",
+    returnCta: "Lire la politique complète",
+
+    badgeStd: "Parfait pour commencer",
+    badgePrm: "Pour ceux qui en veulent plus",
+
+    bullets1: "Contenu mixte et mystérieux issu de lots réels.",
+    bullets2: "Poids net avec une tolérance de ±3 % sur chaque box.",
+    bullets3: "Scellé avec ID de lot et date de préparation.",
+    bullets4: "Aucun produit illégal ou interdit.",
+
+    addToCart: "Ajouter au panier",
+  },
+
+  de: {
+    heroTitleHighlight: "Wiege das Geheimnis",
+    heroTitleRest: "und pack die Überraschung aus",
+    heroSubtitle1:
+      "Standard oder Premium, von 1 bis 10 kg: Du entscheidest, wie intensiv dein Unboxing wird. Jede Box wird ausgewählt, versiegelt und einem echten Posten zugeordnet.",
+    heroSubtitle2:
+      "Wir verkaufen keinen „garantierten Wert“, sondern ein Überraschungserlebnis, das bestehenden Paketen ein zweites Leben gibt und Abfall sowie CO₂ in der Logistikkette reduziert.",
+
+    trustShippingTitle: "Versand",
+    trustShippingText:
+      "Wir versenden in ganz Italien mit Sendungsverfolgung und einer durchschnittlichen Lieferzeit von 24–72 Stunden.",
+    trustPaymentsTitle: "Sichere Zahlungen",
+    trustPaymentsText:
+      "Zahlungen über vertrauenswürdige Anbieter, mit vollständiger Bestellübersicht per E-Mail.",
+    trustSupportTitle: "Support",
+    trustSupportText:
+      "Direkter Support per E-Mail – kein anonymes Callcenter.",
+
+    standardDescription:
+      "Ideal, um KiloMystery zum ersten Mal zu testen, mit einem ausgewogenen Mix aus Produkten und Preis.",
+    premiumDescription:
+      "Für alle, die mehr wollen: ausgewählte Posten und höhere Wahrscheinlichkeit auf Artikel der mittel- bis höherwertigen Kategorie.",
+
+    returnTitle: "Rückgabebedingungen",
+    returnText:
+      "Boxen werden als versiegelte Mystery Boxen verkauft: Rückgaben sind bei bloßer Unzufriedenheit nicht vorgesehen, da der Inhalt per Definition im Voraus nicht bekannt ist. Auf dem Etikett findest du Gewicht, Posten und Nachverfolgbarkeit für maximale Transparenz.",
+    returnCta: "Vollständige Richtlinien lesen",
+
+    badgeStd: "Perfekt zum Start",
+    badgePrm: "Für alle, die mehr wollen",
+
+    bullets1: "Gemischter, geheimer Inhalt aus echten Posten.",
+    bullets2: "Nettogewicht mit einer Toleranz von ±3 % pro Box.",
+    bullets3: "Siegel mit Posten-ID und Vorbereitungsdatum.",
+    bullets4: "Keine illegalen oder verbotenen Produkte.",
+
+    addToCart: "In den Warenkorb",
+  },
+};
+
+// CO₂ text per kg e per lingua
+const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
+  1: {
+    it: "≈0,25 kg di CO₂ evitati",
+    en: "≈0.25 kg of CO₂ saved",
+    es: "≈0,25 kg de CO₂ evitados",
+    fr: "≈0,25 kg de CO₂ évités",
+    de: "≈0,25 kg CO₂ eingespart",
+  },
+  2: {
+    it: "≈0,5 kg di CO₂ evitati",
+    en: "≈0.5 kg of CO₂ saved",
+    es: "≈0,5 kg de CO₂ evitados",
+    fr: "≈0,5 kg de CO₂ évités",
+    de: "≈0,5 kg CO₂ eingespart",
+  },
+  3: {
+    it: "≈0,75 kg di CO₂ evitati",
+    en: "≈0.75 kg of CO₂ saved",
+    es: "≈0,75 kg de CO₂ evitados",
+    fr: "≈0,75 kg de CO₂ évités",
+    de: "≈0,75 kg CO₂ eingespart",
+  },
+  5: {
+    it: "≈1,25 kg di CO₂ evitati",
+    en: "≈1.25 kg of CO₂ saved",
+    es: "≈1,25 kg de CO₂ evitados",
+    fr: "≈1,25 kg de CO₂ évités",
+    de: "≈1,25 kg CO₂ eingespart",
+  },
+  10: {
+    it: "≈2,5 kg di CO₂ evitati",
+    en: "≈2.5 kg of CO₂ saved",
+    es: "≈2,5 kg de CO₂ evitados",
+    fr: "≈2,5 kg de CO₂ évités",
+    de: "≈2,5 kg CO₂ eingespart",
+  },
 };
 
 function safeError(label: string, err: unknown) {
@@ -63,10 +320,14 @@ function PackCard({
   kind,
   kg,
   video,
+  lang,
+  t,
 }: {
   kind: "Standard" | "Premium";
   kg: Kg;
   video: string;
+  lang: Lang;
+  t: CopyPerLang;
 }) {
   const { addItem } = useCart();
 
@@ -89,6 +350,9 @@ function PackCard({
     });
   }
 
+  const badgeTextTop = kind === "Standard" ? t.badgeStd : t.badgePrm;
+  const co2Text = co2ByKg[kg][lang] ?? co2ByKg[kg].it ?? "";
+
   return (
     <article
       className={`card ${isStd ? "card--standard" : "card--premium"}`}
@@ -96,9 +360,7 @@ function PackCard({
     >
       {/* badge piccolo sopra */}
       <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
-        <span>
-          {isStd ? "Perfetta per iniziare" : "Per chi vuole il massimo"}
-        </span>
+        <span>{badgeTextTop}</span>
         <span className="pill pill--std">
           {kg} kg · {isStd ? "Standard" : "Premium"}
         </span>
@@ -136,17 +398,19 @@ function PackCard({
             {euro(total)}
           </div>
           <div className="price-perkg">({ppk.toFixed(2)} €/kg)</div>
-          <div className="text-[0.7rem] text-emerald-200/90">
-            ♻ {co2ByKg[kg]}
-          </div>
+          {co2Text && (
+            <div className="text-[0.7rem] text-emerald-200/90">
+              ♻ {co2Text}
+            </div>
+          )}
         </div>
       </div>
 
       <ul className="bullets mt-3 space-y-1">
-        <li>Contenuto misto e misterioso da lotti reali.</li>
-        <li>Peso netto con tolleranza ±3% su ogni box.</li>
-        <li>Sigillo con ID lotto e data di preparazione.</li>
-        <li>Nessun prodotto illegale o vietato.</li>
+        <li>{t.bullets1}</li>
+        <li>{t.bullets2}</li>
+        <li>{t.bullets3}</li>
+        <li>{t.bullets4}</li>
       </ul>
 
       <div className="mt-4">
@@ -155,7 +419,7 @@ function PackCard({
           onClick={handleAddToCart}
           className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}
         >
-          Aggiungi al carrello
+          {t.addToCart}
         </button>
       </div>
     </article>
@@ -164,6 +428,7 @@ function PackCard({
 
 export default function ProductsPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
+  const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -238,60 +503,45 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           <header className="space-y-3">
             <h1 className="text-3xl md:text-4xl font-extrabold">
               <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
-                Pesa il mistero
+                {t.heroTitleHighlight}
               </span>{" "}
-              <span className="brand-text">e spacchetta la sorpresa</span>
+              <span className="brand-text">{t.heroTitleRest}</span>
             </h1>
-            <p className="text-white/70">
-              Standard o Premium, da 1 a 10 kg: decidi quanto intensa sarà la
-              tua sessione di unboxing. Ogni box è selezionata, sigillata e
-              collegata a un lotto reale.
-            </p>
-            <p className="text-white/70">
-              Non vendiamo “valore garantito”, ma un&apos;esperienza di sorpresa
-              che recupera pacchi esistenti e riduce sprechi e CO₂ lungo la
-              filiera.
-            </p>
+            <p className="text-white/70">{t.heroSubtitle1}</p>
+            <p className="text-white/70">{t.heroSubtitle2}</p>
           </header>
         </section>
 
-        {/* STRIP TRUST (spedizione / pagamenti / assistenza) */}
+        {/* STRIP TRUST */}
         <section className="grid gap-3 md:grid-cols-3 text-sm">
           <div className="card p-3 space-y-1">
             <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
-              🚚 Spedizione
+              🚚 {t.trustShippingTitle}
             </p>
-            <p className="text-white/80">
-              Spediamo in tutta Italia con tracking attivo e tempi medi di 24–72h.
-            </p>
+            <p className="text-white/80">{t.trustShippingText}</p>
           </div>
           <div className="card p-3 space-y-1">
             <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
-              💳 Pagamenti sicuri
+              💳 {t.trustPaymentsTitle}
             </p>
-            <p className="text-white/80">
-              Paghi tramite provider affidabili, con riepilogo completo via email.
-            </p>
+            <p className="text-white/80">{t.trustPaymentsText}</p>
           </div>
           <div className="card p-3 space-y-1">
             <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
-              🤝 Assistenza
+              🤝 {t.trustSupportTitle}
             </p>
-            <p className="text-white/80">
-              Supporto diretto via email: nessun call center impersonale.
-            </p>
+            <p className="text-white/80">{t.trustSupportText}</p>
           </div>
         </section>
 
-        {/* Sezione prodotti Standard */}
+        {/* STANDARD */}
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-2xl font-extrabold text-silver-soft">
               Standard
             </h2>
             <p className="text-xs text-white/60 max-w-md">
-              Ideale per chi vuole provare l&apos;esperienza KiloMystery con un
-              mix bilanciato di prodotti e prezzo.
+              {t.standardDescription}
             </p>
           </div>
 
@@ -302,20 +552,21 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
                 kind="Standard"
                 kg={kg as Kg}
                 video={stdV(kg as Kg)}
+                lang={lang}
+                t={t}
               />
             ))}
           </div>
         </section>
 
-        {/* Sezione prodotti Premium */}
+        {/* PREMIUM */}
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-2xl font-extrabold text-gold-soft">
               Premium
             </h2>
             <p className="text-xs text-white/60 max-w-md">
-              Per chi cerca un mix più spinto: lotti selezionati e maggiore
-              probabilità di articoli di fascia medio–alta.
+              {t.premiumDescription}
             </p>
           </div>
 
@@ -326,60 +577,22 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
                 kind="Premium"
                 kg={kg as Kg}
                 video={prmV(kg as Kg)}
+                lang={lang}
+                t={t}
               />
             ))}
           </div>
         </section>
 
-        {/* INFO EXTRA ISPIRATE ALLO STILE KING-COLIS (MA RISCRITTE) */}
-        <section className="grid gap-4 md:grid-cols-3">
-          <div className="card p-4 space-y-2">
-            <h3 className="font-bold text-emerald-200 text-sm">
-              🎁 Cosa puoi trovare nelle box
-            </h3>
-            <p className="text-white/70 text-sm">
-              Mix di categorie: tech, casa, accessori, piccoli elettrodomestici,
-              tempo libero, articoli per ufficio, gadget e altro ancora. La
-              composizione varia in base ai lotti disponibili.
-            </p>
-          </div>
-
-          <div className="card p-4 space-y-2">
-            <h3 className="font-bold text-emerald-200 text-sm">
-              🧩 Stato dei prodotti
-            </h3>
-            <p className="text-white/70 text-sm">
-              I prodotti possono essere nuovi, usati o ricondizionati. Possono
-              avere difetti estetici o packaging danneggiato. Lo stato non è
-              garantito come “pari al nuovo”.
-            </p>
-          </div>
-
-          <div className="card p-4 space-y-2">
-            <h3 className="font-bold text-emerald-200 text-sm">
-              🚫 Cosa non troverai
-            </h3>
-            <p className="text-white/70 text-sm">
-              Non inseriamo prodotti illegali, pericolosi, alimenti aperti o
-              articoli che non rispettano le normative vigenti.
-            </p>
-          </div>
-        </section>
-
         {/* POLICY RESI */}
         <section id="policy" className="card">
-          <h3 className="text-xl font-extrabold mb-2">Politica resi</h3>
-          <p className="text-white/70 text-sm md:text-base">
-            Le box sono vendute come mystery sigillate: il reso non è previsto,
-            perché il contenuto è per definizione non conosciuto in anticipo.
-            In etichetta trovi peso, lotto e tracciabilità per la massima
-            trasparenza.
-          </p>
+          <h3 className="text-xl font-extrabold mb-2">{t.returnTitle}</h3>
+          <p className="text-white/70 text-sm md:text-base">{t.returnText}</p>
           <a
             href={`/${lang}/policy/returns`}
             className="btn btn-ghost mt-3 inline-flex"
           >
-            Leggi la policy completa
+            {t.returnCta}
           </a>
         </section>
       </main>

@@ -5,9 +5,63 @@ import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
 import { normalizeLang, Lang } from "@/i18n/lang";
 
+type CartCopyKey =
+  | "title"
+  | "empty"
+  | "total"
+  | "remove"
+  | "goCheckout"
+  | "qtyLabel";
+
+type CartCopyPerLang = Record<CartCopyKey, string>;
+
+const CART_COPY: Record<Lang, CartCopyPerLang> = {
+  it: {
+    title: "Carrello",
+    empty: "Il tuo carrello è vuoto.",
+    total: "Totale",
+    remove: "Rimuovi",
+    goCheckout: "Vai al checkout",
+    qtyLabel: "Quantità",
+  },
+  en: {
+    title: "Cart",
+    empty: "Your cart is empty.",
+    total: "Total",
+    remove: "Remove",
+    goCheckout: "Go to checkout",
+    qtyLabel: "Quantity",
+  },
+  es: {
+    title: "Carrito",
+    empty: "Tu carrito está vacío.",
+    total: "Total",
+    remove: "Eliminar",
+    goCheckout: "Ir al checkout",
+    qtyLabel: "Cantidad",
+  },
+  fr: {
+    title: "Panier",
+    empty: "Ton panier est vide.",
+    total: "Total",
+    remove: "Supprimer",
+    goCheckout: "Aller au checkout",
+    qtyLabel: "Quantité",
+  },
+  de: {
+    title: "Warenkorb",
+    empty: "Dein Warenkorb ist leer.",
+    total: "Gesamt",
+    remove: "Entfernen",
+    goCheckout: "Zum Checkout",
+    qtyLabel: "Menge",
+  },
+};
+
 export default function CartPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal } = useCart();
+  const t = CART_COPY[lang] ?? CART_COPY.it;
 
   function goToCheckout() {
     if (items.length === 0) return;
@@ -20,7 +74,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       .map((i) => `${i.shopifyId}:${i.qty}`)
       .join(",");
 
-    // 🔹 Redirect diretto a Shopify (niente API, niente errori)
+    // 🔹 Redirect diretto a Shopify
     window.location.href = base + query;
   }
 
@@ -29,10 +83,10 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       <Header lang={lang} />
 
       <main className="container py-10 space-y-8">
-        <h1 className="text-3xl font-extrabold mb-4">Carrello</h1>
+        <h1 className="text-3xl font-extrabold mb-4">{t.title}</h1>
 
         {items.length === 0 ? (
-          <p className="text-white/70">Il tuo carrello è vuoto.</p>
+          <p className="text-white/70">{t.empty}</p>
         ) : (
           <>
             <div className="space-y-4">
@@ -53,7 +107,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                   </div>
 
                   <div className="flex-1">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between gap-3">
                       <div>
                         <h2 className="text-lg font-bold">{item.title}</h2>
                         <p className="text-white/70 text-sm">
@@ -78,7 +132,10 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                     </div>
 
                     <div className="mt-3 flex items-center gap-3">
-                      <div className="inline-flex rounded-full border border-white/20 bg-white/10 overflow-hidden">
+                      <div className="inline-flex rounded-full border border-white/20 bg-white/10 overflow-hidden text-sm">
+                        <span className="px-3 py-1 text-white/60">
+                          {t.qtyLabel}
+                        </span>
                         <button
                           className="px-3 py-1"
                           onClick={() => setQty(item.id, item.qty - 1)}
@@ -98,7 +155,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                         className="text-xs text-rose-400"
                         onClick={() => removeItem(item.id)}
                       >
-                        Rimuovi
+                        {t.remove}
                       </button>
                     </div>
                   </div>
@@ -107,7 +164,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
             </div>
 
             <div className="border-t border-white/10 pt-4 flex justify-between">
-              <div className="text-white/60">Totale</div>
+              <div className="text-white/60">{t.total}</div>
               <div className="text-2xl font-extrabold">
                 {subtotal.toFixed(2)} €
               </div>
@@ -117,7 +174,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               className="btn btn-brand px-6 py-3"
               onClick={goToCheckout}
             >
-              Vai al checkout
+              {t.goCheckout}
             </button>
           </>
         )}

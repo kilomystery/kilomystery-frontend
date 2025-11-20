@@ -14,7 +14,6 @@ export const metadata: Metadata = {
     template: "%s | KiloMistery",
   },
   description: "Mystery box al Kg. Spedizione rapida e tracciata.",
-  icons: { icon: "/favicon.ico" },
   openGraph: {
     title: "KiloMistery",
     description: "Mystery box al Kg. Spedizione rapida e tracciata.",
