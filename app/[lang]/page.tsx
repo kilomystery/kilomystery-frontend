@@ -755,8 +755,8 @@ export default function HomePage({ params }: { params: { lang: string } }) {
           </h2>
           <p className="text-white/70">
             {t.contactSubtitle}
-          </p>
-          <ContactForm />
+          <ContactForm lang={lang} />
+
         </section>
       </main>
 
