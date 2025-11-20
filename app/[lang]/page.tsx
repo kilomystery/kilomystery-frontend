@@ -549,9 +549,11 @@ export default function HomePage({ params }: { params: { lang: string } }) {
         </section>
 
         {/* 🔹 MARQUEE TRA PRODOTTI E COME FUNZIONA */}
-        <section>
-          <SectionMarquee />
-        </section>
+        // DOPO
+<section>
+  <SectionMarquee lang={lang as any} />
+</section>
+
 
         {/* COME FUNZIONA */}
         <section id="come-funziona" className="space-y-6">
