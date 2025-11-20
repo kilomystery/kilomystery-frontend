@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-// Client Resend
+// Client Resend – usa la API key dalle env
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
@@ -21,13 +21,8 @@ export async function POST(req: Request) {
     }
 
     const { data: resendData, error } = await resend.emails.send({
-      // Mittente “sicuro” che già funzionava
-      from: "KiloMystery <onboarding@resend.dev>",
-
-      // Dove vuoi ricevere ora i messaggi del form
-      to: "gestionekilomystery@gmail.com",
-
-      // niente replyTo per ora → meno possibilità di errore
+      from: "KiloMystery <onboarding@resend.dev>", // mittente sicuro
+      to: "gestionekilomystery@gmail.com",        // dove vuoi ricevere
       subject: subject || "Nuovo messaggio dal sito KiloMystery",
       text: `
 Nuovo messaggio dal sito KiloMystery:
