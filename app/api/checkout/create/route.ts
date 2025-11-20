@@ -1,11 +1,17 @@
 // app/api/checkout/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
-const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
+const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.myshopify.com
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
 const API_VERSION = "2024-01";
 
-const SUPPORTED = ["it", "en", "es", "fr", "de"];
+const LOCALE_MAP: Record<string, string> = {
+  it: "it",
+  en: "en",
+  es: "es",
+  fr: "fr",
+  de: "de",
+};
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,14 +19,23 @@ export async function POST(req: NextRequest) {
     const items = body?.items || [];
     const clientTotalKg = body?.totalKg;
     const returnUrl = body?.returnUrl;
+    const bodyLang = typeof body?.lang === "string" ? body.lang : undefined;
 
+    // 🔤 lingua per Shopify (fallback IT)
+    const shopifyLocale = LOCALE_MAP[bodyLang ?? "it"] ?? "it";
+
+    // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
       return NextResponse.json(
         {
           error: "Missing Shopify configuration",
           code: "NO_ENV",
+          details: {
+            hasDomain: !!STOREFRONT_DOMAIN,
+            hasToken: !!STOREFRONT_TOKEN,
+          },
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -28,27 +43,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing items" }, { status: 400 });
     }
 
-    // 🟦 Detect lingua dal REFERER (URL della pagina da cui parte il checkout)
-    let locale = "it";
-    try {
-      const ref = new URL(req.headers.get("referer") || "");
-      const seg = ref.pathname.split("/")[1];
-      if (SUPPORTED.includes(seg)) locale = seg;
-    } catch {
-      locale = "it";
-    }
-
-    // Totale KG dal server
+    // 🧮 totale kg ricalcolato lato server
     const totalKg =
-      typeof clientTotalKg === "number" && !isNaN(clientTotalKg)
+      typeof clientTotalKg === "number" && !Number.isNaN(clientTotalKg)
         ? clientTotalKg
         : items.reduce(
             (sum: number, i: any) =>
               sum +
-              (Number(i.weightKg ?? i.kg ?? 0) || 0) * (Number(i.qty ?? 1) || 1),
-            0
+              (Number(i.weightKg ?? i.kg ?? 0) || 0) *
+                (Number(i.qty ?? 1) || 1),
+            0,
           );
 
+    // 🧱 linee carrello per Storefront API
     const lines = items.map((i: any) => {
       const qty = Number(i.qty ?? 1) || 1;
       const weight = Number(i.weightKg ?? i.kg ?? 0) || 0;
@@ -56,23 +63,36 @@ export async function POST(req: NextRequest) {
       const attributes: { key: string; value: string }[] = [];
 
       if (i.tier) {
-        attributes.push({ key: "tier", value: String(i.tier) });
-      }
-      if (weight > 0) {
-        attributes.push({ key: "weightKg", value: String(weight) });
+        attributes.push({
+          key: "tier",
+          value: String(i.tier),
+        });
       }
 
-      return {
+      if (weight > 0) {
+        attributes.push({
+          key: "weightKg",
+          value: String(weight),
+        });
+      }
+
+      const line: any = {
         quantity: qty,
         merchandiseId: `gid://shopify/ProductVariant/${i.shopifyId}`,
-        ...(attributes.length > 0 ? { attributes } : {}),
       };
+
+      if (attributes.length > 0) {
+        line.attributes = attributes;
+      }
+
+      return line;
     });
 
+    // Attributi sul CARRELLO
     const cartAttributes: { key: string; value: string }[] = [
       { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
       { key: "orderedKg", value: totalKg.toString() },
-      { key: "locale", value: locale },
+      { key: "locale", value: shopifyLocale },
     ];
 
     if (returnUrl) {
@@ -113,22 +133,27 @@ export async function POST(req: NextRequest) {
           "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN!,
         },
         body: JSON.stringify({ query, variables }),
-      }
+      },
     );
 
     const data = await response.json();
 
     const graphqlErrors = data?.errors;
-    const userErrors = data?.data?.cartCreate?.userErrors;
     const cart = data?.data?.cartCreate?.cart;
+    const userErrors = data?.data?.cartCreate?.userErrors;
 
     if (graphqlErrors?.length || userErrors?.length) {
       return NextResponse.json(
         {
           error: "Checkout error",
-          shopify: { graphqlErrors, userErrors, raw: data },
+          message: "Shopify non ha creato il checkout",
+          shopify: {
+            graphqlErrors,
+            userErrors,
+            raw: data,
+          },
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -136,27 +161,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Checkout error",
-          message: "Shopify missing checkoutUrl",
+          message: "Shopify non ha restituito checkoutUrl",
           shopify: { raw: data },
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
-    // 🟦 Shopify checkout locale = aggiungiamo &locale=xx
-    const checkoutUrlWithLocale =
-      cart.checkoutUrl.includes("?")
-        ? `${cart.checkoutUrl}&locale=${locale}`
-        : `${cart.checkoutUrl}?locale=${locale}`;
+    // 🔗 aggiungo ?locale=xx all'URL del checkout
+    const url = new URL(cart.checkoutUrl as string);
+    url.searchParams.set("locale", shopifyLocale);
+    const checkoutUrlWithLocale = url.toString();
 
-    return NextResponse.json({ url: checkoutUrlWithLocale });
+    return NextResponse.json({
+      url: checkoutUrlWithLocale,
+    });
   } catch (err: any) {
     return NextResponse.json(
       {
         error: "Internal server error",
         message: err?.message || "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

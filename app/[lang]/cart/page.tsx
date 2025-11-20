@@ -63,19 +63,27 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   const { items, setQty, removeItem, subtotal } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
-  function goToCheckout() {
-    if (items.length === 0) return;
+  async function goToCheckout() {
+    if (!items.length) return;
 
-    // 🔹 URL del carrello Shopify (ONLINE STORE)
-    const base = "https://shop.kilomystery.com/cart/";
+    const res = await fetch("/api/checkout/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        items,
+        totalKg: subtotal,
+        locale: lang,
+        returnUrl: `/${lang}/success`
+      }),
+    });
 
-    // 🔹 Formato: variantId:qty,variantId:qty,...
-    const query = items
-      .map((i) => `${i.shopifyId}:${i.qty}`)
-      .join(",");
+    const data = await res.json();
 
-    // 🔹 Redirect diretto a Shopify
-    window.location.href = base + query;
+    if (data?.url) {
+      window.location.href = data.url;
+    } else {
+      alert("Errore durante la creazione del checkout");
+    }
   }
 
   return (
@@ -117,16 +125,10 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
                       <div className="text-right">
                         <div className="text-xl font-bold">
-                          {(
-                            item.pricePerKg *
-                            item.weightKg *
-                            item.qty
-                          ).toFixed(2)}{" "}
-                          €
+                          {(item.pricePerKg * item.weightKg * item.qty).toFixed(2)} €
                         </div>
                         <div className="text-xs text-white/60">
-                          {(item.pricePerKg * item.weightKg).toFixed(2)} € /
-                          box
+                          {(item.pricePerKg * item.weightKg).toFixed(2)} € / box
                         </div>
                       </div>
                     </div>
@@ -170,10 +172,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </div>
             </div>
 
-            <button
-              className="btn btn-brand px-6 py-3"
-              onClick={goToCheckout}
-            >
+            <button className="btn btn-brand px-6 py-3" onClick={goToCheckout}>
               {t.goCheckout}
             </button>
           </>
