@@ -59,38 +59,26 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 };
 
 export default function CartPage({ params }: { params: { lang: string } }) {
-  const lang = normalizeLang(params?.lang);
+  const lang: Lang = normalizeLang(params?.lang);
+  const { items, setQty, removeItem, subtotal } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
-  const { items, setQty, removeItem, subtotal } = useCart();
-
-  async function goToCheckout() {
+  function goToCheckout() {
     if (items.length === 0) return;
 
-    const payload = {
-      items: items.map((i) => ({
-        shopifyId: i.shopifyId,
-        qty: i.qty,
-        kg: i.weightKg,
-        tier: i.tier,
-      })),
-      locale: lang,
-    };
+    // Dominio Shopify (Online Store)
+    const base = "https://shop.kilomystery.com/cart/";
 
-    const res = await fetch("/api/checkout/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    // Formato: variantId:qty,variantId:qty,...
+    const cartPart = items
+      .map((i) => `${i.shopifyId}:${i.qty}`)
+      .join(",");
 
-    const json = await res.json();
+    // Costruisco l'URL e imposto il locale
+    const url = new URL(base + cartPart);
+    url.searchParams.set("locale", lang); // <- dica a Shopify la lingua (it, en, fr, es, de)
 
-    if (!res.ok || !json.url) {
-      alert("Errore durante la creazione del checkout.");
-      return;
-    }
-
-    window.location.href = json.url;
+    window.location.href = url.toString();
   }
 
   return (
@@ -132,17 +120,25 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
                       <div className="text-right">
                         <div className="text-xl font-bold">
-                          {(item.pricePerKg * item.weightKg * item.qty).toFixed(2)} €
+                          {(
+                            item.pricePerKg *
+                            item.weightKg *
+                            item.qty
+                          ).toFixed(2)}{" "}
+                          €
                         </div>
                         <div className="text-xs text-white/60">
-                          {(item.pricePerKg * item.weightKg).toFixed(2)} € / box
+                          {(item.pricePerKg * item.weightKg).toFixed(2)} € /
+                          box
                         </div>
                       </div>
                     </div>
 
                     <div className="mt-3 flex items-center gap-3">
                       <div className="inline-flex rounded-full border border-white/20 bg-white/10 overflow-hidden text-sm">
-                        <span className="px-3 py-1 text-white/60">{t.qtyLabel}</span>
+                        <span className="px-3 py-1 text-white/60">
+                          {t.qtyLabel}
+                        </span>
                         <button
                           className="px-3 py-1"
                           onClick={() => setQty(item.id, item.qty - 1)}
@@ -172,10 +168,15 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
             <div className="border-t border-white/10 pt-4 flex justify-between">
               <div className="text-white/60">{t.total}</div>
-              <div className="text-2xl font-extrabold">{subtotal.toFixed(2)} €</div>
+              <div className="text-2xl font-extrabold">
+                {subtotal.toFixed(2)} €
+              </div>
             </div>
 
-            <button className="btn btn-brand px-6 py-3" onClick={goToCheckout}>
+            <button
+              className="btn btn-brand px-6 py-3"
+              onClick={goToCheckout}
+            >
               {t.goCheckout}
             </button>
           </>
