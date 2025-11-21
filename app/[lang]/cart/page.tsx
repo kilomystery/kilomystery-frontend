@@ -1,10 +1,10 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
 import { normalizeLang, Lang } from "@/i18n/lang";
-import { useEffect, useState } from "react";
 import SpinWheel from "@/app/components/SpinWheel";
 
 // === UPSSELL: COSTANTI CON ID REALI ===
@@ -21,8 +21,9 @@ const UPSELL_PRM_1KG_TOTAL = 16.9; // 16,90 €
 const UPSELL_STD_WEIGHT_KG = 1;
 const UPSELL_PRM_WEIGHT_KG = 1;
 
-// 🔸 lock ruota: quanto tempo deve passare prima di poter rigiocare
-const WHEEL_LOCK_MS = 12 * 60 * 60 * 1000; // 12 ore
+// LOCK ruota – quanto tempo non può rigiocare (es. 12 ore)
+const WHEEL_LOCK_MS = 12 * 60 * 60 * 1000; // 12h
+const WHEEL_LOCK_KEY = "km_wheel_last_play";
 
 type CartCopyKey =
   | "title"
@@ -38,7 +39,10 @@ type CartCopyKey =
   | "upsellStdCta"
   | "upsellPrmTitle"
   | "upsellPrmDesc"
-  | "upsellPrmCta";
+  | "upsellPrmCta"
+  | "wheelBannerTitle"
+  | "wheelBannerText"
+  | "wheelPlayedText";
 
 type CartCopyPerLang = Record<CartCopyKey, string>;
 
@@ -62,6 +66,12 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
     upsellPrmDesc:
       "Aggiungi 1 kg extra Premium per una selezione ancora più spinta.",
     upsellPrmCta: "Aggiungi 1 kg Premium",
+
+    wheelBannerTitle: "Ruota della fortuna",
+    wheelBannerText:
+      "Hai almeno 10 kg nel carrello: ottieni 1 giro alla ruota per vincere kg bonus che aggiungiamo come nota al tuo ordine.",
+    wheelPlayedText:
+      "Hai già usato la ruota di recente da questo dispositivo. Il bonus è già collegato al tuo ordine.",
   },
   en: {
     title: "Cart",
@@ -82,6 +92,12 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
     upsellPrmDesc:
       "Add 1 extra Premium kg for an even stronger selection.",
     upsellPrmCta: "Add 1 kg Premium",
+
+    wheelBannerTitle: "Mystery Wheel",
+    wheelBannerText:
+      "You have at least 10 kg in your cart: you get 1 spin to win bonus kg that we add as a note to your order.",
+    wheelPlayedText:
+      "You’ve already used the wheel recently on this device. The bonus is already attached to your order.",
   },
   es: {
     title: "Carrito",
@@ -102,6 +118,12 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
     upsellPrmDesc:
       "Añade 1 kg extra Premium para una selección aún más potente.",
     upsellPrmCta: "Añadir 1 kg Premium",
+
+    wheelBannerTitle: "Ruleta de la suerte",
+    wheelBannerText:
+      "Tienes al menos 10 kg en el carrito: consigues 1 tirada para ganar kg extra que añadimos como nota a tu pedido.",
+    wheelPlayedText:
+      "Ya has usado la ruleta recientemente desde este dispositivo. El bonus ya está vinculado a tu pedido.",
   },
   fr: {
     title: "Panier",
@@ -122,6 +144,12 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
     upsellPrmDesc:
       "Ajoute 1 kg Premium supplémentaire pour une sélection encore plus poussée.",
     upsellPrmCta: "Ajouter 1 kg Premium",
+
+    wheelBannerTitle: "Roue mystère",
+    wheelBannerText:
+      "Tu as au moins 10 kg dans ton panier : tu obtiens 1 tirage pour gagner des kg bonus ajoutés en note à ta commande.",
+    wheelPlayedText:
+      "Tu as déjà utilisé la roue récemment sur cet appareil. Le bonus est déjà lié à ta commande.",
   },
   de: {
     title: "Warenkorb",
@@ -142,6 +170,12 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
     upsellPrmDesc:
       "Füge 1 kg Premium extra hinzu für eine noch hochwertigere Auswahl.",
     upsellPrmCta: "1 kg Premium hinzufügen",
+
+    wheelBannerTitle: "Glücksrad",
+    wheelBannerText:
+      "Du hast mindestens 10 kg im Warenkorb: Du erhältst 1 Dreh, um Bonus-Kilos zu gewinnen, die wir als Notiz zu deiner Bestellung hinzufügen.",
+    wheelPlayedText:
+      "Du hast das Rad kürzlich auf diesem Gerät schon benutzt. Der Bonus ist bereits mit deiner Bestellung verknüpft.",
   },
 };
 
@@ -150,19 +184,11 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
-  // peso totale in kg
-  const totalKg = items.reduce(
-    (sum, i) => sum + i.weightKg * i.qty,
-    0
-  );
-
-  // ruota & bonus
-  const [showWheel, setShowWheel] = useState(false);
-  const [hasPlayedWheel, setHasPlayedWheel] = useState(false);
-  const [bonusKg, setBonusKg] = useState(0);
-
   // Item principali: escludiamo gli upsell (id che iniziano con "upsell-")
-  const mainItems = items.filter((i) => !i.id.startsWith("upsell-"));
+  const mainItems = useMemo(
+    () => items.filter((i) => !i.id.startsWith("upsell-")),
+    [items]
+  );
 
   const hasStdMain = mainItems.some((i) => i.tier === "Standard");
   const hasPrmMain = mainItems.some((i) => i.tier === "Premium");
@@ -176,48 +202,63 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   const showPrmUpsell =
     hasPrmMain && !hasPrmUpsell && !!UPSELL_PRM_1KG_SHOPIFY_ID;
 
-  // 🔸 NUOVO: leggi da localStorage se ha già giocato di recente
+  // === LOGICA RUOTA ===
+  const [hasPlayedWheel, setHasPlayedWheel] = useState(false);
+  const [showWheel, setShowWheel] = useState(false);
+  const [wheelBonusKg, setWheelBonusKg] = useState(0);
+
+  // kg totali eleggibili per la ruota (solo main items)
+  const totalEligibleKg = useMemo(
+    () =>
+      mainItems.reduce(
+        (sum, item) => sum + (item.weightKg || 0) * item.qty,
+        0
+      ),
+    [mainItems]
+  );
+
+  // leggo il lock da localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
+
     try {
-      const raw = window.localStorage.getItem("km_wheel_last_play");
+      const raw = window.localStorage.getItem(WHEEL_LOCK_KEY);
       if (!raw) return;
-      const ts = Number(raw);
-      if (Number.isNaN(ts)) return;
-      const diff = Date.now() - ts;
+      const last = Number(raw);
+      if (!Number.isFinite(last)) return;
+      const diff = Date.now() - last;
       if (diff < WHEEL_LOCK_MS) {
         setHasPlayedWheel(true);
       }
     } catch (e) {
-      console.error("km wheel localStorage read error", e);
+      console.error("wheel lock read error", e);
     }
   }, []);
 
-  // apri ruota quando ci sono almeno 10kg e non hai ancora giocato
+  // apro automaticamente la ruota se:
+  // - non ha già giocato
+  // - ha almeno 10 kg nel carrello
   useEffect(() => {
+    if (hasPlayedWheel) return;
+    if (totalEligibleKg < 10) return;
     if (items.length === 0) return;
-    if (totalKg >= 10 && !hasPlayedWheel) {
-      setShowWheel(true);
-    }
-  }, [totalKg, hasPlayedWheel, items.length]);
 
-  function handleWheelFinish(bonus: number) {
+    setShowWheel(true);
+  }, [hasPlayedWheel, totalEligibleKg, items.length]);
+
+  const handleWheelFinish = (bonusKg: number) => {
+    setWheelBonusKg(bonusKg);
     setHasPlayedWheel(true);
-    setBonusKg(bonus || 0);
     setShowWheel(false);
 
-    // 🔸 NUOVO: salva timestamp per bloccare reroll per un po'
-    if (typeof window !== "undefined") {
-      try {
-        window.localStorage.setItem(
-          "km_wheel_last_play",
-          String(Date.now())
-        );
-      } catch (e) {
-        console.error("km wheel localStorage write error", e);
+    try {
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(WHEEL_LOCK_KEY, String(Date.now()));
       }
+    } catch (e) {
+      console.error("wheel lock write error", e);
     }
-  }
+  };
 
   function goToCheckout() {
     if (items.length === 0) return;
@@ -230,10 +271,11 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     const url = new URL(base + cartPart);
     url.searchParams.set("locale", lang);
 
-    if (bonusKg > 0) {
+    // se c'è un bonus dalla ruota, lo passo come nota
+    if (wheelBonusKg > 0) {
       url.searchParams.set(
         "note",
-        `Bonus ruota: ${bonusKg.toFixed(2)} kg`
+        `Bonus ruota: ${wheelBonusKg.toFixed(2)} kg`
       );
     }
 
@@ -251,6 +293,30 @@ export default function CartPage({ params }: { params: { lang: string } }) {
           <p className="text-white/70">{t.empty}</p>
         ) : (
           <>
+            {/* Banner ruota sopra il carrello */}
+            {totalEligibleKg >= 10 && (
+              <section className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 flex flex-col gap-2 text-sm">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🎡</span>
+                    <h2 className="font-bold text-emerald-100">
+                      {t.wheelBannerTitle}
+                    </h2>
+                  </div>
+                  {wheelBonusKg > 0 && (
+                    <span className="text-xs px-2 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/60 text-emerald-100">
+                      Bonus: +{wheelBonusKg.toFixed(2)} kg
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-white/80 text-xs md:text-sm">
+                  {hasPlayedWheel ? t.wheelPlayedText : t.wheelBannerText}
+                </p>
+              </section>
+            )}
+
+            {/* Lista items */}
             <div className="space-y-4">
               {items.map((item) => (
                 <div
@@ -306,11 +372,15 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                         </span>
                         <button
                           className="px-3 py-1"
-                          onClick={() => setQty(item.id, item.qty - 1)}
+                          onClick={() =>
+                            setQty(item.id, Math.max(1, item.qty - 1))
+                          }
                         >
                           −
                         </button>
-                        <span className="px-3 font-semibold">{item.qty}</span>
+                        <span className="px-3 font-semibold">
+                          {item.qty}
+                        </span>
                         <button
                           className="px-3 py-1"
                           onClick={() => setQty(item.id, item.qty + 1)}
@@ -425,17 +495,15 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </section>
             )}
 
-            {/* box con kg bonus se vinti */}
-            {bonusKg > 0 && (
-              <div className="mt-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm">
-                🎁 Hai vinto <b>{bonusKg.toFixed(2)} kg</b> extra con la
-                ruota della fortuna! Verranno aggiunti al tuo ordine
-                come bonus (annotati nella nota dell&apos;ordine).
+            <div className="border-t border-white/10 pt-4 flex justify-between items-center gap-3">
+              <div className="flex flex-col text-xs text-white/60">
+                <span>{t.total}</span>
+                {wheelBonusKg > 0 && (
+                  <span className="text-emerald-300">
+                    Bonus ruota: +{wheelBonusKg.toFixed(2)} kg (in nota ordine)
+                  </span>
+                )}
               </div>
-            )}
-
-            <div className="border-t border-white/10 pt-4 flex justify-between">
-              <div className="text-white/60">{t.total}</div>
               <div className="text-2xl font-extrabold">
                 {subtotal.toFixed(2)} €
               </div>
@@ -451,20 +519,27 @@ export default function CartPage({ params }: { params: { lang: string } }) {
         )}
       </main>
 
-      <Footer lang={lang} />
-
-      {/* modale con la ruota */}
+      {/* MODALE RUOTA – solo se showWheel true */}
       {showWheel && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-          <div className="bg-slate-950 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-auto border border-white/10">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-3 py-6">
+          <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/15 bg-[#020617] shadow-[0_24px_80px_rgba(0,0,0,0.85)]">
+            <button
+              type="button"
+              className="absolute right-3 top-3 z-10 rounded-full bg-black/60 px-2 py-1 text-sm text-white/80 hover:bg-black"
+              onClick={() => setShowWheel(false)}
+            >
+              ✕
+            </button>
             <SpinWheel
               lang={lang}
-              showBackToShopButton={false}
               onFinish={handleWheelFinish}
+              showBackToShopButton={false}
             />
           </div>
         </div>
       )}
+
+      <Footer lang={lang} />
     </>
   );
 }
