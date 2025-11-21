@@ -158,40 +158,32 @@ export default function Header({ lang = "it" as Lang }) {
         <nav className="hidden md:flex items-center gap-4">
           <Link
             href={`/${currentLang}/products`}
-            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
-              isActive(`/${currentLang}/products`)
-                ? "text-white bg-white/10"
-                : "text-white/75 hover:text-white hover:bg-white/5"
+            className={`nav-link ${
+              isActive(`/${currentLang}/products`) ? "nav-link--active" : ""
             }`}
           >
             {labels.navProducts}
           </Link>
           <Link
             href={`/${currentLang}/how-it-works`}
-            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
-              isActive(`/${currentLang}/how-it-works`)
-                ? "text-white bg-white/10"
-                : "text-white/75 hover:text-white hover:bg-white/5"
+            className={`nav-link ${
+              isActive(`/${currentLang}/how-it-works`) ? "nav-link--active" : ""
             }`}
           >
             {labels.navHow}
           </Link>
           <Link
             href={`/${currentLang}/about`}
-            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
-              isActive(`/${currentLang}/about`)
-                ? "text-white bg-white/10"
-                : "text-white/75 hover:text-white hover:bg-white/5"
+            className={`nav-link ${
+              isActive(`/${currentLang}/about`) ? "nav-link--active" : ""
             }`}
           >
             {labels.navAbout}
           </Link>
           <Link
             href={`/${currentLang}/events`}
-            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
-              isActive(`/${currentLang}/events`)
-                ? "text-white bg-white/10"
-                : "text-white/75 hover:text-white hover:bg-white/5"
+            className={`nav-link ${
+              isActive(`/${currentLang}/events`) ? "nav-link--active" : ""
             }`}
           >
             {labels.navEvents}
@@ -430,6 +422,67 @@ export default function Header({ lang = "it" as Lang }) {
           </div>
         </div>
       )}
+
+      <style jsx>{`
+        .nav-link {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.35rem 0.9rem;
+          border-radius: 999px;
+          font-size: 0.85rem;
+          font-weight: 600;
+          color: rgba(255, 255, 255, 0.8);
+          transition: color 0.15s ease, background 0.15s ease,
+            text-shadow 0.15s ease, transform 0.15s ease;
+        }
+        .nav-link::after {
+          content: "";
+          position: absolute;
+          inset-inline: 18%;
+          bottom: 0.2rem;
+          height: 2px;
+          border-radius: 999px;
+          background: linear-gradient(
+            90deg,
+            #7a20ff,
+            #ffffff,
+            #20d27a
+          );
+          opacity: 0;
+          transform: scaleX(0.6);
+          transform-origin: center;
+          transition: opacity 0.18s ease, transform 0.18s ease;
+        }
+        .nav-link:hover {
+          color: #ffffff;
+          text-shadow: 0 0 10px rgba(255, 255, 255, 0.25);
+          background: radial-gradient(
+            circle at center,
+            rgba(148, 163, 184, 0.18),
+            transparent
+          );
+          transform: translateY(-0.5px);
+        }
+        .nav-link:hover::after {
+          opacity: 1;
+          transform: scaleX(1);
+        }
+        .nav-link--active {
+          color: #ffffff;
+          background: radial-gradient(
+            circle at center,
+            rgba(15, 23, 42, 0.8),
+            transparent
+          );
+          text-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+        }
+        .nav-link--active::after {
+          opacity: 1;
+          transform: scaleX(1);
+        }
+      `}</style>
     </header>
   );
 }
