@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { Lang } from "@/i18n/lang";
 
 /* -------------------------------------------------------
    CONFIGURAZIONE PREMI
@@ -10,17 +11,24 @@ import Image from "next/image";
 type Sector = { label: string; color: string };
 
 const COLORS = {
-  zero: "#1F2937", // 0 kg
+  zero: "#1F2937", // (non usato più, ma lo lasciamo)
   half: "#F59E0B", // 0.5 kg
-  one: "#22D3EE", // 1 kg
-  two: "#8B5CF6", // 2 kg
+  one: "#22D3EE",  // 1 kg
+  two: "#8B5CF6",  // 2 kg
   spin: "#EC4899", // +1 spin
-  x2: "#F97316", // X2
+  x2: "#F97316",   // X2
 };
 
+/**
+ * Nuova distribuzione:
+ * - NESSUN "0 kg"
+ * - tutti i vecchi 0 diventano 0.5 kg
+ * Prima avevi: zeros: 6, half: 3
+ * Ora: zeros: 0, half: 9
+ */
 const SPEC = {
-  zeros: 6,
-  half: 3,
+  zeros: 0,
+  half: 9,
   one: 2,
   two: 1,
   spin: 2,
@@ -33,7 +41,7 @@ function buildSectorsAlternated(): Sector[] {
   const N = 16;
   const out = new Array<Nullable<Sector>>(N).fill(null);
 
-  // 1) piazzo gli 0 kg sugli indici pari
+  // 1) (prima piazzavamo gli 0kg sugli indici pari) -> ora zeros = 0, quindi salta
   let zerosToPlace = SPEC.zeros;
   for (let i = 0; i < N && zerosToPlace > 0; i += 2) {
     out[i] = { label: "0 kg", color: COLORS.zero };
@@ -98,20 +106,18 @@ function arcPath(
 }
 
 /* -------------------------------------------------------
-   PROPS + COMPONENTE
+   PROPS
 ------------------------------------------------------- */
 
 type SpinWheelProps = {
-  lang: string;
-  /**
-   * Viene chiamata alla fine dei giri con i kg bonus.
-   */
+  lang: Lang;
   onFinish?: (bonusKg: number) => void;
-  /**
-   * Se true mostra il bottone "Torna allo shop" nel popup.
-   */
   showBackToShopButton?: boolean;
 };
+
+/* -------------------------------------------------------
+   COMPONENTE
+------------------------------------------------------- */
 
 export default function SpinWheel({
   lang,
@@ -136,14 +142,12 @@ export default function SpinWheel({
   // popup riepilogo
   const [showSummary, setShowSummary] = useState(false);
 
-  const sentRef = useRef(false);
-
-  // layout ruota
-  const size = 560;
+  // layout ruota (più compatta)
+  const size = 440;
   const cx = size / 2,
     cy = size / 2;
-  const R_OUT = 220;
-  const R_BULB = 238;
+  const R_OUT = 170;
+  const R_BULB = 188;
 
   /* -----------------------------------------------------
      SPIN
@@ -207,20 +211,23 @@ export default function SpinWheel({
       setSpinning(false);
 
       if (nextSpins <= 0) {
-        if (!sentRef.current && onFinish) {
-          sentRef.current = true;
+        // fine gioco: chiamiamo il callback con i kg vinti
+        if (onFinish) {
           onFinish(nextWonKg);
         }
-
         requestAnimationFrame(() => setShowSummary(true));
       }
     }, duration);
   };
 
+  /* -----------------------------------------------------
+     RENDER
+  ----------------------------------------------------- */
+
   return (
-    <main className="container py-8">
+    <main className="container py-6 md:py-8">
       {/* Logo + claim */}
-      <div className="mx-auto mb-6 w-[170px] relative aspect-[3/1]">
+      <div className="mx-auto mb-4 w-[150px] relative aspect-[3/1]">
         <Image
           src="/logo.svg"
           alt="KiloMistery"
@@ -230,40 +237,40 @@ export default function SpinWheel({
         />
       </div>
 
-      <h1 className="text-center text-4xl md:text-5xl font-extrabold">
+      <h1 className="text-center text-3xl md:text-4xl font-extrabold">
         Ruota della fortuna
       </h1>
 
-      <p className="mx-auto mt-4 max-w-3xl text-center text-white/80">
+      <p className="mx-auto mt-3 max-w-3xl text-center text-white/80 text-sm md:text-base">
         Gira la ruota <b>Mistery Kilo</b> e vinci <b>kg bonus</b> aggiuntivi
         per il tuo ordine! Se esce <b>X2</b> raddoppi il prossimo premio (e
         ottieni un altro giro). Se esce <b>+1 spin</b> ottieni un altro giro
-        gratuito.
+        gratuito. Ora ogni premio è almeno <b>0.5 kg</b> garantiti.
       </p>
 
       {/* Stat boxes */}
-      <div className="mx-auto mt-6 mb-4 flex flex-wrap items-center justify-center gap-3 text-sm md:text-base">
-        <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
+      <div className="mx-auto mt-4 mb-3 flex flex-wrap items-center justify-center gap-3 text-xs md:text-sm">
+        <div className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10">
           Giri disponibili: <b>{spinsLeft}</b>
         </div>
-        <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
+        <div className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10">
           Moltiplicatore: <b>x{multiplier}</b>
         </div>
-        <div className="px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
+        <div className="px-3 py-2 rounded-2xl bg-white/5 border border-white/10">
           Bonus cumulato: <b>{wonKg.toFixed(2)} kg</b>
         </div>
       </div>
 
       {/* Freccia + ruota */}
-      <div className="relative mx-auto max-w-[660px]">
+      <div className="relative mx-auto max-w-[520px]">
         <div className="absolute left-1/2 -translate-x-1/2 -top-2 z-20">
           <div
             style={{
               width: 0,
               height: 0,
-              borderLeft: "16px solid transparent",
-              borderRight: "16px solid transparent",
-              borderTop: "28px solid #ef4444",
+              borderLeft: "14px solid transparent",
+              borderRight: "14px solid transparent",
+              borderTop: "26px solid #ef4444",
               filter: "drop-shadow(0 2px 6px rgba(0,0,0,.55))",
             }}
           />
@@ -298,10 +305,10 @@ export default function SpinWheel({
                   key={i}
                   cx={x}
                   cy={y}
-                  r={6}
+                  r={5}
                   fill={i % 2 ? "#fde68a" : "#fff"}
                   stroke="#a855f7"
-                  strokeWidth={2}
+                  strokeWidth={1.8}
                 />
               );
             })}
@@ -310,7 +317,7 @@ export default function SpinWheel({
             <circle
               cx={cx}
               cy={cy}
-              r={R_OUT + 10}
+              r={R_OUT + 8}
               fill="#8b5cf6"
               stroke="#a78bfa"
               strokeWidth={3}
@@ -354,7 +361,7 @@ export default function SpinWheel({
                       y={0}
                       textAnchor="middle"
                       dominantBaseline="middle"
-                      fontSize="14"
+                      fontSize="13"
                       fontWeight={800}
                       fill="#fff"
                     >
@@ -366,11 +373,11 @@ export default function SpinWheel({
             })}
 
             {/* mozzo */}
-            <circle cx={cx} cy={cy} r={70} fill="#0b1220" />
+            <circle cx={cx} cy={cy} r={58} fill="#0b1220" />
             <circle
               cx={cx}
               cy={cy}
-              r={58}
+              r={48}
               fill="url(#gradCenter)"
               stroke="#6ee7b7"
               strokeWidth={2}
@@ -387,10 +394,10 @@ export default function SpinWheel({
           <button
             onClick={spin}
             disabled={spinning || spinsLeft <= 0}
-            className="absolute inset-0 m-auto h-[104px] w-[210px] rounded-full font-extrabold text-white shadow-xl
-                        bg-gradient-to-r from-fuchsia-500 via-purple-500 to-emerald-400
-                        hover:brightness-110 transition
-                        disabled:opacity-60 disabled:cursor-not-allowed"
+            className="absolute inset-0 m-auto h-[88px] w-[190px] rounded-full font-extrabold text-white shadow-xl
+                    bg-gradient-to-r from-fuchsia-500 via-purple-500 to-emerald-400
+                    hover:brightness-110 transition
+                    disabled:opacity-60 disabled:cursor-not-allowed text-sm md:text-base"
           >
             {spinning ? "GIRANDO..." : "GIRA LA RUOTA"}
           </button>
@@ -398,14 +405,14 @@ export default function SpinWheel({
       </div>
 
       {/* Stato live */}
-      <div className="mt-6 text-center">
+      <div className="mt-4 text-center text-sm md:text-base">
         {lastResult && (
-          <p className="text-xl md:text-2xl font-extrabold">
+          <p className="text-lg md:text-xl font-extrabold">
             🎉 Risultato:{" "}
             <span className="text-yellow-300">{lastResult}</span>
           </p>
         )}
-        <p className="text-white/60 mt-1 text-sm">
+        <p className="text-white/60 mt-1 text-xs md:text-sm">
           Bonus cumulato: <b>{wonKg.toFixed(2)} kg</b> · Moltiplicatore
           attuale: <b>x{multiplier}</b> · Giri rimasti: <b>{spinsLeft}</b>
         </p>
@@ -442,7 +449,10 @@ export default function SpinWheel({
 
             <div className="mt-5 flex flex-col sm:flex-row gap-2 justify-center">
               {showBackToShopButton && (
-                <a href={`/${lang}`} className="btn-brand px-5">
+                <a
+                  href={`/${lang ?? "it"}`}
+                  className="btn-brand px-5"
+                >
                   Torna allo shop
                 </a>
               )}
