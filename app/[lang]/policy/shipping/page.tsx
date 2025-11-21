@@ -3,10 +3,9 @@ import Image from "next/image";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
-
-export const metadata = {
-  title: "Spedizioni",
-};
+import type { Metadata } from "next";
+import { getPageMetadata } from "@/src/seo/meta";
+;
 
 type Copy = {
   heroTitle: string;
@@ -140,6 +139,14 @@ const DATE_LOCALE: Record<Lang, string> = {
   fr: "fr-FR",
   de: "de-DE",
 };
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
+  const lang: Lang = normalizeLang(params?.lang);
+  return getPageMetadata(lang, "shipping");
+}
 
 export default function ShippingPage({
   params,

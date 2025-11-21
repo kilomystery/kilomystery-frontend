@@ -1,11 +1,14 @@
 /* eslint-disable react/no-unescaped-entities */
+import type { Metadata } from "next";
+import { getPageMetadata } from "@/src/seo/meta";
+import { Lang, normalizeLang } from "@/i18n/lang";
 import Image from "next/image";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ProductsTabs from "../components/ProductsTabs";
 import ContactForm from "../components/ContactForm";
 import SectionMarquee from "../components/SectionMarquee";
-import { Lang, normalizeLang } from "@/i18n/lang";
+
 
 type CopyKey =
   | "heroTitle"
@@ -459,6 +462,15 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Fragen zu Bestellungen, Versand oder Partnerschaften? Schreib uns:",
   },
 };
+
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
+  const lang: Lang = normalizeLang(params?.lang);
+  return getPageMetadata(lang, "home");
+}
 
 export default function HomePage({ params }: { params: { lang: string } }) {
   const { lang: rawLang } = params;
