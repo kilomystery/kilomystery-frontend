@@ -1,8 +1,7 @@
 "use client";
 
 /* eslint-disable react/no-unescaped-entities */
-import type { Metadata } from "next";
-import { getPageMetadata } from "@/src/seo/meta";
+
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
@@ -480,7 +479,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
       weightKg: EXPLORER_TOTAL_KG,
       pricePerKg: EXPLORER_PRICE_PER_KG,
       qty: 1,
-      image: "/video/ExplorerBox.mp4",
+      image: "/videos/packs/ExplorerBox.mp4",
     });
   }
 
@@ -528,15 +527,53 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
 
             <div className="flex-1 space-y-3 p-2 md:p-0">
               <ul className="text-sm text-white/80 space-y-1">
-                <li>• Mix di lotti Standard e Premium</li>
-                <li>• Pensata per un unboxing lungo e condiviso</li>
-                <li>• Ideale per regali o sessioni in gruppo</li>
+                <li>
+                  {lang === "it"
+                    ? "• Mix di lotti Standard e Premium"
+                    : lang === "en"
+                    ? "• Mix of Standard and Premium lots"
+                    : lang === "es"
+                    ? "• Mix de lotes Standard y Premium"
+                    : lang === "fr"
+                    ? "• Mix de lots Standard et Premium"
+                    : "• Mix aus Standard- und Premium-Posten"}
+                </li>
+                <li>
+                  {lang === "it"
+                    ? "• Pensata per un unboxing lungo e condiviso"
+                    : lang === "en"
+                    ? "• Designed for a long, shared unboxing"
+                    : lang === "es"
+                    ? "• Pensada para un unboxing largo y compartido"
+                    : lang === "fr"
+                    ? "• Pensée pour un unboxing long et partagé"
+                    : "• Für ein langes, gemeinsames Unboxing gedacht"}
+                </li>
+                <li>
+                  {lang === "it"
+                    ? "• Ideale per regali o sessioni in gruppo"
+                    : lang === "en"
+                    ? "• Perfect for gifts or group sessions"
+                    : lang === "es"
+                    ? "• Ideal para regalos o sesiones en grupo"
+                    : lang === "fr"
+                    ? "• Idéale pour des cadeaux ou des sessions en groupe"
+                    : "• Ideal für Geschenke oder Gruppen-Sessions"}
+                </li>
               </ul>
 
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <div className="text-xs uppercase tracking-[.16em] text-white/60">
-                    Totale bundle
+                    {lang === "it"
+                      ? "Totale bundle"
+                      : lang === "en"
+                      ? "Bundle total"
+                      : lang === "es"
+                      ? "Total del bundle"
+                      : lang === "fr"
+                      ? "Total du bundle"
+                      : "Bundle-Gesamtpreis"}
                   </div>
                   <div className="text-3xl font-extrabold">
                     {euro(EXPLORER_PRICE_TOTAL)}
@@ -569,20 +606,12 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
               ? " La Explorer Box es un bundle especial: no puedes cambiar peso o mix, pero obtienes más kilos a un precio medio mejor."
               : lang === "fr"
               ? " L’Explorer Box est un bundle spécial : poids et mix sont fixes, mais tu profites de plus de kilos à un tarif moyen plus avantageux."
-              : "Die Explorer Box ist ein spezielles Bundle: Gewicht und Mix sind fix, dafür bekommst du mehr Kilos zu einem besseren Durchschnittspreis."}
+              : " Die Explorer Box ist ein spezielles Bundle: Gewicht und Mix sind fix, dafür bekommst du mehr Kilos zu einem besseren Durchschnittspreis."}
           </p>
         </div>
       </div>
     </section>
   );
-}
-export async function generateMetadata({
-  params,
-}: {
-  params: { lang: string };
-}): Promise<Metadata> {
-  const lang: Lang = normalizeLang(params?.lang);
-  return getPageMetadata(lang, "products");
 }
 
 export default function ProductsPage({ params }: { params: { lang: string } }) {
@@ -636,52 +665,47 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       } catch {}
     };
   }, []);
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
-const productJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  name:
-    lang === "it"
-      ? "Mystery box al kg KiloMystery"
-      : lang === "en"
-      ? "KiloMystery mystery boxes by the kilo"
-      : lang === "es"
-      ? "Mystery box al kilo KiloMystery"
-      : lang === "fr"
-      ? "Mystery box au kilo KiloMystery"
-      : "Mystery Box zum Kilo-Preis KiloMystery",
-  brand: {
-    "@type": "Brand",
-    name: "KiloMystery",
-  },
-  url: `${siteUrl}/${lang}/products`,
-  offers: {
-    "@type": "AggregateOffer",
-    priceCurrency: "EUR",
-    lowPrice: "17.99",
-    highPrice: "25.99",
-    availability: "https://schema.org/InStock",
-  },
-};
+  // JSON-LD SEO per il prodotto / categoria
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
-return (
-  <>
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(productJsonLd),
-      }}
-    />
-    {/* resto del tuo JSX attuale */}
-    <Header lang={lang} />
-    {/* ... */}
-  </>
-);
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name:
+      lang === "it"
+        ? "Mystery box al kg KiloMystery"
+        : lang === "en"
+        ? "KiloMystery mystery boxes by the kilo"
+        : lang === "es"
+        ? "Mystery box al kilo KiloMystery"
+        : lang === "fr"
+        ? "Mystery box au kilo KiloMystery"
+        : "Mystery Box zum Kilo-Preis KiloMystery",
+    brand: {
+      "@type": "Brand",
+      name: "KiloMystery",
+    },
+    url: `${siteUrl}/${lang}/products`,
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "EUR",
+      lowPrice: "17.99",
+      highPrice: "25.99",
+      availability: "https://schema.org/InStock",
+    },
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(productJsonLd),
+        }}
+      />
+
       <Header lang={lang} />
 
       <main className="container py-10 mb-16 space-y-10">
@@ -809,4 +833,3 @@ return (
     </>
   );
 }
-
