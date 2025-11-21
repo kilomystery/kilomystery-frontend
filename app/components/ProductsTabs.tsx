@@ -28,6 +28,12 @@ const LABELS: Record<Lang, any> = {
     bullet3: 'Sigillo con ID lotto e data',
     badgeStd: 'Perfetta per iniziare',
     badgePrm: 'Per chi vuole il massimo',
+
+    // 🔸 Testi ruota
+    wheelTitle: 'Ruota della fortuna',
+    wheelText:
+      'Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine.',
+    wheelCta: 'Vai ai 10 kg',
   },
   en: {
     standard: 'Standard',
@@ -46,6 +52,11 @@ const LABELS: Record<Lang, any> = {
     bullet3: 'Seal with batch ID and date',
     badgeStd: 'Perfect to start',
     badgePrm: 'For those who want more',
+
+    wheelTitle: 'Mystery Wheel',
+    wheelText:
+      'With an order of at least 10 kg you unlock 1 automatic spin when you go to the cart. Win up to +2 kg bonus that we add to your order.',
+    wheelCta: 'Go to 10 kg',
   },
   es: {
     standard: 'Standard',
@@ -64,6 +75,11 @@ const LABELS: Record<Lang, any> = {
     bullet3: 'Precinto con ID de lote y fecha',
     badgeStd: 'Perfecta para empezar',
     badgePrm: 'Para quienes quieren más',
+
+    wheelTitle: 'Ruleta de la suerte',
+    wheelText:
+      'Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos a tu pedido.',
+    wheelCta: 'Ir a los 10 kg',
   },
   fr: {
     standard: 'Standard',
@@ -82,6 +98,11 @@ const LABELS: Record<Lang, any> = {
     bullet3: 'Scellé avec ID de lot et date',
     badgeStd: 'Parfait pour commencer',
     badgePrm: 'Pour ceux qui en veulent plus',
+
+    wheelTitle: 'Roue mystère',
+    wheelText:
+      'Avec une commande d’au moins 10 kg, tu gagnes 1 tirage automatique en arrivant au panier. Jusqu’à +2 kg bonus ajoutés à ta commande.',
+    wheelCta: 'Aller aux 10 kg',
   },
   de: {
     standard: 'Standard',
@@ -100,6 +121,11 @@ const LABELS: Record<Lang, any> = {
     bullet3: 'Siegel mit Posten-ID und Datum',
     badgeStd: 'Perfekt zum Start',
     badgePrm: 'Für alle, die mehr wollen',
+
+    wheelTitle: 'Glücksrad',
+    wheelText:
+      'Mit einer Bestellung von mindestens 10 kg bekommst du 1 Dreh automatisch im Warenkorb. Gewinne bis zu +2 kg Bonus, die wir deiner Bestellung hinzufügen.',
+    wheelCta: 'Zu den 10 kg',
   },
 };
 
@@ -238,7 +264,7 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
         </button>
       </div>
 
-      {/* Grid prodotti */}
+      {/* Grid prodotti + card ruota */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {WEIGHTS.map((w) => {
           const { perKg, total } = priceForKg(w, tab);
@@ -349,6 +375,40 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
             </article>
           );
         })}
+
+        {/* 🔸 Card promo ruota – adattata al nuovo stile */}
+        <article className="card border border-emerald-300/50 bg-gradient-to-br from-emerald-500/15 via-purple-500/10 to-emerald-400/10 p-4 flex flex-col md:flex-row gap-4">
+          <div className="w-full md:w-1/3 rounded-xl overflow-hidden bg-black/40 border border-white/20">
+            <img
+              src="/wheel/wheel.svg"
+              alt={L.wheelTitle}
+              className="w-full h-full object-contain"
+            />
+          </div>
+
+          <div className="flex-1 flex flex-col gap-3">
+            <div>
+              <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80 mb-1">
+                🎡 Bonus extra
+              </p>
+              <h3 className="text-xl font-extrabold">
+                {L.wheelTitle}
+              </h3>
+              <p className="text-sm text-white/80 mt-1">
+                {L.wheelText}
+              </p>
+            </div>
+
+            <div className="mt-auto">
+              <a
+                href={`/${safeLang}/products#buy-standard-10`}
+                className="inline-flex items-center justify-center rounded-xl px-4 py-2 font-bold bg-gradient-to-r from-purple-300 to-emerald-300 text-[#0f1216] ring-1 ring-white/60 shadow-md hover:shadow-lg text-sm"
+              >
+                {L.wheelCta}
+              </a>
+            </div>
+          </div>
+        </article>
       </div>
     </section>
   );
