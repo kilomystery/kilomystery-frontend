@@ -479,6 +479,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
       weightKg: EXPLORER_TOTAL_KG,
       pricePerKg: EXPLORER_PRICE_PER_KG,
       qty: 1,
+      image: "/video/ExplorerBox.mp4",
     });
   }
 
@@ -500,21 +501,26 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
 
       <div className="grid md:grid-cols-[1.4fr,1fr] gap-4 items-stretch">
         <div className="card relative overflow-hidden bg-gradient-to-br from-[#7A20FF]/40 via-[#111827] to-[#20D27A]/30">
-          <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),transparent_55%)]" />
+          <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),transparent_55%)]" />
           <div className="relative flex flex-col md:flex-row gap-4 items-center md:items-stretch">
             <div className="w-full md:w-1/2">
-              <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(32,210,122,0.2),transparent_60%)]" />
-                <div className="relative text-center space-y-1">
-                  <p className="text-xs tracking-[.2em] uppercase text-emerald-200/80">
-                    Mix Standard + Premium
-                  </p>
-                  <p className="text-3xl font-extrabold">
-                    16 kg
-                    <span className="block text-xs font-normal text-white/70 mt-1">
-                      15 kg + 1 kg omaggio
-                    </span>
-                  </p>
+              <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
+                <video
+                  src="/video/ExplorerBox.mp4"
+                  className="w-full h-full object-cover"
+                  muted
+                  autoPlay
+                  loop
+                  playsInline
+                  preload="metadata"
+                />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-xs text-white/80 flex items-center justify-between">
+                  <span className="tracking-[.18em] uppercase text-emerald-200/90">
+                    Explorer
+                  </span>
+                  <span className="text-[0.7rem]">
+                    15 kg + 1 kg 🎁
+                  </span>
                 </div>
               </div>
             </div>
@@ -751,3 +757,4 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
     </>
   );
 }
+
