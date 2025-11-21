@@ -21,9 +21,8 @@ const UPSELL_PRM_1KG_TOTAL = 16.9; // 16,90 €
 const UPSELL_STD_WEIGHT_KG = 1;
 const UPSELL_PRM_WEIGHT_KG = 1;
 
-// LOCK ruota – quanto tempo non può rigiocare (es. 12 ore)
-const WHEEL_LOCK_MS = 12 * 60 * 60 * 1000; // 12h
-const WHEEL_LOCK_KEY = "km_wheel_last_play";
+// LOCK ruota – vale finché non passiamo dalla pagina di success
+const WHEEL_LOCK_KEY = "km_wheel_can_play";
 
 type CartCopyKey =
   | "title"
@@ -69,9 +68,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 
     wheelBannerTitle: "Ruota della fortuna",
     wheelBannerText:
-      "Hai almeno 10 kg nel carrello: ottieni 1 giro alla ruota per vincere kg bonus che aggiungiamo come nota al tuo ordine.",
+      "🎡 Hai almeno 10 kg nel carrello: ottieni 1 giro alla ruota per vincere kg bonus 🎁 che aggiungiamo come nota al tuo ordine.",
     wheelPlayedText:
-      "Hai già usato la ruota di recente da questo dispositivo. Il bonus è già collegato al tuo ordine.",
+      "Hai già usato la ruota di recente da questo dispositivo. Il bonus 🎁 è già collegato al tuo ordine.",
   },
   en: {
     title: "Cart",
@@ -95,9 +94,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 
     wheelBannerTitle: "Mystery Wheel",
     wheelBannerText:
-      "You have at least 10 kg in your cart: you get 1 spin to win bonus kg that we add as a note to your order.",
+      "🎡 You have at least 10 kg in your cart: you get 1 spin to win bonus kg 🎁 that we add as a note to your order.",
     wheelPlayedText:
-      "You’ve already used the wheel recently on this device. The bonus is already attached to your order.",
+      "You’ve already used the wheel recently on this device. The bonus 🎁 is already attached to your order.",
   },
   es: {
     title: "Carrito",
@@ -121,9 +120,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 
     wheelBannerTitle: "Ruleta de la suerte",
     wheelBannerText:
-      "Tienes al menos 10 kg en el carrito: consigues 1 tirada para ganar kg extra que añadimos como nota a tu pedido.",
+      "🎡 Tienes al menos 10 kg en el carrito: consigues 1 tirada para ganar kg extra 🎁 que añadimos como nota a tu pedido.",
     wheelPlayedText:
-      "Ya has usado la ruleta recientemente desde este dispositivo. El bonus ya está vinculado a tu pedido.",
+      "Ya has usado la ruleta recientemente desde este dispositivo. El bonus 🎁 ya está vinculado a tu pedido.",
   },
   fr: {
     title: "Panier",
@@ -147,9 +146,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 
     wheelBannerTitle: "Roue mystère",
     wheelBannerText:
-      "Tu as au moins 10 kg dans ton panier : tu obtiens 1 tirage pour gagner des kg bonus ajoutés en note à ta commande.",
+      "🎡 Tu as au moins 10 kg dans ton panier : tu obtiens 1 tirage pour gagner des kg bonus 🎁 ajoutés en note à ta commande.",
     wheelPlayedText:
-      "Tu as déjà utilisé la roue récemment sur cet appareil. Le bonus est déjà lié à ta commande.",
+      "Tu as déjà utilisé la roue récemment sur cet appareil. Le bonus 🎁 est déjà lié à ta commande.",
   },
   de: {
     title: "Warenkorb",
@@ -173,9 +172,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 
     wheelBannerTitle: "Glücksrad",
     wheelBannerText:
-      "Du hast mindestens 10 kg im Warenkorb: Du erhältst 1 Dreh, um Bonus-Kilos zu gewinnen, die wir als Notiz zu deiner Bestellung hinzufügen.",
+      "🎡 Du hast mindestens 10 kg im Warenkorb: Du erhältst 1 Dreh, um Bonus-Kilos 🎁 zu gewinnen, die wir als Notiz zu deiner Bestellung hinzufügen.",
     wheelPlayedText:
-      "Du hast das Rad kürzlich auf diesem Gerät schon benutzt. Der Bonus ist bereits mit deiner Bestellung verknüpft.",
+      "Du hast das Rad kürzlich auf diesem Gerät schon benutzt. Der Bonus 🎁 ist bereits mit deiner Bestellung verknüpft.",
   },
 };
 
@@ -220,14 +219,9 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   // leggo il lock da localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
-
     try {
       const raw = window.localStorage.getItem(WHEEL_LOCK_KEY);
-      if (!raw) return;
-      const last = Number(raw);
-      if (!Number.isFinite(last)) return;
-      const diff = Date.now() - last;
-      if (diff < WHEEL_LOCK_MS) {
+      if (raw === "played") {
         setHasPlayedWheel(true);
       }
     } catch (e) {
@@ -236,7 +230,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   }, []);
 
   // apro automaticamente la ruota se:
-  // - non ha già giocato
+  // - non ha già giocato (per questo ordine)
   // - ha almeno 10 kg nel carrello
   useEffect(() => {
     if (hasPlayedWheel) return;
@@ -253,7 +247,9 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(WHEEL_LOCK_KEY, String(Date.now()));
+        // da questo momento la ruota è "consumata" per questo device
+        // fino a quando la pagina di success non resetta il flag
+        window.localStorage.setItem(WHEEL_LOCK_KEY, "played");
       }
     } catch (e) {
       console.error("wheel lock write error", e);
@@ -275,7 +271,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     if (wheelBonusKg > 0) {
       url.searchParams.set(
         "note",
-        `Bonus ruota: ${wheelBonusKg.toFixed(2)} kg`
+        `🎁 Bonus ruota: ${wheelBonusKg.toFixed(2)} kg`
       );
     }
 
@@ -305,7 +301,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                   </div>
                   {wheelBonusKg > 0 && (
                     <span className="text-xs px-2 py-1 rounded-full bg-emerald-400/20 border border-emerald-300/60 text-emerald-100">
-                      Bonus: +{wheelBonusKg.toFixed(2)} kg
+                      🎁 Bonus: +{wheelBonusKg.toFixed(2)} kg
                     </span>
                   )}
                 </div>
@@ -500,7 +496,8 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                 <span>{t.total}</span>
                 {wheelBonusKg > 0 && (
                   <span className="text-emerald-300">
-                    Bonus ruota: +{wheelBonusKg.toFixed(2)} kg (in nota ordine)
+                    🎁 Bonus ruota: +{wheelBonusKg.toFixed(2)} kg (in nota
+                    ordine)
                   </span>
                 )}
               </div>
