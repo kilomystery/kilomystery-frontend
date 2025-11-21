@@ -4,6 +4,8 @@ import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
 import { normalizeLang, Lang } from "@/i18n/lang";
+import { useEffect, useState } from "react";
+import SpinWheel from "@/app/components/SpinWheel";
 
 // === UPSSELL: COSTANTI CON ID REALI ===
 
@@ -115,7 +117,7 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
     upsellStdCta: "Ajouter 1 kg Standard",
     upsellPrmTitle: "+1 kg extra Premium",
     upsellPrmDesc:
-      "Ajoute 1 kg Premium supplémentaire pour une sélection encore plus poussée.",
+      "Ajoute 1 kg Premium supplémentaire pour une sélection encore più poussée.",
     upsellPrmCta: "Ajouter 1 kg Premium",
   },
   de: {
@@ -145,6 +147,17 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
+  // peso totale in kg
+  const totalKg = items.reduce(
+    (sum, i) => sum + i.weightKg * i.qty,
+    0
+  );
+
+  // ruota & bonus
+  const [showWheel, setShowWheel] = useState(false);
+  const [hasPlayedWheel, setHasPlayedWheel] = useState(false);
+  const [bonusKg, setBonusKg] = useState(0);
+
   // Item principali: escludiamo gli upsell (id che iniziano con "upsell-")
   const mainItems = items.filter((i) => !i.id.startsWith("upsell-"));
 
@@ -160,6 +173,20 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   const showPrmUpsell =
     hasPrmMain && !hasPrmUpsell && !!UPSELL_PRM_1KG_SHOPIFY_ID;
 
+  // apri ruota quando ci sono almeno 10kg e non hai ancora giocato
+  useEffect(() => {
+    if (items.length === 0) return;
+    if (totalKg >= 10 && !hasPlayedWheel) {
+      setShowWheel(true);
+    }
+  }, [totalKg, hasPlayedWheel, items.length]);
+
+  function handleWheelFinish(bonus: number) {
+    setHasPlayedWheel(true);
+    setBonusKg(bonus || 0);
+    setShowWheel(false);
+  }
+
   function goToCheckout() {
     if (items.length === 0) return;
 
@@ -170,6 +197,13 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
     const url = new URL(base + cartPart);
     url.searchParams.set("locale", lang);
+
+    if (bonusKg > 0) {
+      url.searchParams.set(
+        "note",
+        `Bonus ruota: ${bonusKg.toFixed(2)} kg`
+      );
+    }
 
     window.location.href = url.toString();
   }
@@ -359,6 +393,15 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </section>
             )}
 
+            {/* box con kg bonus se vinti */}
+            {bonusKg > 0 && (
+              <div className="mt-4 rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-3 text-sm">
+                🎁 Hai vinto <b>{bonusKg.toFixed(2)} kg</b> extra con la
+                ruota della fortuna! Verranno aggiunti al tuo ordine
+                come bonus (annotati nella nota dell&apos;ordine).
+              </div>
+            )}
+
             <div className="border-t border-white/10 pt-4 flex justify-between">
               <div className="text-white/60">{t.total}</div>
               <div className="text-2xl font-extrabold">
@@ -377,6 +420,19 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       </main>
 
       <Footer lang={lang} />
+
+      {/* modale con la ruota */}
+      {showWheel && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="bg-slate-950 rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-auto border border-white/10">
+            <SpinWheel
+              lang={lang}
+              showBackToShopButton={false}
+              onFinish={handleWheelFinish}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }
