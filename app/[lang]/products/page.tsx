@@ -60,7 +60,7 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
 
     trustShippingTitle: "Spedizione",
     trustShippingText:
-      "Spediamo in tutta Italia con tracking attivo e tempi medi di 24–72h.",
+      "Spediamo in tutta Europa con tracking attivo. Tempi medi 48–72h. Spedizione gratuita per ordini superiori a 100€.",
     trustPaymentsTitle: "Pagamenti sicuri",
     trustPaymentsText:
       "Paghi tramite provider affidabili, con riepilogo completo via email.",
@@ -99,7 +99,7 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
 
     trustShippingTitle: "Shipping",
     trustShippingText:
-      "We ship all over Italy with tracking and average delivery times of 24–72 hours.",
+      "We ship across Europe with active tracking. Average delivery time 48–72h. Free shipping on orders over €100.",
     trustPaymentsTitle: "Secure payments",
     trustPaymentsText:
       "Payments are processed via trusted providers, with a full order summary sent by email.",
@@ -114,7 +114,7 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
 
     returnTitle: "Return policy",
     returnText:
-      "Boxes are sold as sealed mystery boxes: returns are not provided for simple lack of satisfaction, because the content is by definition not known in advance. On the label you will find weight, batch and traceability for full transparency.",
+      "Boxes are sold as sealed mystery boxes: returns are not provided for simple lack of satisfaction, because the content is not known in advance. The label includes weight, batch and traceability for full transparency.",
     returnCta: "Read the full policy",
 
     badgeStd: "Perfect to start",
@@ -134,11 +134,11 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     heroSubtitle1:
       "Standard o Premium, de 1 a 10 kg: tú decides cuán intensa será tu sesión de unboxing. Cada caja está seleccionada, precintada y vinculada a un lote real.",
     heroSubtitle2:
-      "No vendemos “valor garantizado”, sino una experiencia de sorpresa que da una segunda vida a paquetes existentes y reduce residuos y CO₂ en la cadena logística.",
+      "No vendemos “valor garantizado”, sino una experiencia de sorpresa que da una segunda vida a paquetes existentes y reduce residuos y CO₂.",
 
     trustShippingTitle: "Envío",
     trustShippingText:
-      "Enviamos a toda Italia con seguimiento activo y plazos medios de 24–72 h.",
+      "Enviamos a toda Europa con seguimiento activo. Plazos medios de entrega 48–72h. Envío gratis en pedidos superiores a 100€.",
     trustPaymentsTitle: "Pagos seguros",
     trustPaymentsText:
       "Pagas a través de proveedores fiables, con un resumen completo del pedido por email.",
@@ -147,20 +147,20 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Soporte directo por email: sin call centers anónimos.",
 
     standardDescription:
-      "Ideal para quien quiere probar la experiencia KiloMystery con una mezcla equilibrada de productos y precio.",
+      "Ideal para quien quiere probar KiloMystery con una mezcla equilibrada de productos y precio.",
     premiumDescription:
-      "Para quien busca una mezcla más fuerte: lotes seleccionados y mayor probabilidad de artículos de gama media–alta.",
+      "Para quien busca algo más potente: lotes seleccionados y mayor probabilidad de artículos de gama media–alta.",
 
     returnTitle: "Política de devoluciones",
     returnText:
-      "Las cajas se venden como mystery boxes precintadas: no se aceptan devoluciones por simple falta de satisfacción, porque el contenido por definición no se conoce de antemano. En la etiqueta encontrarás peso, lote y trazabilidad para la máxima transparencia.",
+      "Las cajas se venden como mystery boxes precintadas: no se aceptan devoluciones por simple falta de satisfacción. En la etiqueta encontrarás peso, lote y trazabilidad para máxima transparencia.",
     returnCta: "Leer la política completa",
 
     badgeStd: "Perfecta para empezar",
     badgePrm: "Para quien quiere más",
 
     bullets1: "Contenido mixto y misterioso procedente de lotes reales.",
-    bullets2: "Peso neto con una tolerancia de ±3% en cada caja.",
+    bullets2: "Peso neto con una tolerancia de ±3%.",
     bullets3: "Precinto con ID de lote y fecha de preparación.",
     bullets4: "Ningún producto ilegal o prohibido.",
 
@@ -171,36 +171,36 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     heroTitleHighlight: "Pèse le mystère",
     heroTitleRest: "et déballe la surprise",
     heroSubtitle1:
-      "Standard ou Premium, de 1 à 10 kg : tu décides de l’intensité de ta session d’unboxing. Chaque box est sélectionnée, scellée et liée à un lot réel.",
+      "Standard ou Premium, de 1 à 10 kg : tu choisis l’intensité de ton unboxing. Chaque box est sélectionnée, scellée et liée à un lot réel.",
     heroSubtitle2:
-      "Nous ne vendons pas une “valeur garantie”, mais une expérience de surprise qui donne une seconde vie à des colis existants et réduit les déchets et le CO₂ dans la chaîne logistique.",
+      "Nous ne vendons pas une “valeur garantie”, mais une expérience de surprise qui donne une seconde vie à des colis existants et réduit les déchets et le CO₂.",
 
     trustShippingTitle: "Livraison",
     trustShippingText:
-      "Nous expédions dans toute l’Italie avec suivi actif et délais moyens de 24–72 h.",
+      "Livraison dans toute l’Europe avec suivi. Délais moyens 48–72h. Livraison gratuite dès 100€ d’achat.",
     trustPaymentsTitle: "Paiements sécurisés",
     trustPaymentsText:
-      "Paiements gérés via des prestataires de confiance, avec récapitulatif complet envoyé par email.",
+      "Paiements gérés via des prestataires de confiance, avec un récapitulatif complet envoyé par email.",
     trustSupportTitle: "Support",
     trustSupportText:
-      "Support direct par email : aucun centre d’appel anonyme.",
+      "Support direct par email : aucun call center anonyme.",
 
     standardDescription:
-      "Idéal pour découvrir KiloMystery avec un mélange équilibré de produits et de prix.",
+      "Idéal pour découvrir KiloMystery avec un mix équilibré.",
     premiumDescription:
-      "Pour ceux qui veulent un mix plus poussé : lots sélectionnés et plus grande probabilité d’articles de gamme moyenne–haute.",
+      "Pour ceux qui veulent un mix plus recherché : lots sélectionnés et plus grande chance d’articles de gamme moyenne–haute.",
 
     returnTitle: "Politique de retours",
     returnText:
-      "Les box sont vendues comme mystery box scellées : aucun retour n’est prévu en cas de simple insatisfaction, car le contenu n’est pas connu à l’avance. L’étiquette indique le poids, le lot et la traçabilité pour une transparence maximale.",
+      "Les box sont vendues scellées : aucun retour n’est accepté pour simple insatisfaction. L’étiquette inclut poids, lot et traçabilité pour une transparence totale.",
     returnCta: "Lire la politique complète",
 
     badgeStd: "Parfait pour commencer",
     badgePrm: "Pour ceux qui en veulent plus",
 
-    bullets1: "Contenu mixte et mystérieux issu de lots réels.",
-    bullets2: "Poids net avec une tolérance de ±3 % sur chaque box.",
-    bullets3: "Scellé avec ID de lot et date de préparation.",
+    bullets1: "Contenu mixte issu de lots réels.",
+    bullets2: "Poids net avec une tolérance de ±3%.",
+    bullets3: "Scellé avec ID de lot et date.",
     bullets4: "Aucun produit illégal ou interdit.",
 
     addToCart: "Ajouter au panier",
@@ -212,11 +212,11 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     heroSubtitle1:
       "Standard oder Premium, von 1 bis 10 kg: Du entscheidest, wie intensiv dein Unboxing wird. Jede Box wird ausgewählt, versiegelt und einem echten Posten zugeordnet.",
     heroSubtitle2:
-      "Wir verkaufen keinen „garantierten Wert“, sondern ein Überraschungserlebnis, das bestehenden Paketen ein zweites Leben gibt und Abfall sowie CO₂ in der Logistikkette reduziert.",
+      "Wir verkaufen keinen „garantierten Wert“, sondern ein Überraschungserlebnis, das bestehenden Paketen ein zweites Leben gibt und Abfall sowie CO₂ reduziert.",
 
     trustShippingTitle: "Versand",
     trustShippingText:
-      "Wir versenden in ganz Italien mit Sendungsverfolgung und einer durchschnittlichen Lieferzeit von 24–72 Stunden.",
+      "Versand in ganz Europa mit Sendungsverfolgung. Durchschnittliche Lieferzeit 48–72h. Kostenloser Versand ab 100€ Bestellwert.",
     trustPaymentsTitle: "Sichere Zahlungen",
     trustPaymentsText:
       "Zahlungen über vertrauenswürdige Anbieter, mit vollständiger Bestellübersicht per E-Mail.",
@@ -225,26 +225,27 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Direkter Support per E-Mail – kein anonymes Callcenter.",
 
     standardDescription:
-      "Ideal, um KiloMystery zum ersten Mal zu testen, mit einem ausgewogenen Mix aus Produkten und Preis.",
+      "Ideal, um KiloMystery zum ersten Mal zu testen.",
     premiumDescription:
-      "Für alle, die mehr wollen: ausgewählte Posten und höhere Wahrscheinlichkeit auf Artikel der mittel- bis höherwertigen Kategorie.",
+      "Für alle, die mehr wollen: ausgewählte Posten und höhere Chance auf hochwertige Artikel.",
 
     returnTitle: "Rückgabebedingungen",
     returnText:
-      "Boxen werden als versiegelte Mystery Boxen verkauft: Rückgaben sind bei bloßer Unzufriedenheit nicht vorgesehen, da der Inhalt per Definition im Voraus nicht bekannt ist. Auf dem Etikett findest du Gewicht, Posten und Nachverfolgbarkeit für maximale Transparenz.",
+      "Mystery Boxen sind versiegelt: Rückgaben bei Nichtgefallen sind ausgeschlossen. Das Etikett enthält Gewicht, Posten und Nachverfolgbarkeit.",
     returnCta: "Vollständige Richtlinien lesen",
 
     badgeStd: "Perfekt zum Start",
     badgePrm: "Für alle, die mehr wollen",
 
-    bullets1: "Gemischter, geheimer Inhalt aus echten Posten.",
-    bullets2: "Nettogewicht mit einer Toleranz von ±3 % pro Box.",
-    bullets3: "Siegel mit Posten-ID und Vorbereitungsdatum.",
+    bullets1: "Gemischter Inhalt aus echten Posten.",
+    bullets2: "Nettogewicht mit ±3% Toleranz.",
+    bullets3: "Siegel mit Posten-ID und Datum.",
     bullets4: "Keine illegalen oder verbotenen Produkte.",
 
     addToCart: "In den Warenkorb",
   },
 };
+
 
 // CO₂ text per kg e per lingua
 const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
