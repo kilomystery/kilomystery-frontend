@@ -29,7 +29,7 @@ const LABELS: Record<Lang, any> = {
     badgeStd: 'Perfetta per iniziare',
     badgePrm: 'Per chi vuole il massimo',
 
-    // 🔸 Testi ruota
+    // testi ruota
     wheelTitle: 'Ruota della fortuna',
     wheelText:
       'Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine.',
@@ -376,9 +376,14 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
           );
         })}
 
-        {/* 🔸 Card promo ruota – adattata al nuovo stile */}
-        <article className="card border border-emerald-300/50 bg-gradient-to-br from-emerald-500/15 via-purple-500/10 to-emerald-400/10 p-4 flex flex-col md:flex-row gap-4">
-          <div className="w-full md:w-1/3 rounded-xl overflow-hidden bg-black/40 border border-white/20">
+        {/* 🔸 Card promo ruota – nuova versione più compatta con immagine quadrata */}
+        <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4">
+          <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">
+            🎡 Bonus extra
+          </p>
+
+          {/* immagine quadrata */}
+          <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
             <img
               src="/wheel/wheel.svg"
               alt={L.wheelTitle}
@@ -386,28 +391,21 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
             />
           </div>
 
-          <div className="flex-1 flex flex-col gap-3">
-            <div>
-              <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80 mb-1">
-                🎡 Bonus extra
-              </p>
-              <h3 className="text-xl font-extrabold">
-                {L.wheelTitle}
-              </h3>
-              <p className="text-sm text-white/80 mt-1">
-                {L.wheelText}
-              </p>
-            </div>
-
-            <div className="mt-auto">
-              <a
-                href={`/${safeLang}/products#buy-standard-10`}
-                className="inline-flex items-center justify-center rounded-xl px-4 py-2 font-bold bg-gradient-to-r from-purple-300 to-emerald-300 text-[#0f1216] ring-1 ring-white/60 shadow-md hover:shadow-lg text-sm"
-              >
-                {L.wheelCta}
-              </a>
-            </div>
+          <div className="space-y-2">
+            <h3 className="text-lg font-extrabold">
+              {L.wheelTitle}
+            </h3>
+            <p className="text-xs md:text-sm text-white/85">
+              {L.wheelText}
+            </p>
           </div>
+
+          <a
+            href={`/${safeLang}/products#buy-standard-10`}
+            className="mt-1 inline-flex items-center justify-center rounded-xl px-4 py-2 font-bold bg-gradient-to-r from-purple-300 to-emerald-300 text-[#0f1216] ring-1 ring-white/60 shadow-md hover:shadow-lg text-sm"
+          >
+            {L.wheelCta}
+          </a>
         </article>
       </div>
     </section>
