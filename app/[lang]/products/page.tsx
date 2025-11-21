@@ -8,6 +8,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { useCart } from "../../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
+import SectionInsideBox from "../../components/SectionInsideBox";
 
 type Kg = 1 | 2 | 3 | 5 | 10;
 
@@ -21,6 +22,12 @@ function pricePerKg(kind: "Standard" | "Premium", kg: Kg) {
 
 const euro = (n: number) =>
   n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+
+// === EXPLORER BOX (BUNDLE) ===
+const EXPLORER_SHOPIFY_ID = "52089141363026"; // variante Shopify
+const EXPLORER_TOTAL_KG = 16; // 15 kg + 1 kg omaggio
+const EXPLORER_PRICE_TOTAL = 270; // prezzo totale
+const EXPLORER_PRICE_PER_KG = EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG;
 
 type CopyKey =
   | "heroTitleHighlight"
@@ -44,7 +51,11 @@ type CopyKey =
   | "bullets2"
   | "bullets3"
   | "bullets4"
-  | "addToCart";
+  | "addToCart"
+  | "explorerTitle"
+  | "explorerSubtitle"
+  | "explorerBadge"
+  | "explorerCta";
 
 type CopyPerLang = Record<CopyKey, string>;
 
@@ -87,6 +98,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     bullets4: "Nessun prodotto illegale o vietato.",
 
     addToCart: "Aggiungi al carrello",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg omaggio",
+    explorerSubtitle:
+      "Bundle speciale con mix di Standard e Premium: 16 kg totali per un unboxing lungo, denso e pieno di sorpresa.",
+    explorerBadge: "Best value",
+    explorerCta: "Aggiungi Explorer Box",
   },
 
   en: {
@@ -126,6 +143,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     bullets4: "No illegal or prohibited products.",
 
     addToCart: "Add to cart",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg free",
+    explorerSubtitle:
+      "Special bundle with a mix of Standard and Premium: 16 kg total for an extra-long, high-intensity unboxing.",
+    explorerBadge: "Best value",
+    explorerCta: "Add Explorer Box",
   },
 
   es: {
@@ -165,6 +188,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     bullets4: "Ningún producto ilegal o prohibido.",
 
     addToCart: "Añadir al carrito",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg de regalo",
+    explorerSubtitle:
+      "Bundle especial con mix de Standard y Premium: 16 kg totales para un unboxing largo e intenso.",
+    explorerBadge: "Mejor valor",
+    explorerCta: "Añadir Explorer Box",
   },
 
   fr: {
@@ -180,7 +209,7 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Livraison dans toute l’Europe avec suivi. Délais moyens 48–72h. Livraison gratuite dès 100€ d’achat.",
     trustPaymentsTitle: "Paiements sécurisés",
     trustPaymentsText:
-      "Paiements gérés via des prestataires de confiance, avec un récapitulatif complet envoyé par email.",
+      "Paiements gérés via des prestataires de confiance, avec récapitulatif complet envoyé par email.",
     trustSupportTitle: "Support",
     trustSupportText:
       "Support direct par email : aucun call center anonyme.",
@@ -204,6 +233,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     bullets4: "Aucun produit illégal ou interdit.",
 
     addToCart: "Ajouter au panier",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg offert",
+    explorerSubtitle:
+      "Bundle spécial mêlant Standard et Premium : 16 kg au total pour un unboxing long et intense.",
+    explorerBadge: "Meilleur deal",
+    explorerCta: "Ajouter l’Explorer Box",
   },
 
   de: {
@@ -243,9 +278,14 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     bullets4: "Keine illegalen oder verbotenen Produkte.",
 
     addToCart: "In den Warenkorb",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg gratis",
+    explorerSubtitle:
+      "Spezielles Bundle mit Standard- und Premium-Mix: 16 kg insgesamt für ein langes, intensives Unboxing.",
+    explorerBadge: "Bestes Angebot",
+    explorerCta: "Explorer Box hinzufügen",
   },
 };
-
 
 // CO₂ text per kg e per lingua
 const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
@@ -427,6 +467,109 @@ function PackCard({
   );
 }
 
+function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
+  const { addItem } = useCart();
+
+  function handleAdd() {
+    addItem({
+      id: "Explorer-16",
+      shopifyId: EXPLORER_SHOPIFY_ID,
+      title: t.explorerTitle,
+      tier: "Premium", // lo trattiamo come bundle "alto"
+      weightKg: EXPLORER_TOTAL_KG,
+      pricePerKg: EXPLORER_PRICE_PER_KG,
+      qty: 1,
+    });
+  }
+
+  return (
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
+          <span className="text-amber-300">🚀</span>
+          <span>{t.explorerTitle}</span>
+        </h2>
+        <span className="inline-flex items-center rounded-full border border-emerald-300/70 bg-emerald-500/10 px-3 py-1 text-[0.7rem] uppercase tracking-[.18em] text-emerald-200">
+          {t.explorerBadge}
+        </span>
+      </div>
+
+      <p className="text-sm md:text-base text-white/75 max-w-2xl">
+        {t.explorerSubtitle}
+      </p>
+
+      <div className="grid md:grid-cols-[1.4fr,1fr] gap-4 items-stretch">
+        <div className="card relative overflow-hidden bg-gradient-to-br from-[#7A20FF]/40 via-[#111827] to-[#20D27A]/30">
+          <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),transparent_55%)]" />
+          <div className="relative flex flex-col md:flex-row gap-4 items-center md:items-stretch">
+            <div className="w-full md:w-1/2">
+              <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 flex items-center justify-center">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(32,210,122,0.2),transparent_60%)]" />
+                <div className="relative text-center space-y-1">
+                  <p className="text-xs tracking-[.2em] uppercase text-emerald-200/80">
+                    Mix Standard + Premium
+                  </p>
+                  <p className="text-3xl font-extrabold">
+                    16 kg
+                    <span className="block text-xs font-normal text-white/70 mt-1">
+                      15 kg + 1 kg omaggio
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-3 p-2 md:p-0">
+              <ul className="text-sm text-white/80 space-y-1">
+                <li>• Mix di lotti Standard e Premium</li>
+                <li>• Pensata per un unboxing lungo e condiviso</li>
+                <li>• Ideale per regali o sessioni in gruppo</li>
+              </ul>
+
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <div className="text-xs uppercase tracking-[.16em] text-white/60">
+                    Totale bundle
+                  </div>
+                  <div className="text-3xl font-extrabold">
+                    {euro(EXPLORER_PRICE_TOTAL)}
+                  </div>
+                  <div className="text-xs text-white/60">
+                    ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleAdd}
+                  className="btn btn-brand px-6 py-3"
+                >
+                  {t.explorerCta}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card text-xs text-white/70 space-y-2">
+          <p>
+            💡
+            {lang === "it"
+              ? " L’Explorer Box è pensata come bundle speciale: non puoi modificarne il peso o il mix, ma ottieni più kg a un prezzo medio più conveniente."
+              : lang === "en"
+              ? " The Explorer Box is a special bundle: weight and mix are fixed, but you get more kilos at a better average rate."
+              : lang === "es"
+              ? " La Explorer Box es un bundle especial: no puedes cambiar peso o mix, pero obtienes más kilos a un precio medio mejor."
+              : lang === "fr"
+              ? " L’Explorer Box est un bundle spécial : poids et mix sont fixes, mais tu profites de plus de kilos à un tarif moyen plus avantageux."
+              : "Die Explorer Box ist ein spezielles Bundle: Gewicht und Mix sind fix, dafür bekommst du mehr Kilos zu einem besseren Durchschnittspreis."}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function ProductsPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
@@ -584,6 +727,12 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
             ))}
           </div>
         </section>
+
+        {/* EXPLORER BUNDLE */}
+        <ExplorerCard lang={lang} t={t} />
+
+        {/* COSA PUOI TROVARE NELLE BOX */}
+        <SectionInsideBox lang={lang} />
 
         {/* POLICY RESI */}
         <section id="policy" className="card">
