@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
-export const runtime = "nodejs"; // assicuriamoci runtime Node
+export const runtime = "nodejs";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
-    // 1. Controllo chiave
     if (!process.env.RESEND_API_KEY) {
       console.error("RESEND_API_KEY non impostata su Vercel");
       return NextResponse.json(
@@ -16,7 +15,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 2. Parse body
     const data = await req.json();
     const name = (data.name ?? "").trim();
     const email = (data.email ?? "").trim();
@@ -30,20 +28,12 @@ export async function POST(req: Request) {
       );
     }
 
-    // 3. INVIO MAIL – versione che sappiamo funzionare
-    const result = await resend.emails.send({
-      // mittente "sicuro" di Resend (quello che funzionava prima)
-      from: "KiloMystery <onboarding@resend.dev>",
-
-      // casella dove vuoi leggere i messaggi
-      to: ["gestionekilomystery@gmail.com"],
-
-      // così quando fai “Rispondi” rispondi al cliente
-      replyTo: [email],
-
-      subject:
-        subject || "Nuovo messaggio dal sito KiloMystery",
-
+    // ⚠️ QUI controlliamo davvero se Resend ha accettato l’invio
+    const { data: sent, error } = await resend.emails.send({
+      from: "KiloMystery <onboarding@resend.dev>", // mittente sicuro
+      to: ["gestionekilomystery@gmail.com"],       // dove leggi i messaggi
+      replyTo: [email],                            // rispondi al cliente
+      subject: subject || "Nuovo messaggio dal sito KiloMystery",
       text: `
 Nuovo messaggio dal sito KiloMystery:
 
@@ -57,8 +47,15 @@ ${message}
       `,
     });
 
-    console.log("Resend result:", result);
+    if (error) {
+      console.error("Resend error:", error);
+      return NextResponse.json(
+        { error: "Email not sent" },
+        { status: 500 }
+      );
+    }
 
+    console.log("Resend email sent:", sent);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Contact API error:", err);
