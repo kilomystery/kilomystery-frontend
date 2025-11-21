@@ -163,7 +163,7 @@ export default function Footer({
         <div className="grid gap-8 md:grid-cols-2">
           {/* Menu */}
           <nav aria-label="Menu">
-            <h4 className="mb-3 text-lg font-extrabold tracking-tight text-white">
+            <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
               {L.menu}
             </h4>
             <ul className="space-y-2">
@@ -208,7 +208,7 @@ export default function Footer({
 
           {/* Legale */}
           <nav aria-label="Legale">
-            <h4 className="mb-3 text-lg font-extrabold tracking-tight text-white">
+            <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
               {L.legal}
             </h4>
             <ul className="space-y-2">
@@ -259,38 +259,63 @@ export default function Footer({
       </div>
 
       <style jsx>{`
+        .footer-heading {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+        }
+        .footer-heading::after {
+          content: "";
+          position: absolute;
+          left: 0;
+          bottom: -0.25rem;
+          width: 42%;
+          height: 2px;
+          border-radius: 999px;
+          background: linear-gradient(
+            90deg,
+            #7a20ff,
+            #ffffff,
+            #20d27a
+          );
+          opacity: 0.7;
+        }
+
         .footer-link {
           display: inline-flex;
           align-items: center;
           gap: 0.375rem;
           color: rgba(255, 255, 255, 0.78);
           font-size: 0.9rem;
+          position: relative;
           transition: color 0.15s ease, transform 0.15s ease,
             text-shadow 0.15s ease;
         }
-        .footer-link::before {
+        .footer-link::after {
           content: "";
-          width: 4px;
-          height: 4px;
+          position: absolute;
+          left: 0;
+          bottom: -0.18rem;
+          width: 0;
+          height: 2px;
           border-radius: 999px;
-          background: radial-gradient(
-            circle at center,
-            rgba(122, 32, 255, 0.9),
-            transparent
+          background: linear-gradient(
+            90deg,
+            #7a20ff,
+            #ffffff,
+            #20d27a
           );
           opacity: 0;
-          transform: scale(0.6);
-          transition: opacity 0.15s ease, transform 0.15s ease;
-        }
-        .footer-link:hover::before {
-          opacity: 1;
-          transform: scale(1);
+          transition: width 0.18s ease, opacity 0.18s ease;
         }
         .footer-link:hover {
-          color: #fff;
-          text-decoration: none;
+          color: #ffffff;
           transform: translateX(2px);
-          text-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
+          text-shadow: 0 0 12px rgba(255, 255, 255, 0.18);
+        }
+        .footer-link:hover::after {
+          opacity: 1;
+          width: 100%;
         }
       `}</style>
     </footer>
