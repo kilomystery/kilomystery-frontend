@@ -340,6 +340,100 @@ export default function Header({ lang = "it" as Lang }) {
 
         {/* DESTRA MOBILE */}
         <div className="flex items-center gap-2 md:hidden">
+          {/* SOCIAL ICONS MOBILE SEMPRE VISIBILI */}
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={labels.ariaInstagram}
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient
+                  id="igGradientMobileHeader"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="100%"
+                >
+                  <stop offset="0%" stopColor="#feda75" />
+                  <stop offset="25%" stopColor="#fa7e1e" />
+                  <stop offset="50%" stopColor="#d62976" />
+                  <stop offset="75%" stopColor="#962fbf" />
+                  <stop offset="100%" stopColor="#4f5bd5" />
+                </linearGradient>
+              </defs>
+              <rect
+                x="2"
+                y="2"
+                width="20"
+                height="20"
+                rx="5"
+                fill="url(#igGradientMobileHeader)"
+              />
+              <path
+                d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 6.5A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5Z"
+                fill="#fff"
+              />
+              <circle cx="17.5" cy="6.5" r="1.1" fill="#fff" />
+            </svg>
+          </a>
+
+          <a
+            href={TIKTOK_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={labels.ariaTikTokMobile}
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              aria-hidden="true"
+            >
+              <path
+                d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
+                fill="#00f2ea"
+                stroke="#ff0050"
+                strokeWidth={0.9}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </a>
+
+          <a
+            href={FACEBOOK_URL}
+            target="_blank"
+            rel="noreferrer"
+            aria-label="Facebook"
+            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              className="w-4 h-4"
+              aria-hidden="true"
+            >
+              <rect
+                x="2"
+                y="2"
+                width="20"
+                height="20"
+                rx="5"
+                fill="#1877F2"
+              />
+              <path
+                d="M13.2 18.5v-4.7h1.6l.3-2h-1.9v-1.3c0-.6.2-.9 1-.9h.9V7.1A11 11 0 0 0 13.9 7c-1.5 0-2.6.9-2.6 2.7v2h-1.7v2h1.7v4.8Z"
+                fill="#fff"
+              />
+            </svg>
+          </a>
+
           <CartIcon
             lang={currentLang}
             className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition shadow-[0_0_18px_rgba(0,0,0,0.7)]"
@@ -386,105 +480,6 @@ export default function Header({ lang = "it" as Lang }) {
             >
               {labels.navEvents}
             </Link>
-
-            {/* SOCIAL ICONS MOBILE */}
-            <div className="flex items-center gap-4 mt-3 px-1">
-              {/* IG mobile */}
-              <a
-                href={INSTAGRAM_URL}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={labels.ariaInstagram}
-                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-6 h-6"
-                  aria-hidden="true"
-                >
-                  <defs>
-                    <linearGradient
-                      id="igGradientMobile"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="100%"
-                    >
-                      <stop offset="0%" stopColor="#feda75" />
-                      <stop offset="25%" stopColor="#fa7e1e" />
-                      <stop offset="50%" stopColor="#d62976" />
-                      <stop offset="75%" stopColor="#962fbf" />
-                      <stop offset="100%" stopColor="#4f5bd5" />
-                    </linearGradient>
-                  </defs>
-                  <rect
-                    x="2"
-                    y="2"
-                    width="20"
-                    height="20"
-                    rx="5"
-                    fill="url(#igGradientMobile)"
-                  />
-                  <path
-                    d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 6.5A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5Z"
-                    fill="#fff"
-                  />
-                  <circle cx="17.5" cy="6.5" r="1.1" fill="#fff" />
-                </svg>
-              </a>
-
-              {/* TikTok mobile (stesso svg del desktop) */}
-              <a
-                href={TIKTOK_URL}
-                target="_blank"
-                rel="noreferrer"
-                aria-label={labels.ariaTikTokMobile}
-                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-6 h-6"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
-                    fill="#00f2ea"
-                    stroke="#ff0050"
-                    strokeWidth={0.9}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </a>
-
-              {/* Facebook mobile */}
-              <a
-                href={FACEBOOK_URL}
-                target="_blank"
-                rel="noreferrer"
-                aria-label="Facebook"
-                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  className="w-6 h-6"
-                  aria-hidden="true"
-                >
-                  <rect
-                    x="2"
-                    y="2"
-                    width="20"
-                    height="20"
-                    rx="5"
-                    fill="#1877F2"
-                  />
-                  <path
-                    d="M13.2 18.5v-4.7h1.6l.3-2h-1.9v-1.3c0-.6.2-.9 1-.9h.9V7.1A11 11 0 0 0 13.9 7c-1.5 0-2.6.9-2.6 2.7v2h-1.7v2h1.7v4.8Z"
-                    fill="#fff"
-                  />
-                </svg>
-              </a>
-            </div>
 
             {/* Lingue mobile */}
             <div className="mt-2 grid grid-cols-5 gap-1 px-1">
