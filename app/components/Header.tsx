@@ -121,32 +121,79 @@ export default function Header({ lang = "it" as Lang }) {
     setOpenLang(false);
   }, [pathname]);
 
+  const isActive = (href: string) => {
+    if (!pathname) return false;
+    return pathname === href || pathname.startsWith(href + "/");
+  };
+
   return (
-    <header className="site-header sticky top-0 z-40 bg-[#0f1216cc] backdrop-blur border-b border-[var(--border)]">
+    <header className="site-header sticky top-0 z-40 border-b border-white/10 bg-gradient-to-b from-[#080b11]/95 via-[#05070b]/95 to-[#05070b]/90 backdrop-blur-xl">
+      {/* barra glow sottile */}
+      <div className="h-[1px] w-full bg-gradient-to-r from-[#7A20FF] via-emerald-400/70 to-[#20D27A]" />
+
       <div className="container h-16 flex items-center justify-between gap-3">
         {/* LOGO */}
-        <Link href={`/${currentLang}`} className="flex items-center gap-3">
-          <Image
-            src="/logo.svg"
-            alt="Kilomistery"
-            width={80}
-            height={80}
-            priority
-          />
+        <Link
+          href={`/${currentLang}`}
+          className="flex items-center gap-3 group"
+        >
+          <div className="relative h-9 w-9 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_25px_rgba(122,32,255,0.45)]">
+            <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
+              <Image
+                src="/logo.svg"
+                alt="Kilomistery"
+                width={80}
+                height={80}
+                className="h-6 w-auto"
+                priority
+              />
+            </div>
+          </div>
+          <span className="hidden sm:block text-sm font-semibold tracking-[0.18em] uppercase text-white/70 group-hover:text-white transition">
+            KILOMYSTERY
+          </span>
         </Link>
 
         {/* NAV DESKTOP */}
         <nav className="hidden md:flex items-center gap-4">
-          <Link href={`/${currentLang}/products`} className="nav-btn">
+          <Link
+            href={`/${currentLang}/products`}
+            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
+              isActive(`/${currentLang}/products`)
+                ? "text-white bg-white/10"
+                : "text-white/75 hover:text-white hover:bg-white/5"
+            }`}
+          >
             {labels.navProducts}
           </Link>
-          <Link href={`/${currentLang}/how-it-works`} className="nav-btn">
+          <Link
+            href={`/${currentLang}/how-it-works`}
+            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
+              isActive(`/${currentLang}/how-it-works`)
+                ? "text-white bg-white/10"
+                : "text-white/75 hover:text-white hover:bg-white/5"
+            }`}
+          >
             {labels.navHow}
           </Link>
-          <Link href={`/${currentLang}/about`} className="nav-btn">
+          <Link
+            href={`/${currentLang}/about`}
+            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
+              isActive(`/${currentLang}/about`)
+                ? "text-white bg-white/10"
+                : "text-white/75 hover:text-white hover:bg-white/5"
+            }`}
+          >
             {labels.navAbout}
           </Link>
-          <Link href={`/${currentLang}/events`} className="nav-btn">
+          <Link
+            href={`/${currentLang}/events`}
+            className={`nav-btn relative text-sm font-semibold px-3 py-1.5 rounded-full transition ${
+              isActive(`/${currentLang}/events`)
+                ? "text-white bg-white/10"
+                : "text-white/75 hover:text-white hover:bg-white/5"
+            }`}
+          >
             {labels.navEvents}
           </Link>
 
@@ -158,7 +205,7 @@ export default function Header({ lang = "it" as Lang }) {
               target="_blank"
               rel="noreferrer"
               aria-label={labels.ariaInstagram}
-              className="w-9 h-9 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition"
+              className="w-9 h-9 flex items-center justify-center rounded-full border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -191,7 +238,7 @@ export default function Header({ lang = "it" as Lang }) {
               target="_blank"
               rel="noreferrer"
               aria-label={labels.ariaTikTokDesktop}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 bg-white/5 hover:bg-white/10 transition"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/5 hover:bg-white/10 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
             >
               <svg
                 viewBox="0 0 24 24"
@@ -216,7 +263,7 @@ export default function Header({ lang = "it" as Lang }) {
           {/* LANG DROPDOWN */}
           <div className="relative">
             <button
-              className="lang-btn"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
               onClick={() => setOpenLang(!openLang)}
               aria-haspopup="listbox"
               aria-expanded={openLang}
@@ -225,13 +272,13 @@ export default function Header({ lang = "it" as Lang }) {
               <span className="font-semibold">
                 {currentLang.toUpperCase()}
               </span>
-              <span className="i-caret">▾</span>
+              <span className="text-[10px] opacity-70">▾</span>
             </button>
 
             {openLang && (
               <ul
                 role="listbox"
-                className="dropdown-menu right open absolute top-full mt-2 right-0 z-50 min-w-[140px] rounded-xl border border-white/15 bg-[#05070b] shadow-[0_18px_45px_rgba(0,0,0,.55)] py-1"
+                className="dropdown-menu right open absolute top-full mt-2 right-0 z-50 min-w-[150px] rounded-2xl border border-white/15 bg-[#05070b]/95 shadow-[0_18px_45px_rgba(0,0,0,.75)] py-1 backdrop-blur-xl"
               >
                 {LANGS.map((l) => (
                   <li key={l.code}>
@@ -239,7 +286,11 @@ export default function Header({ lang = "it" as Lang }) {
                       role="option"
                       aria-selected={l.code === currentLang}
                       href={langLinks[l.code]}
-                      className="dropdown-item w-full flex items-center gap-2 px-3 py-1.5"
+                      className={`dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-sm ${
+                        l.code === currentLang
+                          ? "bg-white/10 text-white"
+                          : "text-white/75 hover:bg-white/5 hover:text-white"
+                      }`}
                       onClick={() => setOpenLang(false)}
                     >
                       <span className="text-lg leading-none">{l.flag}</span>
@@ -257,48 +308,48 @@ export default function Header({ lang = "it" as Lang }) {
           {/* Carrello mobile SEMPRE visibile */}
           <CartIcon
             lang={currentLang}
-            className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition"
+            className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition shadow-[0_0_18px_rgba(0,0,0,0.7)]"
           />
 
           {/* HAMBURGER */}
           <button
             aria-label={labels.ariaOpenMenu}
-            className="rounded-xl border border-[var(--border)] p-2"
+            className="rounded-xl border border-white/20 bg-white/5 p-2 hover:bg-white/10 hover:border-white/40 transition shadow-[0_0_18px_rgba(0,0,0,0.7)]"
             onClick={() => setOpen((v) => !v)}
           >
-            <span className="text-xl leading-none">≡</span>
+            <span className="text-xl leading-none text-white">≡</span>
           </button>
         </div>
       </div>
 
       {/* MENU MOBILE */}
       {open && (
-        <div className="md:hidden border-t border-[var(--border)] bg-[#0f1216]">
+        <div className="md:hidden border-t border-white/10 bg-gradient-to-b from-[#05070b] to-[#020308]">
           <div className="container py-3 flex flex-col gap-3">
             <Link
               href={`/${currentLang}/products`}
-              className="dropdown-item"
+              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
               onClick={() => setOpen(false)}
             >
               {labels.navProducts}
             </Link>
             <Link
               href={`/${currentLang}/how-it-works`}
-              className="dropdown-item"
+              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
               onClick={() => setOpen(false)}
             >
               {labels.navHow}
             </Link>
             <Link
               href={`/${currentLang}/about`}
-              className="dropdown-item"
+              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
               onClick={() => setOpen(false)}
             >
               {labels.navAbout}
             </Link>
             <Link
               href={`/${currentLang}/events`}
-              className="dropdown-item"
+              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
               onClick={() => setOpen(false)}
             >
               {labels.navEvents}
@@ -311,7 +362,7 @@ export default function Header({ lang = "it" as Lang }) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={labels.ariaInstagram}
-                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition"
+                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/40 transition"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -343,7 +394,7 @@ export default function Header({ lang = "it" as Lang }) {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={labels.ariaTikTokMobile}
-                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition"
+                className="w-10 h-10 flex items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 hover:border-white/40 transition"
               >
                 <svg
                   viewBox="0 0 24 24"
@@ -364,7 +415,11 @@ export default function Header({ lang = "it" as Lang }) {
                 <Link
                   key={l.code}
                   href={langLinks[l.code]}
-                  className="dropdown-item flex items-center justify-center gap-1"
+                  className={`dropdown-item flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-xs ${
+                    l.code === currentLang
+                      ? "bg-white/10 text-white"
+                      : "text-white/75 hover:bg-white/5 hover:text-white"
+                  }`}
                   onClick={() => setOpen(false)}
                 >
                   <span>{l.flag}</span>
