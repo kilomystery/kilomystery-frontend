@@ -55,7 +55,12 @@ type CopyKey =
   | "explorerTitle"
   | "explorerSubtitle"
   | "explorerBadge"
-  | "explorerCta";
+  | "explorerCta"
+  // 🔸 NUOVO: testi ruota
+  | "wheelTitle"
+  | "wheelText"
+  | "wheelCtaStd"
+  | "wheelCtaPrm";
 
 type CopyPerLang = Record<CopyKey, string>;
 
@@ -104,6 +109,13 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Bundle speciale con mix di Standard e Premium: 16 kg totali per un unboxing lungo, denso e pieno di sorpresa.",
     explorerBadge: "Best value",
     explorerCta: "Aggiungi Explorer Box",
+
+    // 🔸 ruota (nuova logica: al carrello)
+    wheelTitle: "Ruota della fortuna",
+    wheelText:
+      "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine come peso extra.",
+    wheelCtaStd: "Vai ai 10 kg Standard",
+    wheelCtaPrm: "Vai ai 10 kg Premium",
   },
 
   en: {
@@ -149,6 +161,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Special bundle with a mix of Standard and Premium: 16 kg total for an extra-long, high-intensity unboxing.",
     explorerBadge: "Best value",
     explorerCta: "Add Explorer Box",
+
+    wheelTitle: "Mystery Wheel",
+    wheelText:
+      "With an order of at least 10 kg you unlock 1 automatic spin when you go to the cart. You can win up to +2 kg bonus that we add as extra weight to your order.",
+    wheelCtaStd: "Go to 10 kg Standard",
+    wheelCtaPrm: "Go to 10 kg Premium",
   },
 
   es: {
@@ -180,7 +198,7 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     returnCta: "Leer la política completa",
 
     badgeStd: "Perfecta para empezar",
-    badgePrm: "Para quien quiere más",
+    badgePrm: "Para quienes quieren más",
 
     bullets1: "Contenido mixto y misterioso procedente de lotes reales.",
     bullets2: "Peso neto con una tolerancia de ±3%.",
@@ -194,6 +212,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Bundle especial con mix de Standard y Premium: 16 kg totales para un unboxing largo e intenso.",
     explorerBadge: "Mejor valor",
     explorerCta: "Añadir Explorer Box",
+
+    wheelTitle: "Ruleta de la suerte",
+    wheelText:
+      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos como peso adicional a tu pedido.",
+    wheelCtaStd: "Ir a 10 kg Standard",
+    wheelCtaPrm: "Ir a 10 kg Premium",
   },
 
   fr: {
@@ -239,6 +263,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Bundle spécial mêlant Standard et Premium : 16 kg au total pour un unboxing long et intense.",
     explorerBadge: "Meilleur deal",
     explorerCta: "Ajouter l’Explorer Box",
+
+    wheelTitle: "Roue mystère",
+    wheelText:
+      "Avec une commande d’au moins 10 kg, tu gagnes 1 tirage automatique en arrivant au panier. Jusqu’à +2 kg bonus ajoutés comme poids supplémentaire à ta commande.",
+    wheelCtaStd: "Aller aux 10 kg Standard",
+    wheelCtaPrm: "Aller aux 10 kg Premium",
   },
 
   de: {
@@ -284,6 +314,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Spezielles Bundle mit Standard- und Premium-Mix: 16 kg insgesamt für ein langes, intensives Unboxing.",
     explorerBadge: "Bestes Angebot",
     explorerCta: "Explorer Box hinzufügen",
+
+    wheelTitle: "Glücksrad",
+    wheelText:
+      "Mit einer Bestellung von mindestens 10 kg bekommst du 1 Dreh automatisch im Warenkorb. Gewinne bis zu +2 kg Bonus, die wir als zusätzliches Gewicht zu deiner Bestellung packen.",
+    wheelCtaStd: "Zu 10 kg Standard",
+    wheelCtaPrm: "Zu 10 kg Premium",
   },
 };
 
@@ -757,6 +793,34 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
               🤝 {t.trustSupportTitle}
             </p>
             <p className="text-white/80">{t.trustSupportText}</p>
+          </div>
+        </section>
+
+        {/* 🔸 SEZIONE RUOTA – spiegazione (nuova logica: ruota al carrello) */}
+        <section className="card flex flex-col md:flex-row items-center gap-5">
+          <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
+            <img
+              src="/wheel/wheel.svg"
+              alt={t.wheelTitle}
+              width={500}
+              height={250}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-extrabold">{t.wheelTitle}</h3>
+            <p className="text-white/70 text-sm md:text-base">
+              {t.wheelText}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 w-full md:w-auto">
+            <a href="#buy-Standard-10" className="btn btn-silver">
+              {t.wheelCtaStd}
+            </a>
+            <a href="#buy-premium-10" className="btn btn-gold">
+              {t.wheelCtaPrm}
+            </a>
           </div>
         </section>
 

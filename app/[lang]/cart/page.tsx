@@ -21,6 +21,9 @@ const UPSELL_PRM_1KG_TOTAL = 16.9; // 16,90 €
 const UPSELL_STD_WEIGHT_KG = 1;
 const UPSELL_PRM_WEIGHT_KG = 1;
 
+// 🔸 lock ruota: quanto tempo deve passare prima di poter rigiocare
+const WHEEL_LOCK_MS = 12 * 60 * 60 * 1000; // 12 ore
+
 type CartCopyKey =
   | "title"
   | "empty"
@@ -117,7 +120,7 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
     upsellStdCta: "Ajouter 1 kg Standard",
     upsellPrmTitle: "+1 kg extra Premium",
     upsellPrmDesc:
-      "Ajoute 1 kg Premium supplémentaire pour une sélection encore più poussée.",
+      "Ajoute 1 kg Premium supplémentaire pour une sélection encore plus poussée.",
     upsellPrmCta: "Ajouter 1 kg Premium",
   },
   de: {
@@ -173,6 +176,23 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   const showPrmUpsell =
     hasPrmMain && !hasPrmUpsell && !!UPSELL_PRM_1KG_SHOPIFY_ID;
 
+  // 🔸 NUOVO: leggi da localStorage se ha già giocato di recente
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("km_wheel_last_play");
+      if (!raw) return;
+      const ts = Number(raw);
+      if (Number.isNaN(ts)) return;
+      const diff = Date.now() - ts;
+      if (diff < WHEEL_LOCK_MS) {
+        setHasPlayedWheel(true);
+      }
+    } catch (e) {
+      console.error("km wheel localStorage read error", e);
+    }
+  }, []);
+
   // apri ruota quando ci sono almeno 10kg e non hai ancora giocato
   useEffect(() => {
     if (items.length === 0) return;
@@ -185,6 +205,18 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     setHasPlayedWheel(true);
     setBonusKg(bonus || 0);
     setShowWheel(false);
+
+    // 🔸 NUOVO: salva timestamp per bloccare reroll per un po'
+    if (typeof window !== "undefined") {
+      try {
+        window.localStorage.setItem(
+          "km_wheel_last_play",
+          String(Date.now())
+        );
+      } catch (e) {
+        console.error("km wheel localStorage write error", e);
+      }
+    }
   }
 
   function goToCheckout() {
