@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
-
+import type { Metadata } from "next";
+import { getPageMetadata } from "@/src/seo/meta";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
@@ -248,6 +249,14 @@ const HOW_COPY: Record<Lang, CopyPerLang> = {
     ctaSecondary: "Versandinfos ansehen",
   },
 };
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
+  const lang: Lang = normalizeLang(params?.lang);
+  return getPageMetadata(lang, "how");
+}
 
 export default function HowItWorks({
   params,

@@ -1,7 +1,8 @@
 "use client";
 
 /* eslint-disable react/no-unescaped-entities */
-
+import type { Metadata } from "next";
+import { getPageMetadata } from "@/src/seo/meta";
 import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
@@ -575,6 +576,14 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
     </section>
   );
 }
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
+  const lang: Lang = normalizeLang(params?.lang);
+  return getPageMetadata(lang, "products");
+}
 
 export default function ProductsPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
@@ -627,6 +636,49 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       } catch {}
     };
   }, []);
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+
+const productJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name:
+    lang === "it"
+      ? "Mystery box al kg KiloMystery"
+      : lang === "en"
+      ? "KiloMystery mystery boxes by the kilo"
+      : lang === "es"
+      ? "Mystery box al kilo KiloMystery"
+      : lang === "fr"
+      ? "Mystery box au kilo KiloMystery"
+      : "Mystery Box zum Kilo-Preis KiloMystery",
+  brand: {
+    "@type": "Brand",
+    name: "KiloMystery",
+  },
+  url: `${siteUrl}/${lang}/products`,
+  offers: {
+    "@type": "AggregateOffer",
+    priceCurrency: "EUR",
+    lowPrice: "17.99",
+    highPrice: "25.99",
+    availability: "https://schema.org/InStock",
+  },
+};
+
+return (
+  <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(productJsonLd),
+      }}
+    />
+    {/* resto del tuo JSX attuale */}
+    <Header lang={lang} />
+    {/* ... */}
+  </>
+);
 
   return (
     <>
