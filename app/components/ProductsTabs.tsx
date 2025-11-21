@@ -229,8 +229,9 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
       {/* Titolo sezione */}
       <div className="text-center max-w-2xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-extrabold mb-2">
-          {L.sectionTitleMain}{' '}
-          <span className="text-white/80">{L.sectionTitleAccent}</span>
+          <span className="bg-gradient-to-r from-[#7A20FF] via-emerald-300 to-[#20D27A] bg-clip-text text-transparent">
+            {L.sectionTitleMain} {L.sectionTitleAccent}
+          </span>
         </h2>
         <p className="text-white/70">{L.sectionSubtitle1}</p>
         <p className="text-white/70 mt-2 text-sm md:text-base">
@@ -376,7 +377,7 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
           );
         })}
 
-        {/* 🔸 Card promo ruota – nuova versione più compatta con immagine quadrata */}
+        {/* 🔸 Card promo ruota – immagine quadrata e layout compatto */}
         <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4">
           <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">
             🎡 Bonus extra
