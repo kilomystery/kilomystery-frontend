@@ -116,30 +116,42 @@ export default function Footer({
   const year = new Date().getFullYear();
 
   return (
-    <footer className="mt-16 border-t border-[var(--border)] bg-[#0b0f14]">
-      <div className="container py-10">
+    <footer className="relative mt-16 border-t border-white/10 bg-gradient-to-b from-[#05070b] via-[#05070b] to-[#020308]">
+      {/* linea glow in alto */}
+      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#7A20FF] via-emerald-300/80 to-[#20D27A]" />
+
+      <div className="container py-10 relative z-10">
         {/* LOGO */}
         <div className="flex items-center gap-3 mb-6">
           <Link
             href={base}
             prefetch={false}
-            className="inline-flex items-center"
+            className="inline-flex items-center group"
           >
-            <Image
-              src="/logo.svg"
-              alt="KiloMistery"
-              width={140}
-              height={40}
-              className="h-10 w-auto"
-              priority
-            />
+            <div className="relative h-9 w-9 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_25px_rgba(122,32,255,0.45)]">
+              <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
+                <Image
+                  src="/logo.svg"
+                  alt="KiloMistery"
+                  width={140}
+                  height={40}
+                  className="h-6 w-auto"
+                  priority
+                />
+              </div>
+            </div>
+            <span className="ml-2 text-sm font-semibold tracking-[0.18em] uppercase text-white/60 group-hover:text-white transition">
+              KILOMYSTERY
+            </span>
           </Link>
         </div>
 
         {/* NEWSLETTER */}
-        <section className="mb-10 rounded-2xl border border-white/10 bg-gradient-to-tr from-white/[0.02] to-white/[0.04] p-5 shadow-inner">
+        <section className="mb-10 rounded-2xl border border-white/10 bg-gradient-to-tr from-white/[0.03] via-[#111827]/60 to-white/[0.06] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.75)]">
           <h3 className="text-xl md:text-2xl font-extrabold tracking-tight">
-            {L.newsletterTitle}
+            <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
+              {L.newsletterTitle}
+            </span>
           </h3>
 
           <div className="mt-4">
@@ -151,7 +163,7 @@ export default function Footer({
         <div className="grid gap-8 md:grid-cols-2">
           {/* Menu */}
           <nav aria-label="Menu">
-            <h4 className="mb-3 text-lg font-extrabold tracking-tight">
+            <h4 className="mb-3 text-lg font-extrabold tracking-tight text-white">
               {L.menu}
             </h4>
             <ul className="space-y-2">
@@ -196,7 +208,7 @@ export default function Footer({
 
           {/* Legale */}
           <nav aria-label="Legale">
-            <h4 className="mb-3 text-lg font-extrabold tracking-tight">
+            <h4 className="mb-3 text-lg font-extrabold tracking-tight text-white">
               {L.legal}
             </h4>
             <ul className="space-y-2">
@@ -241,8 +253,8 @@ export default function Footer({
         </div>
 
         {/* LINEA FINALE */}
-        <div className="mt-10 border-t border-white/10 pt-6 text-sm text-white/60">
-          {L.rights(year)}
+        <div className="mt-10 border-t border-white/10 pt-6 text-sm text-white/60 flex flex-wrap items-center gap-2">
+          <span>{L.rights(year)}</span>
         </div>
       </div>
 
@@ -251,16 +263,34 @@ export default function Footer({
           display: inline-flex;
           align-items: center;
           gap: 0.375rem;
-          color: rgba(255, 255, 255, 0.8);
+          color: rgba(255, 255, 255, 0.78);
+          font-size: 0.9rem;
           transition: color 0.15s ease, transform 0.15s ease,
             text-shadow 0.15s ease;
         }
+        .footer-link::before {
+          content: "";
+          width: 4px;
+          height: 4px;
+          border-radius: 999px;
+          background: radial-gradient(
+            circle at center,
+            rgba(122, 32, 255, 0.9),
+            transparent
+          );
+          opacity: 0;
+          transform: scale(0.6);
+          transition: opacity 0.15s ease, transform 0.15s ease;
+        }
+        .footer-link:hover::before {
+          opacity: 1;
+          transform: scale(1);
+        }
         .footer-link:hover {
           color: #fff;
-          text-decoration: underline;
-          text-underline-offset: 3px;
-          transform: translateX(1px);
-          text-shadow: 0 0 10px rgba(255, 255, 255, 0.08);
+          text-decoration: none;
+          transform: translateX(2px);
+          text-shadow: 0 0 12px rgba(255, 255, 255, 0.1);
         }
       `}</style>
     </footer>
