@@ -506,7 +506,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
             <div className="w-full md:w-1/2">
               <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
                 <video
-                  src="/video/ExplorerBox.mp4"
+                  src="/videos/packs/ExplorerBox.mp4"
                   className="w-full h-full object-cover"
                   muted
                   autoPlay
