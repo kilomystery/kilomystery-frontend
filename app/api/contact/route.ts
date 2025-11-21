@@ -16,6 +16,7 @@ export async function POST(req: Request) {
     }
 
     const data = await req.json();
+
     const name = (data.name ?? "").trim();
     const email = (data.email ?? "").trim();
     const subject = (data.subject ?? "").trim();
@@ -29,11 +30,15 @@ export async function POST(req: Request) {
     }
 
     const { data: sent, error } = await resend.emails.send({
-      // 👇 DEVE usare il dominio verificato
+      // 🔹 MITTENTE SUL TUO DOMINIO VERIFICATO
       from: "Support KiloMystery <support@kilomystery.com>",
-      // puoi anche mandare a più destinatari
+
+      // 🔹 CASELLA dove leggi i messaggi del form
       to: ["gestionekilomystery@gmail.com"],
-      replyTo: [email], // così clicchi “Rispondi” e scrivi al cliente
+
+      // 🔹 se fai “Rispondi” dalla casella, rispondi al cliente
+      replyTo: [email],
+
       subject: subject || "Nuovo messaggio dal sito KiloMystery",
       text: `
 Nuovo messaggio dal sito KiloMystery:
@@ -48,17 +53,15 @@ ${message}
       `,
     });
 
-    console.log("Resend response:", { sent, error });
-
     if (error) {
-      // se qualcosa va storto LO VEDIAMO
       console.error("Resend error:", error);
       return NextResponse.json(
-        { error: error.message || "Email not sent" },
+        { error: error.message ?? "Email not sent" },
         { status: 500 }
       );
     }
 
+    console.log("Resend email sent:", sent);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("Contact API error:", err);
