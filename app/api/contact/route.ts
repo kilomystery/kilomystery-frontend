@@ -30,13 +30,13 @@ export async function POST(req: Request) {
     }
 
     const { data: sent, error } = await resend.emails.send({
-      // Mittente consentito da Resend finché il dominio non è verificato
+      // Mittente sicuro supportato da Resend con dominio non verificato
       from: `KiloMystery Form <onboarding@resend.dev>`,
 
-      // Tutte le mail del form arrivano qui
-      to: ["gestionekilomystery@gmail.com"],
+      // QUI arrivano tutte le mail del contact form
+      to: ["kilomystery2025@gmail.com"],
 
-      // Quando fai "Rispondi" vai direttamente al cliente
+      // Quando fai "Rispondi", rispondi direttamente al cliente
       replyTo: [email],
 
       subject: subject || `Nuovo messaggio dal sito KiloMystery`,
@@ -63,6 +63,7 @@ ${message}
 
     console.log("Resend email sent:", sent);
     return NextResponse.json({ ok: true });
+
   } catch (err) {
     console.error("Contact API error:", err);
     return NextResponse.json(
