@@ -3,6 +3,7 @@ import { Resend } from "resend";
 
 export const runtime = "nodejs";
 
+// inizializzo Resend con la API key da env
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
@@ -30,16 +31,16 @@ export async function POST(req: Request) {
     }
 
     const { data: sent, error } = await resend.emails.send({
-      // 🔹 MITTENTE SUL TUO DOMINIO VERIFICATO
-      from: "Support KiloMystery <support@kilomystery.com>",
+      // Mittente: nome del cliente visibile, dominio tuo (verificato)
+      from: `${name || "KiloMystery Form"} <support@kilomystery.com>`,
 
-      // 🔹 CASELLA dove leggi i messaggi del form
+      // Dove arrivano tutte le mail del form
       to: ["gestionekilomystery@gmail.com"],
 
-      // 🔹 se fai “Rispondi” dalla casella, rispondi al cliente
+      // Quando fai "Rispondi" rispondi al cliente
       replyTo: [email],
 
-      subject: subject || "Nuovo messaggio dal sito KiloMystery",
+      subject: subject || `Nuovo messaggio dal sito KiloMystery`,
       text: `
 Nuovo messaggio dal sito KiloMystery:
 
