@@ -4,6 +4,8 @@ import type { NextRequest } from "next/server";
 import { SUPPORTED_LANGS, detectLangFromHeader } from "./i18n/lang";
 
 const PUBLIC_FILE = /\.(.*)$/;
+const COMING_SOON_ENABLED =
+  process.env.NEXT_PUBLIC_COMING_SOON === "true";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -19,6 +21,46 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // -----------------------------
+  // 1) Modalità COMING SOON
+  // -----------------------------
+  if (COMING_SOON_ENABLED) {
+    // segmenti path senza stringhe vuote
+    const segments = pathname.split("/").filter(Boolean);
+    const first = segments[0];
+
+    const isRootComingSoon = pathname === "/coming-soon";
+    const isLangComingSoon =
+      segments.length >= 2 &&
+      SUPPORTED_LANGS.includes(first as any) &&
+      segments[1] === "coming-soon";
+
+    // Se sto già vedendo la coming soon, lascio passare
+    if (isRootComingSoon || isLangComingSoon) {
+      return NextResponse.next();
+    }
+
+    // Tutto il resto viene riscritto su /{lang}/coming-soon
+    const url = req.nextUrl.clone();
+
+    // Se il path ha già una lingua supportata, la riuso
+    if (SUPPORTED_LANGS.includes(first as any)) {
+      url.pathname = `/${first}/coming-soon`;
+    } else {
+      // altrimenti la deduco dall'header
+      const lang = detectLangFromHeader(
+        req.headers.get("accept-language")
+      );
+      url.pathname = `/${lang}/coming-soon`;
+    }
+
+    return NextResponse.rewrite(url);
+  }
+
+  // -----------------------------
+  // 2) Routing i18n "normale"
+  // -----------------------------
+
   // Se l'URL ha già una lingua supportata come primo segmento, non facciamo nulla
   // es: /it, /en/products, /fr/events...
   const segments = pathname.split("/");
@@ -29,7 +71,9 @@ export function middleware(req: NextRequest) {
   }
 
   // Altrimenti: niente lingua nel path → deduco dal browser
-  const lang = detectLangFromHeader(req.headers.get("accept-language"));
+  const lang = detectLangFromHeader(
+    req.headers.get("accept-language")
+  );
 
   const url = req.nextUrl.clone();
   url.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
