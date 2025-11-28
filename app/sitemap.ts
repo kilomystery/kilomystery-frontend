@@ -1,98 +1,43 @@
-// middleware.ts
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { SUPPORTED_LANGS, detectLangFromHeader } from "../i18n/lang";
+// app/sitemap.ts
+import type { MetadataRoute } from "next";
 
-const PUBLIC_FILE = /\.(.*)$/;
+const BASE_URL = "https://www.kilomystery.com";
 
-// flag per attivare/disattivare la coming soon
-const COMING_SOON_ENABLED =
-  process.env.NEXT_PUBLIC_COMING_SOON === "true";
+const LANGS = ["it", "en", "es", "fr", "de"] as const;
 
-// nome cookie per bypassare la coming soon (per te/admin)
-const PREVIEW_COOKIE_NAME = "km_preview";
+const PATHS = [
+  "", // homepage lingua
+  "/products",
+  "/how-it-works",
+  "/about",
+  "/events",
+  "/contact",
+  "/policy/shipping",
+  "/policy/returns",
+  "/policy/terms",
+  "/policy/privacy",
+] as const;
 
-export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+export default function sitemap(): MetadataRoute.Sitemap {
+  const lastModified = new Date("2025-11-22T13:02:05.290Z"); // puoi mettere new Date()
 
-  // 0) Escludiamo file statici, API, ecc.
-  if (
-    pathname.startsWith("/api") || // se vuoi escludere anche /api dalla coming soon
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/static") ||
-    pathname.startsWith("/favicon") ||
-    PUBLIC_FILE.test(pathname)
-  ) {
-    return NextResponse.next();
-  }
+  const entries: MetadataRoute.Sitemap = [];
 
-  // Controllo cookie di preview (per te/admin)
-  const hasPreviewBypass =
-    req.cookies.get(PREVIEW_COOKIE_NAME)?.value === "1";
+  for (const lang of LANGS) {
+    for (const path of PATHS) {
+      const isHome = path === "";
+      const url = isHome
+        ? `${BASE_URL}/${lang}`
+        : `${BASE_URL}/${lang}${path}`;
 
-  // -----------------------------
-  // 1) Modalità COMING SOON
-  // -----------------------------
-  if (COMING_SOON_ENABLED && !hasPreviewBypass) {
-    // segmenti path senza stringhe vuote
-    const segments = pathname.split("/").filter(Boolean);
-    const first = segments[0];
-
-    const isRootComingSoon = pathname === "/coming-soon";
-    const isLangComingSoon =
-      segments.length >= 2 &&
-      SUPPORTED_LANGS.includes(first as any) &&
-      segments[1] === "coming-soon";
-
-    // Se sto già vedendo la coming soon, lascio passare
-    if (isRootComingSoon || isLangComingSoon) {
-      return NextResponse.next();
+      entries.push({
+        url,
+        lastModified,
+        changeFrequency: "weekly",
+        priority: isHome ? 1 : path === "/products" ? 0.9 : 0.7,
+      });
     }
-
-    // Tutto il resto viene riscritto su /{lang}/coming-soon
-    const url = req.nextUrl.clone();
-
-    // Se il path ha già una lingua supportata, la riuso
-    if (SUPPORTED_LANGS.includes(first as any)) {
-      url.pathname = `/${first}/coming-soon`;
-    } else {
-      // altrimenti deduco la lingua dall'header
-      const lang = detectLangFromHeader(
-        req.headers.get("accept-language")
-      );
-      url.pathname = `/${lang}/coming-soon`;
-    }
-
-    return NextResponse.rewrite(url);
   }
 
-  // -----------------------------
-  // 2) Routing i18n "normale"
-  // -----------------------------
-
-  // Se l'URL ha già una lingua supportata come primo segmento, non facciamo nulla
-  // es: /it, /en/products, /fr/events...
-  const segments = pathname.split("/");
-  const first = segments[1];
-
-  if (SUPPORTED_LANGS.includes(first as any)) {
-    return NextResponse.next();
-  }
-
-  // Altrimenti: niente lingua nel path → deduco dal browser
-  const lang = detectLangFromHeader(
-    req.headers.get("accept-language")
-  );
-
-  const url = req.nextUrl.clone();
-  url.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
-
-  return NextResponse.redirect(url);
+  return entries;
 }
-
-// Matcher per dire a Next su quali path applicare il middleware
-export const config = {
-  matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
-  ],
-};
