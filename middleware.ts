@@ -4,28 +4,37 @@ import type { NextRequest } from "next/server";
 import { SUPPORTED_LANGS, detectLangFromHeader } from "./i18n/lang";
 
 const PUBLIC_FILE = /\.(.*)$/;
+
+// flag per attivare/disattivare la coming soon
 const COMING_SOON_ENABLED =
   process.env.NEXT_PUBLIC_COMING_SOON === "true";
+
+// nome cookie per bypassare la coming soon (per te/admin)
+const PREVIEW_COOKIE_NAME = "km_preview";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Escludiamo file statici, API, ecc.
+  // 0) Escludiamo file statici, API, preview, ecc.
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.startsWith("/favicon") ||
+    pathname.startsWith("/preview") || // così /preview/enable funziona anche con coming soon attiva
     PUBLIC_FILE.test(pathname)
   ) {
     return NextResponse.next();
   }
 
+  // Controllo cookie di preview (per te/admin)
+  const hasPreviewBypass =
+    req.cookies.get(PREVIEW_COOKIE_NAME)?.value === "1";
+
   // -----------------------------
   // 1) Modalità COMING SOON
   // -----------------------------
-  if (COMING_SOON_ENABLED) {
-    // segmenti path senza stringhe vuote
+  if (COMING_SOON_ENABLED && !hasPreviewBypass) {
     const segments = pathname.split("/").filter(Boolean);
     const first = segments[0];
 
@@ -40,14 +49,13 @@ export function middleware(req: NextRequest) {
       return NextResponse.next();
     }
 
-    // Tutto il resto viene riscritto su /{lang}/coming-soon
     const url = req.nextUrl.clone();
 
     // Se il path ha già una lingua supportata, la riuso
     if (SUPPORTED_LANGS.includes(first as any)) {
       url.pathname = `/${first}/coming-soon`;
     } else {
-      // altrimenti la deduco dall'header
+      // altrimenti deduco la lingua dall'header
       const lang = detectLangFromHeader(
         req.headers.get("accept-language")
       );
@@ -60,9 +68,6 @@ export function middleware(req: NextRequest) {
   // -----------------------------
   // 2) Routing i18n "normale"
   // -----------------------------
-
-  // Se l'URL ha già una lingua supportata come primo segmento, non facciamo nulla
-  // es: /it, /en/products, /fr/events...
   const segments = pathname.split("/");
   const first = segments[1];
 
@@ -70,7 +75,6 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Altrimenti: niente lingua nel path → deduco dal browser
   const lang = detectLangFromHeader(
     req.headers.get("accept-language")
   );
@@ -81,7 +85,6 @@ export function middleware(req: NextRequest) {
   return NextResponse.redirect(url);
 }
 
-// Matcher per dire a Next su quali path applicare il middleware
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
