@@ -32,16 +32,25 @@ export default function RootLayout({
   return (
     <html lang="it" className="bg-[#0b0f14] text-white">
       <body>
-        {/* Google Analytics */}
+        {/* Google Analytics + Consent Mode */}
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-8MG904NJ76"
         />
+
         <Script id="google-analytics">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
+
+            // 🌍 CONSENT MODE — default: tutto negato finché l'utente non accetta
+            gtag('consent', 'default', {
+              ad_storage: 'denied',
+              analytics_storage: 'denied'
+            });
+
+            // Configurazione GA4
             gtag('config', 'G-8MG904NJ76');
           `}
         </Script>
