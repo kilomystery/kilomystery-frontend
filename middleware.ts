@@ -16,13 +16,31 @@ const PREVIEW_COOKIE_NAME = "km_preview";
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // 0) Escludiamo file statici, API, preview, ecc.
+  // -----------------------------------
+  // 0) Gestione bypass: ?km_preview=1
+  //    Esempio: /it?km_preview=1
+  // -----------------------------------
+  if (req.nextUrl.searchParams.get("km_preview") === "1") {
+    const cleanUrl = req.nextUrl.clone();
+    cleanUrl.searchParams.delete("km_preview");
+
+    const res = NextResponse.redirect(cleanUrl);
+    res.cookies.set(PREVIEW_COOKIE_NAME, "1", {
+      path: "/",
+      httpOnly: false,
+      sameSite: "lax",
+    });
+
+    return res;
+  }
+
+  // 1) Escludiamo file statici, API, preview, ecc.
   if (
-    pathname.startsWith("/api") ||       // API sempre raggiungibili
+    pathname.startsWith("/api") || // API sempre raggiungibili
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.startsWith("/favicon") ||
-    pathname.startsWith("/preview") ||   // /preview/enable & /preview/disable
+    pathname.startsWith("/preview") || // eventuali route /preview
     PUBLIC_FILE.test(pathname)
   ) {
     return NextResponse.next();
@@ -33,7 +51,7 @@ export function middleware(req: NextRequest) {
     req.cookies.get(PREVIEW_COOKIE_NAME)?.value === "1";
 
   // -----------------------------
-  // 1) Modalità COMING SOON
+  // 2) Modalità COMING SOON
   // -----------------------------
   if (COMING_SOON_ENABLED && !hasPreviewBypass) {
     const segments = pathname.split("/").filter(Boolean);
@@ -68,7 +86,7 @@ export function middleware(req: NextRequest) {
   }
 
   // -----------------------------
-  // 2) Routing i18n "normale"
+  // 3) Routing i18n "normale"
   // -----------------------------
   const segments = pathname.split("/");
   const first = segments[1];
