@@ -1,4 +1,6 @@
+// app/layout.tsx
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 import CookieBanner from "./components/CookieBanner";
@@ -30,6 +32,20 @@ export default function RootLayout({
   return (
     <html lang="it" className="bg-[#0b0f14] text-white">
       <body>
+        {/* Google Analytics */}
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-8MG904NJ76"
+        />
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-8MG904NJ76');
+          `}
+        </Script>
+
         <CartProviderRoot>
           {children}
           <CookieBanner />
