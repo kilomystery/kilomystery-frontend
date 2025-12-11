@@ -27,8 +27,6 @@ const COMPANY_INFO = {
   vat: "P.IVA / C.F. 027945505745",
   address:
     "Sede legale: Piazza Alessandro Romano 11, 72023 Mesagne (BR) – Italia",
-  representative:
-    "Rappresentante legale: Ivan Santoro (C.F. SNTVNI93C02F152H)",
 };
 
 const FOOTER_LABELS: Record<Lang, Labels> = {
@@ -270,7 +268,6 @@ export default function Footer({
           <p>{COMPANY_INFO.name}</p>
           <p>{COMPANY_INFO.vat}</p>
           <p>{COMPANY_INFO.address}</p>
-          <p>{COMPANY_INFO.representative}</p>
         </div>
       </div>
 
