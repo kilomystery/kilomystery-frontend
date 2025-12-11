@@ -22,6 +22,15 @@ type Labels = {
   rights: (year: number) => string;
 };
 
+const COMPANY_INFO = {
+  name: "Kilo Mystery SRLS",
+  vat: "P.IVA / C.F. 027945505745",
+  address:
+    "Sede legale: Piazza Alessandro Romano 11, 72023 Mesagne (BR) – Italia",
+  representative:
+    "Rappresentante legale: Ivan Santoro (C.F. SNTVNI93C02F152H)",
+};
+
 const FOOTER_LABELS: Record<Lang, Labels> = {
   it: {
     menu: "Menu",
@@ -255,6 +264,13 @@ export default function Footer({
         {/* LINEA FINALE */}
         <div className="mt-10 border-t border-white/10 pt-6 text-sm text-white/60 flex flex-wrap items-center gap-2">
           <span>{L.rights(year)}</span>
+        </div>
+
+        <div className="mt-3 space-y-1 text-xs text-white/50">
+          <p>{COMPANY_INFO.name}</p>
+          <p>{COMPANY_INFO.vat}</p>
+          <p>{COMPANY_INFO.address}</p>
+          <p>{COMPANY_INFO.representative}</p>
         </div>
       </div>
 
