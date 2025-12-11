@@ -189,7 +189,7 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
 export const metadata: Metadata = {
   robots: {
     index: false,
-    follow: false,
+    follow: true,
   },
 };
 

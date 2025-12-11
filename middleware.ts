@@ -5,13 +5,31 @@ import { SUPPORTED_LANGS, detectLangFromHeader } from "./i18n/lang";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-// 🔒 PER ORA: Coming Soon sempre attiva
-// Quando vorrai spegnerla, puoi rimettere la versione con process.env:
-// const COMING_SOON_ENABLED = process.env.NEXT_PUBLIC_COMING_SOON === "true";
-const COMING_SOON_ENABLED = true;
+// Leggiamo da env per capire se mostrare la Coming Soon.
+// Valore di default = false così il sito rimane indicizzabile se la variabile
+// NEXT_PUBLIC_COMING_SOON non è impostata.
+const COMING_SOON_ENABLED =
+  process.env.NEXT_PUBLIC_COMING_SOON === "true";
 
 // Cookie per bypassare la Coming Soon (solo per te/admin)
 const PREVIEW_COOKIE_NAME = "km_preview";
+
+const CRAWLER_UA_PATTERNS = [
+  /googlebot/i,
+  /bingbot/i,
+  /duckduckbot/i,
+  /yandexbot/i,
+  /baiduspider/i,
+  /sogou/i,
+  /exabot/i,
+  /facebot/i,
+  /ia_archiver/i,
+];
+
+function isSearchCrawler(req: NextRequest) {
+  const ua = req.headers.get("user-agent") || "";
+  return CRAWLER_UA_PATTERNS.some((pattern) => pattern.test(ua));
+}
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -53,7 +71,11 @@ export function middleware(req: NextRequest) {
   // -----------------------------
   // 2) Modalità COMING SOON
   // -----------------------------
-  if (COMING_SOON_ENABLED && !hasPreviewBypass) {
+  if (
+    COMING_SOON_ENABLED &&
+    !hasPreviewBypass &&
+    !isSearchCrawler(req)
+  ) {
     const segments = pathname.split("/").filter(Boolean);
     const first = segments[0];
 
