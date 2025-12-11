@@ -9,7 +9,9 @@ const PUBLIC_FILE = /\.(.*)$/;
 // Valore di default = false così il sito rimane indicizzabile se la variabile
 // NEXT_PUBLIC_COMING_SOON non è impostata.
 const COMING_SOON_ENABLED =
-  process.env.NEXT_PUBLIC_COMING_SOON === "true";
+  process.env.NEXT_PUBLIC_COMING_SOON === undefined
+    ? true
+    : process.env.NEXT_PUBLIC_COMING_SOON === "true";
 
 // Cookie per bypassare la Coming Soon (solo per te/admin)
 const PREVIEW_COOKIE_NAME = "km_preview";
