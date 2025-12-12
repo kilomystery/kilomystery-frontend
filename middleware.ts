@@ -20,6 +20,9 @@ const CRAWLER_UA_PATTERNS = [
   /googlebot/i,
   /google-inspectiontool/i,
   /googleother/i,
+  /adsbot-google/i,
+  /mediapartners-google/i,
+  /apis-google/i,
   /bingbot/i,
   /duckduckbot/i,
   /yandexbot/i,
@@ -28,6 +31,10 @@ const CRAWLER_UA_PATTERNS = [
   /exabot/i,
   /facebot/i,
   /ia_archiver/i,
+  /crawler/i,
+  /spider/i,
+  /bot/i,
+  /slurp/i,
 ];
 
 function isSearchCrawler(req: NextRequest) {
