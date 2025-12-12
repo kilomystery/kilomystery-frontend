@@ -18,6 +18,8 @@ const PREVIEW_COOKIE_NAME = "km_preview";
 
 const CRAWLER_UA_PATTERNS = [
   /googlebot/i,
+  /google-inspectiontool/i,
+  /googleother/i,
   /bingbot/i,
   /duckduckbot/i,
   /yandexbot/i,
