@@ -30,14 +30,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it" className="bg-[#0b0f14] text-white">
-      <body>
+    <html>
+      <body className="bg-[#0b0f14] text-white">
         {/* Google Analytics + Consent Mode */}
         <Script
           async
           src="https://www.googletagmanager.com/gtag/js?id=G-8MG904NJ76"
         />
-
         <Script id="google-analytics">
           {`
             window.dataLayer = window.dataLayer || [];
