@@ -1,21 +1,18 @@
 // middleware.ts
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { SUPPORTED_LANGS, detectLangFromHeader } from "./i18n/lang";
+import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
 
 const PUBLIC_FILE = /\.(.*)$/;
 
-// Leggiamo da env per capire se mostrare la Coming Soon.
-// Valore di default = false così il sito rimane indicizzabile se la variabile
-// NEXT_PUBLIC_COMING_SOON non è impostata.
-const COMING_SOON_ENABLED =
-  process.env.NEXT_PUBLIC_COMING_SOON === undefined
-    ? true
-    : process.env.NEXT_PUBLIC_COMING_SOON === "true";
-
-// Cookie per bypassare la Coming Soon (solo per te/admin)
+// 🔒 Cookie per bypassare la Coming Soon (per te/admin)
 const PREVIEW_COOKIE_NAME = "km_preview";
 
+// ⚙️ Coming Soon: SPENTA di default.
+// Si attiva solo se in ambiente hai NEXT_PUBLIC_COMING_SOON="true".
+const COMING_SOON_ENABLED = process.env.NEXT_PUBLIC_COMING_SOON === "true";
+
+// Pattern base per user-agent dei crawler
 const CRAWLER_UA_PATTERNS = [
   /googlebot/i,
   /google-inspectiontool/i,
@@ -39,18 +36,28 @@ const CRAWLER_UA_PATTERNS = [
 
 function isSearchCrawler(req: NextRequest) {
   const ua = req.headers.get("user-agent") || "";
-  return CRAWLER_UA_PATTERNS.some((pattern) => pattern.test(ua));
+  return CRAWLER_UA_PATTERNS.some((re) => re.test(ua));
 }
 
 export function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const url = req.nextUrl;
+  const { pathname } = url;
 
-  // -----------------------------------
-  // 0) Gestione bypass: ?km_preview=1
-  //    Esempio: /it?km_preview=1
-  // -----------------------------------
-  if (req.nextUrl.searchParams.get("km_preview") === "1") {
-    const cleanUrl = req.nextUrl.clone();
+  // 0) Escludiamo asset statici, API, file pubblici, robots, sitemap ecc.
+  if (
+    pathname.startsWith("/api") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname.startsWith("/favicon") ||
+    pathname.startsWith("/preview") ||
+    PUBLIC_FILE.test(pathname)
+  ) {
+    return NextResponse.next();
+  }
+
+  // 1) Gestione bypass: ?km_preview=1 → set cookie e ripulisce l'URL
+  if (url.searchParams.get("km_preview") === "1") {
+    const cleanUrl = url.clone();
     cleanUrl.searchParams.delete("km_preview");
 
     const res = NextResponse.redirect(cleanUrl);
@@ -63,84 +70,58 @@ export function middleware(req: NextRequest) {
     return res;
   }
 
-  // 1) Escludiamo file statici, API, preview, ecc.
-  if (
-    pathname.startsWith("/api") || // API sempre raggiungibili
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/static") ||
-    pathname.startsWith("/favicon") ||
-    pathname.startsWith("/preview") || // eventuali route /preview
-    PUBLIC_FILE.test(pathname)
-  ) {
-    return NextResponse.next();
-  }
+  const segments = pathname.split("/").filter(Boolean); // es: "/it/how-it-works" → ["it","how-it-works"]
+  const firstSegment = segments[0];
+  const hasLangPrefix = SUPPORTED_LANGS.includes(firstSegment as Lang);
 
-  // Controllo cookie di preview (per te/admin)
   const hasPreviewBypass =
     req.cookies.get(PREVIEW_COOKIE_NAME)?.value === "1";
 
-  // -----------------------------
-  // 2) Modalità COMING SOON
-  // -----------------------------
-  if (
-    COMING_SOON_ENABLED &&
-    !hasPreviewBypass &&
-    !isSearchCrawler(req)
-  ) {
-    const segments = pathname.split("/").filter(Boolean);
-    const first = segments[0];
+  // 2) Modalità COMING SOON (solo utenti normali, non crawler, non preview)
+  if (COMING_SOON_ENABLED && !hasPreviewBypass && !isSearchCrawler(req)) {
+    const isAlreadyComingSoon =
+      (hasLangPrefix && segments[1] === "coming-soon") ||
+      (!hasLangPrefix && pathname === "/coming-soon");
 
-    const isRootComingSoon = pathname === "/coming-soon";
-    const isLangComingSoon =
-      segments.length >= 2 &&
-      SUPPORTED_LANGS.includes(first as any) &&
-      segments[1] === "coming-soon";
-
-    // Se sto già vedendo la coming soon, lascio passare
-    if (isRootComingSoon || isLangComingSoon) {
+    // Se sto già visualizzando la coming soon, lascio passare
+    if (isAlreadyComingSoon) {
       return NextResponse.next();
     }
 
-    // Tutto il resto viene riscritto su /{lang}/coming-soon
-    const url = req.nextUrl.clone();
-
-    if (SUPPORTED_LANGS.includes(first as any)) {
-      // Path con lingua già presente: /it/... → /it/coming-soon
-      url.pathname = `/${first}/coming-soon`;
+    // Se il path ha già la lingua → la riuso
+    let lang: Lang;
+    if (hasLangPrefix) {
+      lang = firstSegment as Lang;
     } else {
-      // Nessuna lingua nel path → deduco dal browser
-      const lang = detectLangFromHeader(
-        req.headers.get("accept-language")
-      );
-      url.pathname = `/${lang}/coming-soon`;
+      // Altrimenti deduco dal browser
+      lang = detectLangFromHeader(req.headers.get("accept-language"));
     }
 
-    return NextResponse.rewrite(url);
+    const rewriteUrl = url.clone();
+    rewriteUrl.pathname = `/${lang}/coming-soon`;
+    rewriteUrl.search = "";
+
+    return NextResponse.rewrite(rewriteUrl);
   }
 
-  // -----------------------------
   // 3) Routing i18n "normale"
-  // -----------------------------
-  const segments = pathname.split("/");
-  const first = segments[1];
 
-  // Se l'URL ha già una lingua supportata come primo segmento
-  if (SUPPORTED_LANGS.includes(first as any)) {
+  // 3a) Se l'URL ha già una lingua supportata come primo segmento, non tocchiamo nulla.
+  //     Es: /it/..., /en/..., /de/... → passano dritti alle pagine [lang].
+  if (hasLangPrefix) {
     return NextResponse.next();
   }
 
-  // Altrimenti: niente lingua nel path → deduco dal browser
-  const lang = detectLangFromHeader(
-    req.headers.get("accept-language")
-  );
+  // 3b) Se NON c'è la lingua nel path (es: "/", "/products"),
+  //     redirezioniamo a /{lang}/... in base all'Accept-Language.
+  const lang = detectLangFromHeader(req.headers.get("accept-language"));
+  const redirectUrl = url.clone();
+  redirectUrl.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
 
-  const url = req.nextUrl.clone();
-  url.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
-
-  return NextResponse.redirect(url);
+  return NextResponse.redirect(redirectUrl);
 }
 
-// Matcher per dire a Next su quali path applicare il middleware
+// Applichiamo il middleware a tutte le pagine tranne asset statici & co.
 export const config = {
   matcher: [
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
