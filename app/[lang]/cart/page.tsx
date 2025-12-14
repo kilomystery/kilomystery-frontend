@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState } from "react";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
@@ -178,12 +178,12 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
   },
 };
 
-export default async function CartPage({
+export default function CartPage({
   params,
 }: {
   params: Promise<{ lang: string }>;
 }) {
-  const resolved = await params;
+  const resolved = use(params);
   const lang: Lang = normalizeLang(resolved?.lang);
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;

@@ -191,13 +191,12 @@ type FormState =
   | { status: 'ok' }
   | { status: 'error'; message: string };
 
-export default async function ContactPage({
+export default function ContactPage({
   params,
 }: {
-  params: Promise<{ lang: string }>;
+  params: { lang: string };
 }) {
-  const resolved = await params;
-  const lang: Lang = normalizeLang(resolved?.lang);
+  const lang: Lang = normalizeLang(params?.lang);
   const t = CONTACT_COPY[lang] ?? CONTACT_COPY.it;
 
   const [state, setState] = useState<FormState>({ status: 'idle' });

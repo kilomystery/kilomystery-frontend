@@ -2,7 +2,7 @@
 
 /* eslint-disable react/no-unescaped-entities */
 
-import { useEffect, useRef } from "react";
+import { use, useEffect, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -650,12 +650,12 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   );
 }
 
-export default async function ProductsPage({
+export default function ProductsPage({
   params,
 }: {
   params: Promise<{ lang: string }>;
 }) {
-  const resolved = await params;
+  const resolved = use(params);
   const lang: Lang = normalizeLang(resolved?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);

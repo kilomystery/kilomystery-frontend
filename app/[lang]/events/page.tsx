@@ -120,13 +120,12 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
   },
 };
 
-export default async function EventsPage({
+export default function EventsPage({
   params,
 }: {
-  params: Promise<{ lang: string }>;
+  params: { lang: string };
 }) {
-  const resolved = await params;
-  const lang: Lang = normalizeLang(resolved?.lang);
+  const lang: Lang = normalizeLang(params?.lang);
   const t = EVENTS_COPY[lang] ?? EVENTS_COPY.it;
 
   return (
