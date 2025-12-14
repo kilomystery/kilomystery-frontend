@@ -466,14 +466,19 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   return getPageMetadata(lang, "home");
 }
 
-export default function HomePage({ params }: { params: { lang: string } }) {
-  const { lang: rawLang } = params;
+export default async function HomePage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const { lang: rawLang } = await params;
   const lang: Lang = normalizeLang(rawLang);
   const t = HOME_COPY[lang] ?? HOME_COPY.it;
 

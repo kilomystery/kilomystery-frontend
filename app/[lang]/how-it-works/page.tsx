@@ -252,18 +252,20 @@ const HOW_COPY: Record<Lang, CopyPerLang> = {
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   return getPageMetadata(lang, "how");
 }
 
-export default function HowItWorks({
+export default async function HowItWorks({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = HOW_COPY[lang] ?? HOW_COPY.it;
 
   return (

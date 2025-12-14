@@ -291,8 +291,13 @@ const ABOUT_COPY: Record<Lang, CopyPerLang> = {
   },
 };
 
-export default function AboutPage({ params }: { params: { lang: string } }) {
-  const lang: Lang = normalizeLang(params?.lang);
+export default async function AboutPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = ABOUT_COPY[lang] ?? ABOUT_COPY.it;
 
   return (

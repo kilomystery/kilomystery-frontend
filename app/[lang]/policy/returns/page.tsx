@@ -175,12 +175,13 @@ const RETURNS_COPY: Record<Lang, Copy> = {
   },
 };
 
-export default function ReturnsPage({
+export default async function ReturnsPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = RETURNS_COPY[lang] ?? RETURNS_COPY.it;
   const today = new Date().toLocaleDateString("it-IT");
 

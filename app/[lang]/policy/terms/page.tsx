@@ -154,12 +154,13 @@ const DATE_LOCALE: Record<Lang, string> = {
   de: "de-DE",
 };
 
-export default function TermsPage({
+export default async function TermsPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = TERMS_COPY[lang] ?? TERMS_COPY.it;
   const today = new Date().toLocaleDateString(DATE_LOCALE[lang]);
 

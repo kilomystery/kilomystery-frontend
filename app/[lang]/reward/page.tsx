@@ -4,12 +4,13 @@
 import SpinWheel from "@/app/components/SpinWheel";
 import { Lang, normalizeLang } from "@/i18n/lang";
 
-export default function RewardPage({
+export default async function RewardPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
 
   return <SpinWheel lang={lang} showBackToShopButton />;
 }

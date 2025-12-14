@@ -5,6 +5,7 @@ import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
 
 const PUBLIC_FILE = /\.(.*)$/;
 const PREVIEW_COOKIE = "km_preview";
+const LANG_COOKIE = "km_lang";
 
 // Coming soon sempre attiva
 const COMING_SOON_ENABLED = true;
@@ -45,6 +46,10 @@ export function middleware(req: NextRequest) {
       path: "/",
       sameSite: "lax",
     });
+    res.cookies.set(LANG_COOKIE, detectLangFromHeader(req.headers.get("accept-language")), {
+      path: "/",
+      sameSite: "lax",
+    });
     return res;
   }
 
@@ -62,9 +67,16 @@ export function middleware(req: NextRequest) {
       );
       const redirect = url.clone();
       redirect.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
-      return NextResponse.redirect(redirect);
+      const res = NextResponse.redirect(redirect);
+      res.cookies.set(LANG_COOKIE, lang, { path: "/", sameSite: "lax" });
+      return res;
     }
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.cookies.set(LANG_COOKIE, first as Lang, {
+      path: "/",
+      sameSite: "lax",
+    });
+    return res;
   }
 
   // 4️⃣ UTENTI NORMALI → COMING SOON
@@ -91,14 +103,18 @@ export function middleware(req: NextRequest) {
     hasLang && segments[1] === "coming-soon";
 
   if (isAlreadyComingSoon) {
-    return NextResponse.next();
+    const res = NextResponse.next();
+    res.cookies.set(LANG_COOKIE, lang, { path: "/", sameSite: "lax" });
+    return res;
   }
 
   const rewrite = url.clone();
   rewrite.pathname = `/${lang}/coming-soon`;
   rewrite.search = "";
 
-  return NextResponse.rewrite(rewrite);
+  const res = NextResponse.rewrite(rewrite);
+  res.cookies.set(LANG_COOKIE, lang, { path: "/", sameSite: "lax" });
+  return res;
 }
 
 export const config = {

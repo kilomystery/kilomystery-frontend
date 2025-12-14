@@ -650,8 +650,13 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   );
 }
 
-export default function ProductsPage({ params }: { params: { lang: string } }) {
-  const lang: Lang = normalizeLang(params?.lang);
+export default async function ProductsPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
 

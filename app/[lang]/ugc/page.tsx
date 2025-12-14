@@ -273,19 +273,21 @@ const UGC_COPY: Record<Lang, CopyPerLang> = {
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   // Usa uno slug tipo "ugc" o "unboxing-contest" nel tuo sistema SEO
   return getPageMetadata(lang, "how");
 }
 
-export default function UgcPage({
+export default async function UgcPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = UGC_COPY[lang] ?? UGC_COPY.it;
 
   const instagramUrl = "https://www.instagram.com/kilomystery";

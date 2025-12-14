@@ -1,19 +1,17 @@
 // app/[lang]/layout.tsx
-import { normalizeLang } from "@/i18n/lang";
+import type { ReactNode } from "react";
+import { SUPPORTED_LANGS } from "@/i18n/lang";
 
-export default async function LangLayout({
+export const dynamicParams = false;
+
+export function generateStaticParams() {
+  return SUPPORTED_LANGS.map((lang) => ({ lang }));
+}
+
+export default function LangSegmentLayout({
   children,
-  params,
 }: {
-  children: React.ReactNode;
-  params: Promise<{ lang: string }>;
+  children: ReactNode;
 }) {
-  const { lang: rawLang } = await params;
-  const lang = normalizeLang(rawLang);
-
-  return (
-    <html lang={lang} className="bg-[#0b0f14] text-white">
-      <body>{children}</body>
-    </html>
-  );
+  return <>{children}</>;
 }

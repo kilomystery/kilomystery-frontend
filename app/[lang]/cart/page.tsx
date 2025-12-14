@@ -178,8 +178,13 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
   },
 };
 
-export default function CartPage({ params }: { params: { lang: string } }) {
-  const lang: Lang = normalizeLang(params?.lang);
+export default async function CartPage({
+  params,
+}: {
+  params: Promise<{ lang: string }>;
+}) {
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 

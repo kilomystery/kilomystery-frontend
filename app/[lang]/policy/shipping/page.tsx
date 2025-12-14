@@ -142,18 +142,20 @@ const DATE_LOCALE: Record<Lang, string> = {
 export async function generateMetadata({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }): Promise<Metadata> {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   return getPageMetadata(lang, "shipping");
 }
 
-export default function ShippingPage({
+export default async function ShippingPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = SHIPPING_COPY[lang] ?? SHIPPING_COPY.it;
   const today = new Date().toLocaleDateString(DATE_LOCALE[lang]);
 

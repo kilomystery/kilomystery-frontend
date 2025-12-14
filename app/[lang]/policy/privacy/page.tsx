@@ -256,12 +256,13 @@ const DATE_LOCALE: Record<Lang, string> = {
   de: "de-DE",
 };
 
-export default function PrivacyPage({
+export default async function PrivacyPage({
   params,
 }: {
-  params: { lang: string };
+  params: Promise<{ lang: string }>;
 }) {
-  const lang: Lang = normalizeLang(params?.lang);
+  const resolved = await params;
+  const lang: Lang = normalizeLang(resolved?.lang);
   const t = PRIVACY_COPY[lang] ?? PRIVACY_COPY.it;
   const today = new Date().toLocaleDateString(DATE_LOCALE[lang]);
 
