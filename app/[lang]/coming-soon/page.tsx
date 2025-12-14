@@ -10,6 +10,12 @@ type ComingKey =
   | "bullet1"
   | "bullet2"
   | "bullet3"
+  | "info1Title"
+  | "info1Value"
+  | "info2Title"
+  | "info2Value"
+  | "info3Title"
+  | "info3Value"
   | "comingTitle"
   | "comingItem1"
   | "comingItem2"
@@ -35,6 +41,12 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
     bullet2:
       "📦 Lotti tracciati – pesi chiari, zero fuffa",
     bullet3: "🌍 Spedizione in tutta Europa",
+    info1Title: "Drop #03",
+    info1Value: "Primavera 2025",
+    info2Title: "Pop-up tour",
+    info2Value: "Milano • Madrid • Parigi",
+    info3Title: "Lista d'attesa",
+    info3Value: "4.300 persone",
     comingTitle: "Cosa stiamo preparando",
     comingItem1:
       "Nuovi lotti Standard e Premium con selezione migliorata",
@@ -65,6 +77,12 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
       "📦 Traceable batches – batch IDs, clear weights, no fluff",
     bullet3:
       "🌍 Shipping across Europe – mystery boxes by the kilo beyond Italy",
+    info1Title: "Drop #03",
+    info1Value: "Spring 2025",
+    info2Title: "Pop-up tour",
+    info2Value: "Milan • Madrid • Paris",
+    info3Title: "Waitlist",
+    info3Value: "4.3K people",
     comingTitle: "What we’re working on",
     comingItem1:
       "New Standard and Premium batches with improved selection",
@@ -95,6 +113,12 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
       "📦 Lotes trazables – IDs claros, cero humo",
     bullet3:
       "🌍 Envíos a toda Europa",
+    info1Title: "Drop #03",
+    info1Value: "Primavera 2025",
+    info2Title: "Gira pop-up",
+    info2Value: "Milán • Madrid • París",
+    info3Title: "Lista de espera",
+    info3Value: "4.300 personas",
     comingTitle: "Qué estamos preparando",
     comingItem1:
       "Nuevos lotes Standard y Premium con una selección mejorada",
@@ -127,6 +151,12 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
       "📦 Lots traçables – IDs clairs, poids transparents, zéro blabla",
     bullet3:
       "🌍 Expédition dans toute l’Europe",
+    info1Title: "Drop #03",
+    info1Value: "Printemps 2025",
+    info2Title: "Tournée pop-up",
+    info2Value: "Milan • Madrid • Paris",
+    info3Title: "Liste d’attente",
+    info3Value: "4 300 personnes",
     comingTitle: "Ce que nous préparons",
     comingItem1:
       "De nouveaux lots Standard et Premium avec une sélection améliorée",
@@ -160,6 +190,12 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
       "📦 Rückverfolgbare Chargen – klare Gewichte, kein Bullshit",
     bullet3:
       "🌍 Versand in ganz Europa",
+    info1Title: "Drop #03",
+    info1Value: "Frühjahr 2025",
+    info2Title: "Pop-up-Tour",
+    info2Value: "Mailand • Madrid • Paris",
+    info3Title: "Warteliste",
+    info3Value: "4.300 Personen",
     comingTitle: "Woran wir arbeiten",
     comingItem1:
       "Neue Standard- und Premium-Chargen mit besserer Auswahl",
@@ -198,92 +234,150 @@ export default async function ComingSoonPage({ params }: PageProps) {
   const lang: Lang = normalizeLang(resolved.lang);
   const t = COMING_COPY[lang] ?? COMING_COPY.en;
 
+  const highlights = [t.bullet1, t.bullet2, t.bullet3];
+  const comingList = [
+    t.comingItem1,
+    t.comingItem2,
+    t.comingItem3,
+    t.comingItem4,
+  ];
+  const infoCards = [
+    { title: t.info1Title, value: t.info1Value },
+    { title: t.info2Title, value: t.info2Value },
+    { title: t.info3Title, value: t.info3Value },
+  ];
+
   return (
-    <main className="container space-y-10 py-10 md:py-16">
-      {/* CARD PRINCIPALE */}
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 pt-10 md:p-10 md:pt-12">
-        {/* logo + badge */}
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <Image
-              src="/logo.png"
-              alt="KiloMystery"
-              width={40}
-              height={40}
-              className="h-10 w-auto"
-            />
-            <span className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">
-              KILOMYSTERY
+    <main className="relative min-h-screen overflow-hidden bg-[#03060b] py-12 text-white">
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(122,32,255,0.2),_transparent_45%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom,_rgba(32,210,122,0.15),_transparent_45%)]" />
+      </div>
+      <div className="container relative space-y-10">
+        {/* Hero */}
+        <section className="relative overflow-hidden rounded-[36px] border border-white/10 bg-gradient-to-b from-white/10/5 via-white/5 to-transparent p-8 pt-12 text-center shadow-[0_45px_80px_rgba(0,0,0,0.45)]">
+          <div className="absolute inset-0 opacity-60 blur-3xl">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(122,32,255,0.5),transparent_50%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_20%,rgba(32,210,122,0.4),transparent_45%)]" />
+          </div>
+
+          <div className="relative mx-auto flex max-w-3xl flex-col items-center gap-5">
+            <div className="relative rounded-full border border-white/30 bg-black/40 p-6 shadow-[0_25px_50px_rgba(0,0,0,0.45)] before:absolute before:inset-3 before:-z-10 before:rounded-full before:bg-gradient-to-r before:from-[#7A20FF] before:to-[#20D27A] before:opacity-70 before:blur-xl">
+              <Image
+                src="/logo.png"
+                alt="KiloMystery"
+                width={180}
+                height={180}
+                className="h-24 w-auto md:h-32"
+              />
+            </div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-4 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-white/80">
+              {t.badge}
             </span>
+
+            <h1 className="text-3xl md:text-5xl font-black leading-tight">
+              <span className="bg-gradient-to-r from-[#7A20FF] via-[#c8fff9] to-[#20D27A] bg-clip-text text-transparent">
+                {t.heroTitle}
+              </span>
+            </h1>
+            <p className="text-balance text-base text-white/70 md:text-lg">
+              {t.heroSubtitle}
+            </p>
+
+            <div className="grid w-full gap-4 md:grid-cols-3">
+              {highlights.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl border border-white/15 bg-black/35 px-4 py-3 text-sm text-white/80 shadow-inner shadow-white/5"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            <div className="grid w-full gap-4 md:grid-cols-3">
+              {infoCards.map((card, idx) => (
+                <div
+                  key={idx}
+                  className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10/30 to-black/40 px-5 py-4 text-left shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
+                >
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-white/60">
+                    {card.title}
+                  </p>
+                  <p className="mt-2 text-2xl font-black text-white">
+                    {card.value}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-full rounded-[28px] border border-white/20 bg-black/40 p-4 text-left shadow-[0_30px_65px_rgba(0,0,0,0.45)]">
+              <p className="text-sm font-semibold uppercase tracking-widest text-white/70">
+                {t.newsletterLabel}
+              </p>
+              <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                <input
+                  type="email"
+                  placeholder={t.newsletterPlaceholder}
+                  className="flex-1 rounded-full border border-white/25 bg-black/60 px-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#7A20FF]"
+                />
+                <button
+                  type="button"
+                  className="rounded-full bg-gradient-to-r from-[#7A20FF] via-[#b55bff] to-[#20D27A] px-6 py-3 text-sm font-extrabold text-[#04070a] shadow-[0_14px_30px_rgba(122,32,255,0.4)]"
+                >
+                  {t.newsletterButton}
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-white/45">{t.footerNote}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Roadmap + sustainability */}
+        <section className="grid gap-6 md:grid-cols-2">
+          <div className="rounded-[30px] border border-white/10 bg-black/35 p-6 shadow-[0_25px_60px_rgba(0,0,0,0.35)]">
+            <h2 className="text-xl font-extrabold text-white">
+              {t.comingTitle}
+            </h2>
+            <div className="mt-6 space-y-4">
+              {comingList.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-4 rounded-2xl border border-white/5 bg-white/5/20 px-4 py-3"
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-b from-[#7A20FF] to-[#20D27A] text-sm font-bold text-[#05070b]">
+                    {idx + 1}
+                  </span>
+                  <p className="text-sm text-white/80">{item}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <span className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">
-            {t.badge}
-          </span>
-        </div>
+          <div className="rounded-[30px] border border-white/10 bg-gradient-to-b from-[#0a1114] to-[#03060b] p-6 shadow-[0_25px_60px_rgba(0,0,0,0.35)]">
+            <div className="mb-4 flex items-center gap-3 text-lg font-extrabold text-white">
+              <span className="text-2xl">🌱</span>
+              <span>{t.sustainTitle}</span>
+            </div>
+            <p className="text-sm text-white/80">{t.sustainText}</p>
 
-        {/* titolo gradient */}
-        <h1 className="text-center text-3xl md:text-5xl font-extrabold leading-tight">
-          <span className="bg-gradient-to-r from-[#7A20FF] via-[#c3fffd] to-[#20D27A] bg-clip-text text-transparent">
-            {t.heroTitle}
-          </span>
-        </h1>
-
-        <p className="mx-auto mt-4 max-w-2xl text-center text-white/70">
-          {t.heroSubtitle}
-        </p>
-
-        {/* bullet list */}
-        <ul className="mx-auto mt-6 max-w-xl space-y-2 text-sm text-white/80">
-          <li>{t.bullet1}</li>
-          <li>{t.bullet2}</li>
-          <li>{t.bullet3}</li>
-        </ul>
-
-        {/* newsletter form */}
-        <div className="mx-auto mt-8 max-w-xl rounded-3xl border border-white/15 bg-black/30 p-4 backdrop-blur">
-          <p className="text-sm font-medium text-white/90">
-            {t.newsletterLabel}
-          </p>
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row">
-            <input
-              type="email"
-              placeholder={t.newsletterPlaceholder}
-              className="flex-1 rounded-full border border-white/30 bg-black/60 px-4 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#7A20FF]"
-            />
-            <button
-              type="button"
-              className="inline-flex items-center justify-center rounded-full border border-white/70 bg-gradient-to-r from-[#7A20FF] to-[#20D27A] px-5 py-2 text-sm font-extrabold text-[#0c0f10] shadow-[0_10px_28px_rgba(122,32,255,.25),0_6px_20px_rgba(32,210,122,.25)]"
-            >
-              {t.newsletterButton}
-            </button>
+            <div className="mt-6 grid gap-3 text-xs uppercase tracking-[0.2em] text-white/50 md:grid-cols-2">
+              <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                ♻️ Zero sprechi
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                🔒 Lotti tracciati
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                🚚 Europa intera
+              </div>
+              <div className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                🎁 Esperienze live
+              </div>
+            </div>
           </div>
-          <p className="mt-2 text-xs text-white/50">{t.footerNote}</p>
-        </div>
-      </section>
-
-      {/* card sotto: cosa stiamo preparando + sostenibilità */}
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-5 md:p-6">
-          <h2 className="text-lg md:text-xl font-extrabold">
-            {t.comingTitle}
-          </h2>
-          <ul className="mt-3 list-disc ps-5 space-y-1 text-sm text-white/80">
-            <li>{t.comingItem1}</li>
-            <li>{t.comingItem2}</li>
-            <li>{t.comingItem3}</li>
-            <li>{t.comingItem4}</li>
-          </ul>
-        </div>
-
-        <div className="rounded-3xl border border-white/10 bg-black/30 p-5 md:p-6">
-          <h2 className="flex items-center gap-2 text-lg md:text-xl font-extrabold">
-            <span>{t.sustainTitle}</span>
-            <span className="text-base">🌱</span>
-          </h2>
-          <p className="mt-3 text-sm text-white/80">{t.sustainText}</p>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }
