@@ -6,10 +6,10 @@ import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
 const PUBLIC_FILE = /\.(.*)$/;
 const PREVIEW_COOKIE = "km_preview";
 
-// Coming soon SEMPRE attiva (finché non vai live)
+// Coming soon sempre attiva
 const COMING_SOON_ENABLED = true;
 
-// Bot principali (per SEO)
+// Bot per SEO
 const BOT_REGEX =
   /googlebot|google-inspectiontool|googleother|adsbot|bingbot|duckduckbot|yandex|baidu|crawler|spider|bot/i;
 
@@ -22,7 +22,7 @@ export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const { pathname } = url;
 
-  // 1️⃣ Escludiamo asset, api, file pubblici
+  // 1️⃣ Asset e file pubblici
   if (
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
@@ -35,7 +35,7 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2️⃣ Preview admin → set cookie e lascia passare
+  // 2️⃣ Preview admin
   if (url.searchParams.get("km_preview") === "1") {
     const clean = url.clone();
     clean.searchParams.delete("km_preview");
@@ -54,9 +54,8 @@ export function middleware(req: NextRequest) {
   const first = segments[0];
   const hasLang = SUPPORTED_LANGS.includes(first as Lang);
 
-  // 3️⃣ Se BOT o PREVIEW → VEDONO IL SITO REALE
+  // 3️⃣ BOT o ADMIN → sito reale
   if (isBot(req) || hasPreview) {
-    // Se manca la lingua, la aggiungiamo
     if (!hasLang) {
       const lang = detectLangFromHeader(
         req.headers.get("accept-language")
@@ -65,20 +64,25 @@ export function middleware(req: NextRequest) {
       redirect.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
       return NextResponse.redirect(redirect);
     }
-
     return NextResponse.next();
   }
 
-  // 4️⃣ UTENTE NORMALE → SEMPRE COMING SOON
+  // 4️⃣ UTENTI NORMALI → COMING SOON
+
+  // 🔥 QUI È LA PARTE CHIAVE 🔥
+  // Se l'URL ha già una lingua → USALA
+  // NON leggere il browser
   let lang: Lang;
 
   if (hasLang) {
     lang = first as Lang;
   } else {
-    lang = detectLangFromHeader(req.headers.get("accept-language"));
+    lang = detectLangFromHeader(
+      req.headers.get("accept-language")
+    );
   }
 
-  // fallback di sicurezza
+  // fallback globale
   if (!SUPPORTED_LANGS.includes(lang)) {
     lang = "en";
   }
