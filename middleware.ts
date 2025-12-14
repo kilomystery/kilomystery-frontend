@@ -114,10 +114,11 @@ export function middleware(req: NextRequest) {
 
   // 3b) Se NON c'è la lingua nel path (es: "/", "/products"),
   //     redirezioniamo a /{lang}/... in base all'Accept-Language.
-  const lang = detectLangFromHeader(req.headers.get("accept-language"));
+  const lang = detectLangFromHeader(req.headers.get("accept-language")) || "it"; // Fallback su italiano se nulla viene rilevato
+  console.log("Detected language:", lang);  // Log per il debug
+
   const redirectUrl = url.clone();
   redirectUrl.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
-
   return NextResponse.redirect(redirectUrl);
 }
 
