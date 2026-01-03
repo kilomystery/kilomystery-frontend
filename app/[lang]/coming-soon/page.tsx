@@ -220,7 +220,7 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
 // NOINDEX solo per la coming soon
 export const metadata: Metadata = {
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
 };
