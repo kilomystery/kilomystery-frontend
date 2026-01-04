@@ -11,10 +11,12 @@ const PATHS = [
   "/how-it-works",
   "/about",
   "/contact",
+   "/faq",
   "/policy/shipping",
   "/policy/returns",
   "/policy/terms",
-  "/policy/privacy",
+  "/policy/privacy"
+ 
 ] as const;
 
 export default function sitemap(): MetadataRoute.Sitemap {
