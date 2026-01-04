@@ -106,10 +106,7 @@ const COPY: Record<Lang, {
         q: "Cosa succede se arriva danneggiata?",
         a: "Contatta l’assistenza con foto e numero ordine: ti aiutiamo a risolvere velocemente.",
       },
-      {
-        q: "Perché questa pagina aiuta a trovare ‘mystery box’ su Google?",
-        a: "Perché spiega in modo chiaro cos’è una mystery box, include FAQ e termini correlati (mystery box, mystery box al kg) in modo naturale.",
-      },
+      
     ],
   },
 
