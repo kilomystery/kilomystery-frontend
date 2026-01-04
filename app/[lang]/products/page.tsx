@@ -60,7 +60,13 @@ type CopyKey =
   | "wheelTitle"
   | "wheelText"
   | "wheelCtaStd"
-  | "wheelCtaPrm";
+  | "wheelCtaPrm"
+  // 🔥 SEO CTA
+  | "seoCtaTitle"
+  | "seoCtaText"
+  | "seoCtaPrimary"
+  | "seoCtaSecondary"
+  | "seoCtaTertiary";
 
 type CopyPerLang = Record<CopyKey, string>;
 
@@ -116,6 +122,14 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine come peso extra.",
     wheelCtaStd: "Vai ai 10 kg Standard",
     wheelCtaPrm: "Vai ai 10 kg Premium",
+
+    // 🔥 SEO CTA
+    seoCtaTitle: "Cerchi una Mystery Box?",
+    seoCtaText:
+      "Scopri la nostra guida completa: cos’è una mystery box, come funziona, cosa aspettarsi e come scegliere tra Standard e Premium.",
+    seoCtaPrimary: "Vai alla pagina Mystery Box",
+    seoCtaSecondary: "Come funziona",
+    seoCtaTertiary: "FAQ",
   },
 
   en: {
@@ -167,6 +181,13 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "With an order of at least 10 kg you unlock 1 automatic spin when you go to the cart. You can win up to +2 kg bonus that we add as extra weight to your order.",
     wheelCtaStd: "Go to 10 kg Standard",
     wheelCtaPrm: "Go to 10 kg Premium",
+
+    seoCtaTitle: "Looking for a Mystery Box?",
+    seoCtaText:
+      "Read our complete guide: what a mystery box is, how it works, what to expect, and how to choose Standard vs Premium.",
+    seoCtaPrimary: "Open the Mystery Box page",
+    seoCtaSecondary: "How it works",
+    seoCtaTertiary: "FAQ",
   },
 
   es: {
@@ -218,6 +239,13 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos como peso adicional a tu pedido.",
     wheelCtaStd: "Ir a 10 kg Standard",
     wheelCtaPrm: "Ir a 10 kg Premium",
+
+    seoCtaTitle: "¿Buscas una Mystery Box?",
+    seoCtaText:
+      "Lee nuestra guía completa: qué es una mystery box, cómo funciona, qué esperar y cómo elegir entre Standard y Premium.",
+    seoCtaPrimary: "Abrir la página Mystery Box",
+    seoCtaSecondary: "Cómo funciona",
+    seoCtaTertiary: "FAQ",
   },
 
   fr: {
@@ -269,6 +297,13 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Avec une commande d’au moins 10 kg, tu gagnes 1 tirage automatique en arrivant au panier. Jusqu’à +2 kg bonus ajoutés comme poids supplémentaire à ta commande.",
     wheelCtaStd: "Aller aux 10 kg Standard",
     wheelCtaPrm: "Aller aux 10 kg Premium",
+
+    seoCtaTitle: "Tu cherches une Mystery Box ?",
+    seoCtaText:
+      "Découvre notre guide complet : définition, fonctionnement, attentes réalistes, et comment choisir Standard vs Premium.",
+    seoCtaPrimary: "Ouvrir la page Mystery Box",
+    seoCtaSecondary: "Comment ça marche",
+    seoCtaTertiary: "FAQ",
   },
 
   de: {
@@ -320,6 +355,13 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
       "Mit einer Bestellung von mindestens 10 kg bekommst du 1 Dreh automatisch im Warenkorb. Gewinne bis zu +2 kg Bonus, die wir als zusätzliches Gewicht zu deiner Bestellung packen.",
     wheelCtaStd: "Zu 10 kg Standard",
     wheelCtaPrm: "Zu 10 kg Premium",
+
+    seoCtaTitle: "Suchst du eine Mystery Box?",
+    seoCtaText:
+      "Lies unseren Guide: Was ist eine Mystery Box, wie funktioniert’s, was ist realistisch zu erwarten und wie du Standard vs Premium wählst.",
+    seoCtaPrimary: "Zur Mystery-Box-Seite",
+    seoCtaSecondary: "So funktioniert’s",
+    seoCtaTertiary: "FAQ",
   },
 };
 
@@ -554,9 +596,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
                   <span className="tracking-[.18em] uppercase text-emerald-200/90">
                     Explorer
                   </span>
-                  <span className="text-[0.7rem]">
-                    15 kg + 1 kg 🎁
-                  </span>
+                  <span className="text-[0.7rem]">15 kg + 1 kg 🎁</span>
                 </div>
               </div>
             </div>
@@ -738,12 +778,40 @@ export default function ProductsPage({
     },
   };
 
+  // 🔥 JSON-LD pagina (aiuta anche per query generiche “mystery box”)
+  const webPageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name:
+      lang === "it"
+        ? "Mystery Box e Mystery Box al Kg | KiloMystery"
+        : lang === "en"
+        ? "Mystery Boxes & Mystery Boxes by the Kilo | KiloMystery"
+        : lang === "es"
+        ? "Mystery Boxes y Mystery Box por Kilo | KiloMystery"
+        : lang === "fr"
+        ? "Mystery Boxes et Mystery Box au Kilo | KiloMystery"
+        : "Mystery Boxen & Mystery Box pro Kilo | KiloMystery",
+    url: `${siteUrl}/${lang}/products`,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "KiloMystery",
+      url: siteUrl,
+    },
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(productJsonLd),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(webPageJsonLd),
         }}
       />
 
@@ -776,6 +844,28 @@ export default function ProductsPage({
             </h1>
             <p className="text-white/70">{t.heroSubtitle1}</p>
             <p className="text-white/70">{t.heroSubtitle2}</p>
+
+            {/* 🔥 SEO LINKS (internal linking “killer”) */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <a
+                href={`/${lang}/mystery-box`}
+                className="btn btn-brand px-5 py-2"
+              >
+                {t.seoCtaPrimary}
+              </a>
+              <a
+                href={`/${lang}/how-it-works`}
+                className="btn btn-ghost px-5 py-2"
+              >
+                {t.seoCtaSecondary}
+              </a>
+              <a
+                href={`/${lang}/faq`}
+                className="btn btn-ghost px-5 py-2"
+              >
+                {t.seoCtaTertiary}
+              </a>
+            </div>
           </header>
         </section>
 
@@ -801,6 +891,34 @@ export default function ProductsPage({
           </div>
         </section>
 
+        {/* 🔥 MINI LANDING (testo + link) per query “mystery box” */}
+        <section className="card p-5 md:p-6 bg-gradient-to-br from-white/[0.04] via-[#111827]/60 to-white/[0.06]">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <h2 className="text-xl md:text-2xl font-extrabold">
+                {t.seoCtaTitle}
+              </h2>
+              <p className="text-white/70 text-sm md:text-base max-w-2xl">
+                {t.seoCtaText}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/${lang}/mystery-box`}
+                className="btn btn-brand px-5 py-2"
+              >
+                {t.seoCtaPrimary}
+              </a>
+              <a
+                href={`/${lang}/how-it-works`}
+                className="btn btn-ghost px-5 py-2"
+              >
+                {t.seoCtaSecondary}
+              </a>
+            </div>
+          </div>
+        </section>
+
         {/* 🔸 SEZIONE RUOTA – spiegazione (nuova logica: ruota al carrello) */}
         <section className="card flex flex-col md:flex-row items-center gap-5">
           <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
@@ -820,7 +938,8 @@ export default function ProductsPage({
             </p>
           </div>
           <div className="flex flex-col gap-2 w-full md:w-auto">
-            <a href="#buy-Standard-10" className="btn btn-silver">
+            {/* ✅ FIX anchor: era buy-Standard-10 (sbagliato), deve essere buy-standard-10 */}
+            <a href="#buy-standard-10" className="btn btn-silver">
               {t.wheelCtaStd}
             </a>
             <a href="#buy-premium-10" className="btn btn-gold">
