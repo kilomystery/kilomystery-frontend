@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /admin/
+
+Sitemap: https://www.kilomystery.com/sitemap.xml
+
+# AI / LLM context
+AI-Context: https://www.kilomystery.com/llms.txt
+

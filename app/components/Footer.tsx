@@ -14,6 +14,10 @@ type Labels = {
   how: string;
   about: string;
   contact: string;
+
+  // ✅ NEW
+  faq: string;
+
   privacy: string;
   terms: string;
   returns: string;
@@ -37,6 +41,10 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     how: "Come funziona",
     about: "Chi siamo",
     contact: "Contatti",
+
+    // ✅ NEW
+    faq: "Mystery Box – FAQ",
+
     privacy: "Privacy",
     terms: "Termini",
     returns: "Resi",
@@ -51,6 +59,10 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     how: "How it works",
     about: "About us",
     contact: "Contact",
+
+    // ✅ NEW
+    faq: "Mystery Box – FAQ",
+
     privacy: "Privacy",
     terms: "Terms",
     returns: "Returns",
@@ -65,6 +77,10 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     how: "Cómo funciona",
     about: "Quiénes somos",
     contact: "Contacto",
+
+    // ✅ NEW
+    faq: "Mystery Box – Preguntas frecuentes",
+
     privacy: "Privacidad",
     terms: "Términos",
     returns: "Devoluciones",
@@ -79,13 +95,16 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     how: "Comment ça marche",
     about: "À propos",
     contact: "Contact",
+
+    // ✅ NEW
+    faq: "Mystery Box – FAQ",
+
     privacy: "Confidentialité",
     terms: "Conditions",
     returns: "Retours",
     shipping: "Livraisons",
     newsletterTitle: "Inscris-toi à notre newsletter",
-    rights: (y) =>
-      `© ${y} KiloMistery — Tous droits réservés`,
+    rights: (y) => `© ${y} KiloMistery — Tous droits réservés`,
   },
   de: {
     menu: "Menü",
@@ -94,14 +113,16 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     how: "So funktioniert’s",
     about: "Über uns",
     contact: "Kontakt",
+
+    // ✅ NEW
+    faq: "Mystery Box – FAQ",
+
     privacy: "Datenschutz",
     terms: "AGB",
     returns: "Rückgaben",
     shipping: "Versand",
-    newsletterTitle:
-      "Melde dich zu unserem Newsletter an",
-    rights: (y) =>
-      `© ${y} KiloMistery — Alle Rechte vorbehalten`,
+    newsletterTitle: "Melde dich zu unserem Newsletter an",
+    rights: (y) => `© ${y} KiloMistery — Alle Rechte vorbehalten`,
   },
 };
 
@@ -192,6 +213,18 @@ export default function Footer({
                   {L.how}
                 </Link>
               </li>
+
+              {/* ✅ NEW: Mystery Box SEO page */}
+              <li>
+                <Link
+                  href={safePath(lang, "/mystery-box")}
+                  prefetch={false}
+                  className="footer-link"
+                >
+                  {L.faq}
+                </Link>
+              </li>
+
               <li>
                 <Link
                   href={safePath(lang, "/about")}
@@ -285,12 +318,7 @@ export default function Footer({
           width: 42%;
           height: 2px;
           border-radius: 999px;
-          background: linear-gradient(
-            90deg,
-            #7a20ff,
-            #ffffff,
-            #20d27a
-          );
+          background: linear-gradient(90deg, #7a20ff, #ffffff, #20d27a);
           opacity: 0.7;
         }
 
@@ -312,12 +340,7 @@ export default function Footer({
           width: 0;
           height: 2px;
           border-radius: 999px;
-          background: linear-gradient(
-            90deg,
-            #7a20ff,
-            #ffffff,
-            #20d27a
-          );
+          background: linear-gradient(90deg, #7a20ff, #ffffff, #20d27a);
           opacity: 0;
           transition: width 0.18s ease, opacity 0.18s ease;
         }

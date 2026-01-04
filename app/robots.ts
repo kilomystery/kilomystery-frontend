@@ -2,7 +2,8 @@
 import type { MetadataRoute } from "next";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+  "https://www.kilomystery.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -10,11 +11,13 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
+
+        // Nota: evita di bloccare /cart se la tua pagina cart è su /[lang]/cart
+        // Blocca solo le rotte tecniche/non utili in SERP:
         disallow: [
           "/api/",
           "/_next/",
           "/admin",
-          "/cart", // il cart Shopify diretto non ti serve in SERP
         ],
       },
     ],
