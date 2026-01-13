@@ -19,24 +19,24 @@ type Event = {
 const upcomingEvents: Event[] = [
   {
     id: "brindisi-2025-01-03",
-    date: "3–4 gennaio 2025",
-    city: "Brindisi",
+    date: "13-14-15 Febbraio 2026",
+    city: "Mesagne (Brindisi)",
     location:
       "Centro Commerciale Appia Antica – Spazio Conad, Mesagne (BR) 72023",
-    title: "KiloMystery Pop-Up – Brindisi",
+    title: "KiloMystery Pop-Up – Mesagne (Brindisi)",
     description:
-      "Due giornate intere di mystery box al kg presso il Centro Commerciale Appia Antica.",
-    extraInfo: "Orario continuato 9:00–21:00.",
+      "Tre giornate intere di mystery box al kg presso il Centro Commerciale Appia Antica.Un Iphone 17 si nasconde tra i pacchi!",
+    extraInfo: "VenerdiOrario 12:00 -21:00 , Sabato e Domenica  continuato 9:00–21:00.",
     image: "/events/brindisi-2025-01-03.png",
   },
   {
     id: "milano-2025-12-10",
-    date: "10 dicembre 2025",
-    city: "Milano",
-    location: "Zona Navigli (location in aggiornamento)",
-    title: "KiloMystery Pop-Up – Milano",
+    date: "27-28-29 Marzo 2026",
+    city: "Surbo ,Lecce",
+    location: "Centro commerciale Mongolfiera Surbo (LE) 73014",
+    title: "KiloMystery Pop-Up – Surbo (Lecce)",
     description:
-      "Mystery box Standard e Premium, offerte dedicate all’evento.",
+      "Mystery box  Premium, un Iphone 17 si cela tra i pacchi.",
     extraInfo: "Dettagli in aggiornamento.",
   },
 ];
