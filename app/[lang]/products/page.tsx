@@ -16,9 +16,10 @@ const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
 const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
 
 /* =========================================================
-   PREZZI FRONTEND (REAL + COMPARE)
-   Standard: base compare 25,90 €/kg
-   Premium : base compare 29,90 €/kg
+   ✅ PREZZI FRONTEND (REAL + COMPARE) — ALLINEATI A SHOPIFY
+   Standard: 1kg 22,90 (compare 25,90)
+   Premium : 1kg 26,90 (compare 29,90)
+   Totali per KG già calcolati e scalari.
 ========================================================= */
 
 const PRICE_TABLE: Record<
@@ -51,24 +52,11 @@ function prices(kind: "Standard" | "Premium", kg: Kg) {
 const euro = (n: number) =>
   n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
-/* =========================================================
-   EXPLORER BOX
-   7,5 kg Standard + 7,5 kg Premium + 1 kg omaggio
-   Compare price: 418,50 €
-   Prezzo reale: -25% → 314,00 €
-========================================================= */
-
-const EXPLORER_SHOPIFY_ID = "52089141363026";
-const EXPLORER_TOTAL_KG = 16;
-
-const EXPLORER_COMPARE_PRICE = 418.5;
-const EXPLORER_PRICE_TOTAL = 314.0;
-const EXPLORER_PRICE_PER_KG =
-  EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG;
-
-/* =========================================================
-   COPY / I18N — DEFINIZIONI
-========================================================= */
+// === EXPLORER BOX (BUNDLE) ===
+const EXPLORER_SHOPIFY_ID = "52089141363026"; // variante Shopify
+const EXPLORER_TOTAL_KG = 16; // 15 kg + 1 kg omaggio
+const EXPLORER_PRICE_TOTAL = 270; // prezzo totale
+const EXPLORER_PRICE_PER_KG = EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG;
 
 type CopyKey =
   | "heroTitleHighlight"
@@ -97,10 +85,12 @@ type CopyKey =
   | "explorerSubtitle"
   | "explorerBadge"
   | "explorerCta"
+  // 🔸 NUOVO: testi ruota
   | "wheelTitle"
   | "wheelText"
   | "wheelCtaStd"
   | "wheelCtaPrm"
+  // 🔥 SEO CTA
   | "seoCtaTitle"
   | "seoCtaText"
   | "seoCtaPrimary"
@@ -108,65 +98,65 @@ type CopyKey =
   | "seoCtaTertiary";
 
 type CopyPerLang = Record<CopyKey, string>;
-/* =========================================================
-   TESTI MULTILINGUA
-========================================================= */
 
+// 🔤 Testi per OGNI lingua (IT, EN, ES, FR, DE)
 const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
   it: {
     heroTitleHighlight: "Pesa il mistero",
     heroTitleRest: "e spacchetta la sorpresa",
     heroSubtitle1:
-      "Standard o Premium, da 1 a 10 kg: decidi quanto intensa sarà la tua sessione di unboxing.",
+      "Standard o Premium, da 1 a 10 kg: decidi quanto intensa sarà la tua sessione di unboxing. Ogni box è selezionata, sigillata e collegata a un lotto reale.",
     heroSubtitle2:
-      "Non vendiamo valore garantito, ma un’esperienza di recupero, sorpresa e riduzione degli sprechi.",
+      "Non vendiamo “valore garantito”, ma un'esperienza di sorpresa che recupera pacchi esistenti e riduce sprechi e CO₂ lungo la filiera.",
 
     trustShippingTitle: "Spedizione",
     trustShippingText:
-      "Spediamo in tutta Europa con tracking. Gratis sopra i 100€.",
+      "Spediamo in tutta Europa con tracking attivo. Tempi medi 48–72h. Spedizione gratuita per ordini superiori a 100€.",
     trustPaymentsTitle: "Pagamenti sicuri",
     trustPaymentsText:
-      "Pagamenti protetti tramite provider certificati.",
+      "Paghi tramite provider affidabili, con riepilogo completo via email.",
     trustSupportTitle: "Assistenza",
     trustSupportText:
-      "Supporto diretto via email, senza call center.",
+      "Supporto diretto via email: nessun call center impersonale.",
 
     standardDescription:
-      "Ideale per iniziare e scoprire l’esperienza KiloMystery.",
+      "Ideale per chi vuole provare l'esperienza KiloMystery con un mix bilanciato di prodotti e prezzo.",
     premiumDescription:
-      "Per chi vuole lotti più spinti e articoli di fascia superiore.",
+      "Per chi cerca un mix più spinto: lotti selezionati e maggiore probabilità di articoli di fascia medio–alta.",
 
     returnTitle: "Politica resi",
     returnText:
-      "Le mystery box sono sigillate: il reso non è previsto per semplice ripensamento.",
+      "Le box sono vendute come mystery sigillate: il reso non è previsto per semplice mancato gradimento, perché il contenuto è per definizione non conosciuto in anticipo. In etichetta trovi peso, lotto e tracciabilità per la massima trasparenza.",
     returnCta: "Leggi la policy completa",
 
     badgeStd: "Perfetta per iniziare",
     badgePrm: "Per chi vuole il massimo",
 
-    bullets1: "Contenuto misto e misterioso",
-    bullets2: "Peso netto ±3%",
-    bullets3: "Sigillo e lotto tracciabile",
-    bullets4: "Nessun prodotto vietato",
+    bullets1: "Contenuto misto e misterioso da lotti reali.",
+    bullets2: "Peso netto con tolleranza ±3% su ogni box.",
+    bullets3: "Sigillo con ID lotto e data di preparazione.",
+    bullets4: "Nessun prodotto illegale o vietato.",
 
     addToCart: "Aggiungi al carrello",
 
     explorerTitle: "Explorer Box 15 kg + 1 kg omaggio",
     explorerSubtitle:
-      "7,5 kg Standard + 7,5 kg Premium, più 1 kg extra gratuito.",
-    explorerBadge: "Miglior valore",
+      "Bundle speciale con mix di Standard e Premium: 16 kg totali per un unboxing lungo, denso e pieno di sorpresa.",
+    explorerBadge: "Best value",
     explorerCta: "Aggiungi Explorer Box",
 
+    // 🔸 ruota (nuova logica: al carrello)
     wheelTitle: "Ruota della fortuna",
     wheelText:
-      "Con almeno 10 kg ottieni 1 giro automatico al carrello.",
+      "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine come peso extra.",
     wheelCtaStd: "Vai ai 10 kg Standard",
     wheelCtaPrm: "Vai ai 10 kg Premium",
 
+    // 🔥 SEO CTA
     seoCtaTitle: "Cerchi una Mystery Box?",
     seoCtaText:
-      "Scopri come funzionano e quale scegliere tra Standard e Premium.",
-    seoCtaPrimary: "Vai alla guida",
+      "Scopri la nostra guida completa: cos’è una mystery box, come funziona, cosa aspettarsi e come scegliere tra Standard e Premium.",
+    seoCtaPrimary: "Vai alla pagina Mystery Box",
     seoCtaSecondary: "Come funziona",
     seoCtaTertiary: "FAQ",
   },
@@ -175,69 +165,236 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     heroTitleHighlight: "Weigh the mystery",
     heroTitleRest: "and unbox the surprise",
     heroSubtitle1:
-      "Standard or Premium, from 1 to 10 kg: you choose the experience.",
+      "Standard or Premium, from 1 to 10 kg: you decide how intense your unboxing session will be. Each box is selected, sealed and linked to a real batch.",
     heroSubtitle2:
-      "We sell surprise, recovery and sustainability.",
+      "We don’t sell “guaranteed value”, but a surprise experience that gives a second life to existing parcels and reduces waste and CO₂ in the logistics chain.",
 
     trustShippingTitle: "Shipping",
     trustShippingText:
-      "Tracked shipping across Europe. Free over €100.",
+      "We ship across Europe with active tracking. Average delivery time 48–72h. Free shipping on orders over €100.",
     trustPaymentsTitle: "Secure payments",
     trustPaymentsText:
-      "Protected payments via certified providers.",
+      "Payments are processed via trusted providers, with a full order summary sent by email.",
     trustSupportTitle: "Support",
     trustSupportText:
-      "Direct email support.",
+      "Direct support via email: no anonymous call centers.",
 
     standardDescription:
-      "Perfect to start with KiloMystery.",
+      "Ideal if you want to experience KiloMystery for the first time, with a balanced mix of products and price.",
     premiumDescription:
-      "For those who want more premium lots.",
+      "For those looking for a stronger mix: selected lots and a higher chance of medium–high range items.",
 
-    returnTitle: "Returns",
+    returnTitle: "Return policy",
     returnText:
-      "Mystery boxes are sealed and non-returnable.",
-    returnCta: "Read full policy",
+      "Boxes are sold as sealed mystery boxes: returns are not provided for simple lack of satisfaction, because the content is not known in advance. The label includes weight, batch and traceability for full transparency.",
+    returnCta: "Read the full policy",
 
     badgeStd: "Perfect to start",
     badgePrm: "For those who want more",
 
-    bullets1: "Mixed mystery contents",
-    bullets2: "Net weight ±3%",
-    bullets3: "Sealed & traceable",
-    bullets4: "No prohibited items",
+    bullets1: "Mixed and mysterious content from real lots.",
+    bullets2: "Net weight with ±3% tolerance on every box.",
+    bullets3: "Seal with batch ID and preparation date.",
+    bullets4: "No illegal or prohibited products.",
 
     addToCart: "Add to cart",
 
     explorerTitle: "Explorer Box 15 kg + 1 kg free",
     explorerSubtitle:
-      "7.5 kg Standard + 7.5 kg Premium plus 1 kg free.",
+      "Special bundle with a mix of Standard and Premium: 16 kg total for an extra-long, high-intensity unboxing.",
     explorerBadge: "Best value",
     explorerCta: "Add Explorer Box",
 
     wheelTitle: "Mystery Wheel",
     wheelText:
-      "Orders of 10 kg unlock 1 automatic spin.",
+      "With an order of at least 10 kg you unlock 1 automatic spin when you go to the cart. You can win up to +2 kg bonus that we add as extra weight to your order.",
     wheelCtaStd: "Go to 10 kg Standard",
     wheelCtaPrm: "Go to 10 kg Premium",
 
     seoCtaTitle: "Looking for a Mystery Box?",
     seoCtaText:
-      "Learn how it works and choose the right tier.",
-    seoCtaPrimary: "Open guide",
+      "Read our complete guide: what a mystery box is, how it works, what to expect, and how to choose Standard vs Premium.",
+    seoCtaPrimary: "Open the Mystery Box page",
     seoCtaSecondary: "How it works",
     seoCtaTertiary: "FAQ",
   },
 
-  // ⬇️ ES / FR / DE IDENTICI A STRUTTURA
-  es: PRODUCTS_COPY.it,
-  fr: PRODUCTS_COPY.it,
-  de: PRODUCTS_COPY.it,
-};
-/* =========================================================
-   CO₂ RISPARMIATA (STIMA) PER KG
-========================================================= */
+  es: {
+    heroTitleHighlight: "Pesa el misterio",
+    heroTitleRest: "y abre la sorpresa",
+    heroSubtitle1:
+      "Standard o Premium, de 1 a 10 kg: tú decides cuán intensa será tu sesión de unboxing. Cada caja está seleccionada, precintada y vinculada a un lote real.",
+    heroSubtitle2:
+      "No vendemos “valor garantizado”, sino una experiencia de sorpresa que da una segunda vida a paquetes existentes y reduce residuos y CO₂.",
 
+    trustShippingTitle: "Envío",
+    trustShippingText:
+      "Enviamos a toda Europa con seguimiento activo. Plazos medios de entrega 48–72h. Envío gratis en pedidos superiores a 100€.",
+    trustPaymentsTitle: "Pagos seguros",
+    trustPaymentsText:
+      "Pagas a través de proveedores fiables, con un resumen completo del pedido por email.",
+    trustSupportTitle: "Soporte",
+    trustSupportText:
+      "Soporte directo por email: sin call centers anónimos.",
+
+    standardDescription:
+      "Ideal para quien quiere probar KiloMystery con una mezcla equilibrada de productos y precio.",
+    premiumDescription:
+      "Para quien busca algo más potente: lotes seleccionados y mayor probabilidad de artículos de gama media–alta.",
+
+    returnTitle: "Política de devoluciones",
+    returnText:
+      "Las cajas se venden como mystery boxes precintadas: no se aceptan devoluciones por simple falta de satisfacción. En la etiqueta encontrarás peso, lote y trazabilidad para máxima transparencia.",
+    returnCta: "Leer la política completa",
+
+    badgeStd: "Perfecta para empezar",
+    badgePrm: "Para quienes quieren más",
+
+    bullets1: "Contenido mixto y misterioso procedente de lotes reales.",
+    bullets2: "Peso neto con una tolerancia de ±3%.",
+    bullets3: "Precinto con ID de lote y fecha de preparación.",
+    bullets4: "Ningún producto ilegal o prohibido.",
+
+    addToCart: "Añadir al carrito",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg de regalo",
+    explorerSubtitle:
+      "Bundle especial con mix de Standard y Premium: 16 kg totales para un unboxing largo e intenso.",
+    explorerBadge: "Mejor valor",
+    explorerCta: "Añadir Explorer Box",
+
+    wheelTitle: "Ruleta de la suerte",
+    wheelText:
+      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos como peso adicional a tu pedido.",
+    wheelCtaStd: "Ir a 10 kg Standard",
+    wheelCtaPrm: "Ir a 10 kg Premium",
+
+    seoCtaTitle: "¿Buscas una Mystery Box?",
+    seoCtaText:
+      "Lee nuestra guía completa: qué es una mystery box, cómo funciona, qué esperar y cómo elegir entre Standard y Premium.",
+    seoCtaPrimary: "Abrir la página Mystery Box",
+    seoCtaSecondary: "Cómo funciona",
+    seoCtaTertiary: "FAQ",
+  },
+
+  fr: {
+    heroTitleHighlight: "Pèse le mystère",
+    heroTitleRest: "et déballe la surprise",
+    heroSubtitle1:
+      "Standard ou Premium, de 1 à 10 kg : tu choisis l’intensité de ton unboxing. Chaque box est sélectionnée, scellée et liée à un lot réel.",
+    heroSubtitle2:
+      "Nous ne vendons pas une “valeur garantie”, mais une expérience de surprise qui donne une seconde vie à des colis existants et réduit les déchets et le CO₂.",
+
+    trustShippingTitle: "Livraison",
+    trustShippingText:
+      "Livraison dans toute l’Europe avec suivi. Délais moyens 48–72h. Livraison gratuite dès 100€ d’achat.",
+    trustPaymentsTitle: "Paiements sécurisés",
+    trustPaymentsText:
+      "Paiements gérés via des prestataires de confiance, avec récapitulatif complet envoyé par email.",
+    trustSupportTitle: "Support",
+    trustSupportText:
+      "Support direct par email : aucun call center anonyme.",
+
+    standardDescription:
+      "Idéal pour découvrir KiloMystery avec un mix équilibré.",
+    premiumDescription:
+      "Pour ceux qui veulent un mix plus recherché : lots sélectionnés et plus grande chance d’articles de gamme moyenne–haute.",
+
+    returnTitle: "Politique de retours",
+    returnText:
+      "Les box sont vendues scellées : aucun retour n’est accepté pour simple insatisfaction. L’étiquette inclut poids, lot et traçabilité pour une transparence totale.",
+    returnCta: "Lire la politique complète",
+
+    badgeStd: "Parfait pour commencer",
+    badgePrm: "Pour ceux qui en veulent plus",
+
+    bullets1: "Contenu mixte issu de lots réels.",
+    bullets2: "Poids net avec une tolérance de ±3%.",
+    bullets3: "Scellé avec ID de lot et date.",
+    bullets4: "Aucun produit illégal ou interdit.",
+
+    addToCart: "Ajouter au panier",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg offert",
+    explorerSubtitle:
+      "Bundle spécial mêlant Standard et Premium : 16 kg au total pour un unboxing long et intense.",
+    explorerBadge: "Meilleur deal",
+    explorerCta: "Ajouter l’Explorer Box",
+
+    wheelTitle: "Roue mystère",
+    wheelText:
+      "Avec une commande d’au moins 10 kg, tu gagnes 1 tirage automatique en arrivant au panier. Jusqu’à +2 kg bonus ajoutés comme poids supplémentaire à ta commande.",
+    wheelCtaStd: "Aller aux 10 kg Standard",
+    wheelCtaPrm: "Aller aux 10 kg Premium",
+
+    seoCtaTitle: "Tu cherches une Mystery Box ?",
+    seoCtaText:
+      "Découvre notre guide complet : définition, fonctionnement, attentes réalistes, et comment choisir Standard vs Premium.",
+    seoCtaPrimary: "Ouvrir la page Mystery Box",
+    seoCtaSecondary: "Comment ça marche",
+    seoCtaTertiary: "FAQ",
+  },
+
+  de: {
+    heroTitleHighlight: "Wiege das Geheimnis",
+    heroTitleRest: "und pack die Überraschung aus",
+    heroSubtitle1:
+      "Standard oder Premium, von 1 bis 10 kg: Du entscheidest, wie intensiv dein Unboxing wird. Jede Box wird ausgewählt, versiegelt und einem echten Posten zugeordnet.",
+    heroSubtitle2:
+      "Wir verkaufen keinen „garantierten Wert“, sondern ein Überraschungserlebnis, das bestehenden Paketen ein zweites Leben gibt und Abfall sowie CO₂ reduziert.",
+
+    trustShippingTitle: "Versand",
+    trustShippingText:
+      "Versand in ganz Europa mit Sendungsverfolgung. Durchschnittliche Lieferzeit 48–72h. Kostenloser Versand ab 100€ Bestellwert.",
+    trustPaymentsTitle: "Sichere Zahlungen",
+    trustPaymentsText:
+      "Zahlungen über vertrauenswürdige Anbieter, mit vollständiger Bestellübersicht per E-Mail.",
+    trustSupportTitle: "Support",
+    trustSupportText:
+      "Direkter Support per E-Mail – kein anonymes Callcenter.",
+
+    standardDescription:
+      "Ideal, um KiloMystery zum ersten Mal zu testen.",
+    premiumDescription:
+      "Für alle, die mehr wollen: ausgewählte Posten und höhere Chance auf hochwertige Artikel.",
+
+    returnTitle: "Rückgabebedingungen",
+    returnText:
+      "Mystery Boxen sind versiegelt: Rückgaben bei Nichtgefallen sind ausgeschlossen. Das Etikett enthält Gewicht, Posten und Nachverfolgbarkeit.",
+    returnCta: "Vollständige Richtlinien lesen",
+
+    badgeStd: "Perfekt zum Start",
+    badgePrm: "Für alle, die mehr wollen",
+
+    bullets1: "Gemischter Inhalt aus echten Posten.",
+    bullets2: "Nettogewicht mit ±3% Toleranz.",
+    bullets3: "Siegel mit Posten-ID und Datum.",
+    bullets4: "Keine illegalen oder verbotenen Produkte.",
+
+    addToCart: "In den Warenkorb",
+
+    explorerTitle: "Explorer Box 15 kg + 1 kg gratis",
+    explorerSubtitle:
+      "Spezielles Bundle mit Standard- und Premium-Mix: 16 kg insgesamt für ein langes, intensives Unboxing.",
+    explorerBadge: "Bestes Angebot",
+    explorerCta: "Explorer Box hinzufügen",
+
+    wheelTitle: "Glücksrad",
+    wheelText:
+      "Mit einer Bestellung von mindestens 10 kg bekommst du 1 Dreh automatisch im Warenkorb. Gewinne bis zu +2 kg Bonus, die wir als zusätzliches Gewicht zu deiner Bestellung packen.",
+    wheelCtaStd: "Zu 10 kg Standard",
+    wheelCtaPrm: "Zu 10 kg Premium",
+
+    seoCtaTitle: "Suchst du eine Mystery Box?",
+    seoCtaText:
+      "Lies unseren Guide: Was ist eine Mystery Box, wie funktioniert’s, was ist realistisch zu erwarten und wie du Standard vs Premium wählst.",
+    seoCtaPrimary: "Zur Mystery-Box-Seite",
+    seoCtaSecondary: "So funktioniert’s",
+    seoCtaTertiary: "FAQ",
+  },
+};
+
+// CO₂ text per kg e per lingua
 const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
   1: {
     it: "≈0,25 kg di CO₂ evitati",
@@ -276,9 +433,19 @@ const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
   },
 };
 
-/* =========================================================
-   SHOPIFY VARIANT IDS
-========================================================= */
+function safeError(label: string, err: unknown) {
+  const msg =
+    err instanceof Error
+      ? err.message
+      : (() => {
+          try {
+            return typeof err === "string" ? err : JSON.stringify(err);
+          } catch {
+            return String(err);
+          }
+        })();
+  console.error(`${label}: ${msg}`);
+}
 
 const VARIANT_IDS: Record<"Standard" | "Premium", Record<Kg, string>> = {
   Standard: {
@@ -297,10 +464,6 @@ const VARIANT_IDS: Record<"Standard" | "Premium", Record<Kg, string>> = {
   },
 };
 
-/* =========================================================
-   PACK CARD (STANDARD / PREMIUM)
-========================================================= */
-
 function PackCard({
   kind,
   kg,
@@ -318,8 +481,8 @@ function PackCard({
 
   const { total, compareTotal, ppk } = prices(kind, kg);
   const isStd = kind === "Standard";
-  const variantId = VARIANT_IDS[kind][kg];
   const anchorId = kg === 10 ? `buy-${kind.toLowerCase()}-10` : undefined;
+  const variantId = VARIANT_IDS[kind][kg];
 
   function handleAddToCart() {
     addItem({
@@ -334,17 +497,19 @@ function PackCard({
     });
   }
 
+  const badgeTextTop = kind === "Standard" ? t.badgeStd : t.badgePrm;
   const co2Text = co2ByKg[kg][lang] ?? co2ByKg[kg].it ?? "";
 
   return (
     <article
-      id={anchorId}
       className={`card ${isStd ? "card--standard" : "card--premium"}`}
+      id={anchorId}
     >
+      {/* badge piccolo sopra */}
       <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
-        <span>{isStd ? t.badgeStd : t.badgePrm}</span>
+        <span>{badgeTextTop}</span>
         <span className="pill pill--std">
-          {kg} kg · {kind}
+          {kg} kg · {isStd ? "Standard" : "Premium"}
         </span>
       </div>
 
@@ -355,8 +520,8 @@ function PackCard({
       >
         <div className="ratio-16-9">
           <video
-            src={video}
             className="media rounded-[12px] object-cover"
+            src={video}
             muted
             autoPlay
             loop
@@ -372,12 +537,12 @@ function PackCard({
         </h4>
 
         <div className="text-right space-y-1">
-          {/* prezzo di confronto */}
+          {/* ✅ PREZZO DI CONFRONTO (SBARRATO) */}
           <div className="text-sm line-through text-white/45">
             {euro(compareTotal)}
           </div>
 
-          {/* prezzo reale */}
+          {/* ✅ PREZZO REALE */}
           <div
             className={`price-figure ${
               isStd ? "price-figure--std" : "price-figure--prm"
@@ -386,9 +551,8 @@ function PackCard({
             {euro(total)}
           </div>
 
-          <div className="price-perkg">
-            ({ppk.toFixed(2)} €/kg)
-          </div>
+          {/* ✅ €/KG REALE */}
+          <div className="price-perkg">({ppk.toFixed(2)} €/kg)</div>
 
           {co2Text && (
             <div className="text-[0.7rem] text-emerald-200/90">
@@ -417,50 +581,8 @@ function PackCard({
     </article>
   );
 }
-/* =========================================================
-   EXPLORER BOX — 7.5 KG STD + 7.5 KG PRM + 1 KG FREE
-========================================================= */
 
-const EXPLORER_SHOPIFY_ID = "52089141363026";
-
-// prezzi di confronto per kg
-const EXPLORER_COMPARE_STD_PPK = 25.9;
-const EXPLORER_COMPARE_PRM_PPK = 29.9;
-
-// composizione box
-const EXPLORER_STD_KG = 7.5;
-const EXPLORER_PRM_KG = 7.5;
-const EXPLORER_BONUS_KG = 1;
-const EXPLORER_TOTAL_KG =
-  EXPLORER_STD_KG + EXPLORER_PRM_KG + EXPLORER_BONUS_KG;
-
-// prezzo di confronto totale
-const EXPLORER_COMPARE_TOTAL = +(
-  EXPLORER_STD_KG * EXPLORER_COMPARE_STD_PPK +
-  EXPLORER_PRM_KG * EXPLORER_COMPARE_PRM_PPK
-).toFixed(2);
-
-// sconto 25%
-const EXPLORER_DISCOUNT = 0.25;
-const EXPLORER_PRICE_TOTAL = +(
-  EXPLORER_COMPARE_TOTAL * (1 - EXPLORER_DISCOUNT)
-).toFixed(2);
-
-const EXPLORER_PRICE_PER_KG = +(
-  EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG
-).toFixed(2);
-
-/* =========================================================
-   EXPLORER CARD
-========================================================= */
-
-function ExplorerCard({
-  lang,
-  t,
-}: {
-  lang: Lang;
-  t: CopyPerLang;
-}) {
+function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   const { addItem } = useCart();
 
   function handleAdd() {
@@ -468,9 +590,9 @@ function ExplorerCard({
       id: "Explorer-16",
       shopifyId: EXPLORER_SHOPIFY_ID,
       title: t.explorerTitle,
-      kind: "Premium",
-      kg: EXPLORER_TOTAL_KG,
-      price: EXPLORER_PRICE_TOTAL,
+      tier: "Premium", // lo trattiamo come bundle "alto"
+      weightKg: EXPLORER_TOTAL_KG,
+      pricePerKg: EXPLORER_PRICE_PER_KG,
       qty: 1,
       image: "/videos/packs/ExplorerBox.mp4",
     });
@@ -495,7 +617,6 @@ function ExplorerCard({
       <div className="grid md:grid-cols-[1.4fr,1fr] gap-4 items-stretch">
         <div className="card relative overflow-hidden bg-gradient-to-br from-[#7A20FF]/40 via-[#111827] to-[#20D27A]/30">
           <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),transparent_55%)]" />
-
           <div className="relative flex flex-col md:flex-row gap-4 items-center md:items-stretch">
             <div className="w-full md:w-1/2">
               <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
@@ -512,9 +633,7 @@ function ExplorerCard({
                   <span className="tracking-[.18em] uppercase text-emerald-200/90">
                     Explorer
                   </span>
-                  <span className="text-[0.7rem]">
-                    15 kg + 1 kg 🎁
-                  </span>
+                  <span className="text-[0.7rem]">15 kg + 1 kg 🎁</span>
                 </div>
               </div>
             </div>
@@ -522,13 +641,37 @@ function ExplorerCard({
             <div className="flex-1 space-y-3 p-2 md:p-0">
               <ul className="text-sm text-white/80 space-y-1">
                 <li>
-                  • 7,5 kg Standard + 7,5 kg Premium
+                  {lang === "it"
+                    ? "• Mix di lotti Standard e Premium"
+                    : lang === "en"
+                    ? "• Mix of Standard and Premium lots"
+                    : lang === "es"
+                    ? "• Mix de lotes Standard y Premium"
+                    : lang === "fr"
+                    ? "• Mix de lots Standard et Premium"
+                    : "• Mix aus Standard- und Premium-Posten"}
                 </li>
                 <li>
-                  • 1 kg bonus incluso
+                  {lang === "it"
+                    ? "• Pensata per un unboxing lungo e condiviso"
+                    : lang === "en"
+                    ? "• Designed for a long, shared unboxing"
+                    : lang === "es"
+                    ? "• Pensada para un unboxing largo y compartido"
+                    : lang === "fr"
+                    ? "• Pensée pour un unboxing long et partagé"
+                    : "• Für ein langes, gemeinsames Unboxing gedacht"}
                 </li>
                 <li>
-                  • Sconto bundle del 25%
+                  {lang === "it"
+                    ? "• Ideale per regali o sessioni in gruppo"
+                    : lang === "en"
+                    ? "• Perfect for gifts or group sessions"
+                    : lang === "es"
+                    ? "• Ideal para regalos o sesiones en grupo"
+                    : lang === "fr"
+                    ? "• Idéale pour des cadeaux ou des sessions en groupe"
+                    : "• Ideal für Geschenke oder Gruppen-Sessions"}
                 </li>
               </ul>
 
@@ -536,22 +679,20 @@ function ExplorerCard({
                 <div>
                   <div className="text-xs uppercase tracking-[.16em] text-white/60">
                     {lang === "it"
-                      ? "Prezzo bundle"
-                      : "Bundle price"}
+                      ? "Totale bundle"
+                      : lang === "en"
+                      ? "Bundle total"
+                      : lang === "es"
+                      ? "Total del bundle"
+                      : lang === "fr"
+                      ? "Total du bundle"
+                      : "Bundle-Gesamtpreis"}
                   </div>
-
-                  {/* prezzo confronto */}
-                  <div className="text-sm line-through text-white/45">
-                    {euro(EXPLORER_COMPARE_TOTAL)}
-                  </div>
-
-                  {/* prezzo reale */}
                   <div className="text-3xl font-extrabold">
                     {euro(EXPLORER_PRICE_TOTAL)}
                   </div>
-
                   <div className="text-xs text-white/60">
-                    ≈ {EXPLORER_PRICE_PER_KG} €/kg
+                    ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg
                   </div>
                 </div>
 
@@ -569,19 +710,22 @@ function ExplorerCard({
 
         <div className="card text-xs text-white/70 space-y-2">
           <p>
-            💡{" "}
+            💡
             {lang === "it"
-              ? "Explorer Box è un bundle speciale con prezzo medio ridotto grazie allo sconto volume."
-              : "Explorer Box is a special bundle with reduced average price thanks to volume discount."}
+              ? " L’Explorer Box è pensata come bundle speciale: non puoi modificarne il peso o il mix, ma ottieni più kg a un prezzo medio più conveniente."
+              : lang === "en"
+              ? " The Explorer Box is a special bundle: weight and mix are fixed, but you get more kilos at a better average rate."
+              : lang === "es"
+              ? " La Explorer Box es un bundle especial: no puedes cambiar peso o mix, pero obtienes más kilos a un precio medio mejor."
+              : lang === "fr"
+              ? " L’Explorer Box est un bundle spécial : poids et mix sont fixes, mais tu profites de plus de kilos à un tarif moyen plus avantageux."
+              : " Die Explorer Box ist ein spezielles Bundle: Gewicht und Mix sind fix, dafür bekommst du mehr Kilos zu einem besseren Durchschnittspreis."}
           </p>
         </div>
       </div>
     </section>
   );
 }
-/* =========================================================
-   PRODUCTS PAGE
-========================================================= */
 
 export default function ProductsPage({
   params,
@@ -593,15 +737,13 @@ export default function ProductsPage({
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
 
-  /* ===============================
-     LOTTIE ANIMATION
-  =============================== */
   useEffect(() => {
     let destroyed = false;
     let anim: import("lottie-web").AnimationItem | null = null;
 
     const prefersReduced =
       typeof window !== "undefined" &&
+      window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (prefersReduced) return;
@@ -609,12 +751,14 @@ export default function ProductsPage({
     (async () => {
       try {
         const { default: lottie } = await import("lottie-web");
+
         const res = await fetch("/lottie/products-animation.json", {
           cache: "no-store",
         });
-
-        if (!res.ok) return;
-
+        if (!res.ok) {
+          safeError("Lottie load error", `HTTP ${res.status}`);
+          return;
+        }
         const data = await res.json();
 
         if (!destroyed && animRef.current) {
@@ -625,8 +769,11 @@ export default function ProductsPage({
             autoplay: true,
             animationData: data,
           });
+          (animRef.current.style as any).willChange = "transform";
         }
-      } catch {}
+      } catch (e) {
+        safeError("Lottie load error", e);
+      }
     })();
 
     return () => {
@@ -637,20 +784,23 @@ export default function ProductsPage({
     };
   }, []);
 
-  /* ===============================
-     SEO JSON-LD
-  =============================== */
+  // JSON-LD SEO per il prodotto / categoria
   const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    "https://www.kilomystery.com";
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
   const productJsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name:
       lang === "it"
-        ? "Mystery Box al kg KiloMystery"
-        : "KiloMystery Mystery Boxes by the kilo",
+        ? "Mystery box al kg KiloMystery"
+        : lang === "en"
+        ? "KiloMystery mystery boxes by the kilo"
+        : lang === "es"
+        ? "Mystery box al kilo KiloMystery"
+        : lang === "fr"
+        ? "Mystery box au kilo KiloMystery"
+        : "Mystery Box zum Kilo-Preis KiloMystery",
     brand: {
       "@type": "Brand",
       name: "KiloMystery",
@@ -659,25 +809,37 @@ export default function ProductsPage({
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
+      // ✅ aggiornati ai nuovi prezzi €/kg reali (min = Standard 10kg, max = Premium 1kg)
       lowPrice: "20.15",
       highPrice: "26.90",
       availability: "https://schema.org/InStock",
     },
   };
 
+  // 🔥 JSON-LD pagina (aiuta anche per query generiche “mystery box”)
   const webPageJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name:
       lang === "it"
-        ? "Mystery Box al Kg | KiloMystery"
-        : "Mystery Boxes by the Kilo | KiloMystery",
+        ? "Mystery Box e Mystery Box al Kg | KiloMystery"
+        : lang === "en"
+        ? "Mystery Boxes & Mystery Boxes by the Kilo | KiloMystery"
+        : lang === "es"
+        ? "Mystery Boxes y Mystery Box por Kilo | KiloMystery"
+        : lang === "fr"
+        ? "Mystery Boxes et Mystery Box au Kilo | KiloMystery"
+        : "Mystery Boxen & Mystery Box pro Kilo | KiloMystery",
     url: `${siteUrl}/${lang}/products`,
+    isPartOf: {
+      "@type": "WebSite",
+      name: "KiloMystery",
+      url: siteUrl,
+    },
   };
 
   return (
     <>
-      {/* SEO */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -694,9 +856,9 @@ export default function ProductsPage({
       <Header lang={lang} />
 
       <main className="container py-10 mb-16 space-y-10">
-        {/* HERO */}
+        {/* LOGO + HERO */}
         <section className="space-y-6 text-center max-w-3xl mx-auto">
-          <div className="mx-auto w-[200px] relative aspect-[3/1]">
+          <div className="mx-auto w-[160px] md:w-[220px] relative aspect-[3/1]">
             <Image
               src="/logo.svg"
               alt="KiloMystery"
@@ -708,35 +870,140 @@ export default function ProductsPage({
 
           <div
             ref={animRef}
-            className="mx-auto w-[300px] h-[240px]"
+            className="mx-auto w-[280px] md:w-[360px] h-[220px] md:h-[260px]"
           />
 
-          <h1 className="text-3xl md:text-4xl font-extrabold">
-            <span className="brand-text">
-              {t.heroTitleHighlight} {t.heroTitleRest}
-            </span>
-          </h1>
+          <header className="space-y-3">
+            <h1 className="text-3xl md:text-4xl font-extrabold">
+              <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
+                {t.heroTitleHighlight}
+              </span>{" "}
+              <span className="brand-text">{t.heroTitleRest}</span>
+            </h1>
+            <p className="text-white/70">{t.heroSubtitle1}</p>
+            <p className="text-white/70">{t.heroSubtitle2}</p>
 
-          <p className="text-white/70">
-            {t.heroSubtitle1}
-          </p>
-          <p className="text-white/70">
-            {t.heroSubtitle2}
-          </p>
+            {/* 🔥 SEO LINKS (internal linking “killer”) */}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <a
+                href={`/${lang}/mystery-box`}
+                className="btn btn-brand px-5 py-2"
+              >
+                {t.seoCtaPrimary}
+              </a>
+              <a
+                href={`/${lang}/how-it-works`}
+                className="btn btn-ghost px-5 py-2"
+              >
+                {t.seoCtaSecondary}
+              </a>
+              <a
+                href={`/${lang}/faq`}
+                className="btn btn-ghost px-5 py-2"
+              >
+                {t.seoCtaTertiary}
+              </a>
+            </div>
+          </header>
+        </section>
+
+        {/* STRIP TRUST */}
+        <section className="grid gap-3 md:grid-cols-3 text-sm">
+          <div className="card p-3 space-y-1">
+            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
+              🚚 {t.trustShippingTitle}
+            </p>
+            <p className="text-white/80">{t.trustShippingText}</p>
+          </div>
+          <div className="card p-3 space-y-1">
+            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
+              💳 {t.trustPaymentsTitle}
+            </p>
+            <p className="text-white/80">{t.trustPaymentsText}</p>
+          </div>
+          <div className="card p-3 space-y-1">
+            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
+              🤝 {t.trustSupportTitle}
+            </p>
+            <p className="text-white/80">{t.trustSupportText}</p>
+          </div>
+        </section>
+
+        {/* 🔥 MINI LANDING (testo + link) per query “mystery box” */}
+        <section className="card p-5 md:p-6 bg-gradient-to-br from-white/[0.04] via-[#111827]/60 to-white/[0.06]">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <h2 className="text-xl md:text-2xl font-extrabold">
+                {t.seoCtaTitle}
+              </h2>
+              <p className="text-white/70 text-sm md:text-base max-w-2xl">
+                {t.seoCtaText}
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a
+                href={`/${lang}/mystery-box`}
+                className="btn btn-brand px-5 py-2"
+              >
+                {t.seoCtaPrimary}
+              </a>
+              <a
+                href={`/${lang}/how-it-works`}
+                className="btn btn-ghost px-5 py-2"
+              >
+                {t.seoCtaSecondary}
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* 🔸 SEZIONE RUOTA – spiegazione (nuova logica: ruota al carrello) */}
+        <section className="card flex flex-col md:flex-row items-center gap-5">
+          <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
+            <img
+              src="/wheel/wheel.svg"
+              alt={t.wheelTitle}
+              width={500}
+              height={250}
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-extrabold">{t.wheelTitle}</h3>
+            <p className="text-white/70 text-sm md:text-base">
+              {t.wheelText}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 w-full md:w-auto">
+            {/* ✅ FIX anchor: era buy-Standard-10 (sbagliato), deve essere buy-standard-10 */}
+            <a href="#buy-standard-10" className="btn btn-silver">
+              {t.wheelCtaStd}
+            </a>
+            <a href="#buy-premium-10" className="btn btn-gold">
+              {t.wheelCtaPrm}
+            </a>
+          </div>
         </section>
 
         {/* STANDARD */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-extrabold">
-            Standard
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-2xl font-extrabold text-silver-soft">
+              Standard
+            </h2>
+            <p className="text-xs text-white/60 max-w-md">
+              {t.standardDescription}
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-5">
             {[1, 2, 3, 5, 10].map((kg) => (
               <PackCard
                 key={`std-${kg}`}
                 kind="Standard"
                 kg={kg as Kg}
-                video={`/videos/packs/std-${kg}.mp4`}
+                video={stdV(kg as Kg)}
                 lang={lang}
                 t={t}
               />
@@ -746,16 +1013,22 @@ export default function ProductsPage({
 
         {/* PREMIUM */}
         <section className="space-y-4">
-          <h2 className="text-2xl font-extrabold">
-            Premium
-          </h2>
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-2xl font-extrabold text-gold-soft">
+              Premium
+            </h2>
+            <p className="text-xs text-white/60 max-w-md">
+              {t.premiumDescription}
+            </p>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-5">
             {[1, 2, 3, 5, 10].map((kg) => (
               <PackCard
                 key={`prm-${kg}`}
                 kind="Premium"
                 kg={kg as Kg}
-                video={`/videos/packs/prm-${kg}.mp4`}
+                video={prmV(kg as Kg)}
                 lang={lang}
                 t={t}
               />
@@ -763,20 +1036,22 @@ export default function ProductsPage({
           </div>
         </section>
 
-        {/* EXPLORER */}
+        {/* EXPLORER BUNDLE */}
         <ExplorerCard lang={lang} t={t} />
 
-        {/* CONTENUTO BOX */}
+        {/* COSA PUOI TROVARE NELLE BOX */}
         <SectionInsideBox lang={lang} />
 
-        {/* RESI */}
-        <section className="card">
-          <h3 className="text-xl font-extrabold">
-            {t.returnTitle}
-          </h3>
-          <p className="text-white/70 mt-2">
-            {t.returnText}
-          </p>
+        {/* POLICY RESI */}
+        <section id="policy" className="card">
+          <h3 className="text-xl font-extrabold mb-2">{t.returnTitle}</h3>
+          <p className="text-white/70 text-sm md:text-base">{t.returnText}</p>
+          <a
+            href={`/${lang}/policy/returns`}
+            className="btn btn-ghost mt-3 inline-flex"
+          >
+            {t.returnCta}
+          </a>
         </section>
       </main>
 
