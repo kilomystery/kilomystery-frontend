@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
@@ -181,24 +181,28 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
 export default function CartPage({
   params,
 }: {
-  params: Promise<{ lang: string }>;
+  params: { lang: string };
 }) {
-  const resolved = use(params);
-  const lang: Lang = normalizeLang(resolved?.lang);
+  const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
   // Item principali: escludiamo gli upsell (id che iniziano con "upsell-")
   const mainItems = useMemo(
-    () => items.filter((i) => !i.id.startsWith("upsell-")),
+    () => items.filter((i: any) => !String(i.id || "").startsWith("upsell-")),
     [items]
   );
 
-  const hasStdMain = mainItems.some((i) => i.tier === "Standard");
-  const hasPrmMain = mainItems.some((i) => i.tier === "Premium");
+  // Compatibilità: tier può arrivare come "Standard"/"Premium" oppure "standard"/"premium"
+  const hasStdMain = mainItems.some(
+    (i: any) => i.tier === "Standard" || i.tier === "standard"
+  );
+  const hasPrmMain = mainItems.some(
+    (i: any) => i.tier === "Premium" || i.tier === "premium"
+  );
 
-  const hasStdUpsell = items.some((i) => i.id === "upsell-extra-std-1kg");
-  const hasPrmUpsell = items.some((i) => i.id === "upsell-extra-prm-1kg");
+  const hasStdUpsell = items.some((i: any) => i.id === "upsell-extra-std-1kg");
+  const hasPrmUpsell = items.some((i: any) => i.id === "upsell-extra-prm-1kg");
 
   const showStdUpsell =
     hasStdMain && !hasStdUpsell && !!UPSELL_STD_1KG_SHOPIFY_ID;
@@ -212,14 +216,13 @@ export default function CartPage({
   const [wheelBonusKg, setWheelBonusKg] = useState(0);
 
   // kg totali eleggibili per la ruota (solo main items)
-  const totalEligibleKg = useMemo(
-    () =>
-      mainItems.reduce(
-        (sum, item) => sum + (item.weightKg || 0) * item.qty,
-        0
-      ),
-    [mainItems]
-  );
+  const totalEligibleKg = useMemo(() => {
+    return mainItems.reduce((sum: number, item: any) => {
+      const w = Number(item.weightKg || 0);
+      const q = Number(item.qty || 0);
+      return sum + w * q;
+    }, 0);
+  }, [mainItems]);
 
   // leggo il lock da localStorage
   useEffect(() => {
@@ -266,7 +269,8 @@ export default function CartPage({
 
     const base = "https://shop.kilomystery.com/cart/";
     const cartPart = items
-      .map((i) => `${i.shopifyId}:${i.qty}`)
+      .filter((i: any) => i.shopifyId && i.qty) // evita rotture se manca un id
+      .map((i: any) => `${i.shopifyId}:${i.qty}`)
       .join(",");
 
     const url = new URL(base + cartPart);
@@ -319,87 +323,91 @@ export default function CartPage({
 
             {/* Lista items */}
             <div className="space-y-4">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex flex-col sm:flex-row gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl"
-                >
-                  <div className="w-24 h-24 bg-black/40 rounded-xl overflow-hidden border border-white/10">
-                    {item.image ? (
-                      <video
-                        src={item.image}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-white/40">
-                        KM
-                      </div>
-                    )}
-                  </div>
+              {items.map((item: any) => {
+                const pricePerKg =
+                  typeof item.pricePerKg === "number"
+                    ? item.pricePerKg
+                    : typeof item.price === "number" && item.weightKg
+                    ? item.price / item.weightKg
+                    : 0;
 
-                  <div className="flex-1">
-                    <div className="flex justify-between gap-3">
-                      <div>
-                        <h2 className="text-lg font-bold">{item.title}</h2>
-                        <p className="text-white/70 text-sm">
-                          {item.tier} · {item.weightKg} kg
-                        </p>
-                      </div>
+                const weightKg = Number(item.weightKg || 0);
+                const qty = Number(item.qty || 0);
 
-                      <div className="text-right">
-                        <div className="text-xl font-bold">
-                          {(
-                            item.pricePerKg *
-                            item.weightKg *
-                            item.qty
-                          ).toFixed(2)}{" "}
-                          €
+                return (
+                  <div
+                    key={item.id}
+                    className="flex flex-col sm:flex-row gap-4 bg-white/5 border border-white/10 p-4 rounded-2xl"
+                  >
+                    <div className="w-24 h-24 bg-black/40 rounded-xl overflow-hidden border border-white/10">
+                      {item.image ? (
+                        <video
+                          src={item.image}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-xs text-white/40">
+                          KM
                         </div>
-                        <div className="text-xs text-white/60">
-                          {(item.pricePerKg * item.weightKg).toFixed(2)} € /
-                          box
-                        </div>
-                      </div>
+                      )}
                     </div>
 
-                    <div className="mt-3 flex items-center gap-3">
-                      <div className="inline-flex rounded-full border border-white/20 bg-white/10 overflow-hidden text-sm">
-                        <span className="px-3 py-1 text-white/60">
-                          {t.qtyLabel}
-                        </span>
-                        <button
-                          className="px-3 py-1"
-                          onClick={() =>
-                            setQty(item.id, Math.max(1, item.qty - 1))
-                          }
-                        >
-                          −
-                        </button>
-                        <span className="px-3 font-semibold">
-                          {item.qty}
-                        </span>
-                        <button
-                          className="px-3 py-1"
-                          onClick={() => setQty(item.id, item.qty + 1)}
-                        >
-                          +
-                        </button>
+                    <div className="flex-1">
+                      <div className="flex justify-between gap-3">
+                        <div>
+                          <h2 className="text-lg font-bold">{item.title}</h2>
+                          <p className="text-white/70 text-sm">
+                            {item.tier} · {weightKg} kg
+                          </p>
+                        </div>
+
+                        <div className="text-right">
+                          <div className="text-xl font-bold">
+                            {(pricePerKg * weightKg * qty).toFixed(2)} €
+                          </div>
+                          <div className="text-xs text-white/60">
+                            {(pricePerKg * weightKg).toFixed(2)} € / box
+                          </div>
+                        </div>
                       </div>
 
-                      <button
-                        className="text-xs text-rose-400"
-                        onClick={() => removeItem(item.id)}
-                      >
-                        {t.remove}
-                      </button>
+                      <div className="mt-3 flex items-center gap-3">
+                        <div className="inline-flex rounded-full border border-white/20 bg-white/10 overflow-hidden text-sm">
+                          <span className="px-3 py-1 text-white/60">
+                            {t.qtyLabel}
+                          </span>
+                          <button
+                            className="px-3 py-1"
+                            onClick={() =>
+                              setQty(item.id, Math.max(1, qty - 1))
+                            }
+                          >
+                            −
+                          </button>
+                          <span className="px-3 font-semibold">{qty}</span>
+                          <button
+                            className="px-3 py-1"
+                            onClick={() => setQty(item.id, qty + 1)}
+                          >
+                            +
+                          </button>
+                        </div>
+
+                        <button
+                          className="text-xs text-rose-400"
+                          onClick={() => removeItem(item.id)}
+                        >
+                          {t.remove}
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* SEZIONE MINI UPSELL EXTRA KG STANDARD/PREMIUM */}
@@ -417,9 +425,7 @@ export default function CartPage({
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          <p className="font-semibold">
-                            {t.upsellStdTitle}
-                          </p>
+                          <p className="font-semibold">{t.upsellStdTitle}</p>
                           <p className="text-white/60 text-[0.7rem]">
                             {UPSELL_STD_WEIGHT_KG} kg ·{" "}
                             {UPSELL_STD_1KG_TOTAL.toFixed(2)} € totali
@@ -429,9 +435,7 @@ export default function CartPage({
                           {UPSELL_STD_1KG_TOTAL.toFixed(2)} €
                         </div>
                       </div>
-                      <p className="text-xs text-white/70">
-                        {t.upsellStdDesc}
-                      </p>
+                      <p className="text-xs text-white/70">{t.upsellStdDesc}</p>
                       <button
                         type="button"
                         className="btn btn-ghost btn-sm self-start"
@@ -457,9 +461,7 @@ export default function CartPage({
                     <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-sm flex flex-col gap-2">
                       <div className="flex items-center justify-between gap-2">
                         <div>
-                          <p className="font-semibold">
-                            {t.upsellPrmTitle}
-                          </p>
+                          <p className="font-semibold">{t.upsellPrmTitle}</p>
                           <p className="text-white/60 text-[0.7rem]">
                             {UPSELL_PRM_WEIGHT_KG} kg ·{" "}
                             {UPSELL_PRM_1KG_TOTAL.toFixed(2)} € totali
@@ -469,9 +471,7 @@ export default function CartPage({
                           {UPSELL_PRM_1KG_TOTAL.toFixed(2)} €
                         </div>
                       </div>
-                      <p className="text-xs text-white/70">
-                        {t.upsellPrmDesc}
-                      </p>
+                      <p className="text-xs text-white/70">{t.upsellPrmDesc}</p>
                       <button
                         type="button"
                         className="btn btn-ghost btn-sm self-start"
@@ -501,20 +501,16 @@ export default function CartPage({
                 <span>{t.total}</span>
                 {wheelBonusKg > 0 && (
                   <span className="text-emerald-300">
-                    🎁 Bonus ruota: +{wheelBonusKg.toFixed(2)} kg (in nota
-                    ordine)
+                    🎁 Bonus ruota: +{wheelBonusKg.toFixed(2)} kg (in nota ordine)
                   </span>
                 )}
               </div>
               <div className="text-2xl font-extrabold">
-                {subtotal.toFixed(2)} €
+                {Number(subtotal || 0).toFixed(2)} €
               </div>
             </div>
 
-            <button
-              className="btn btn-brand px-6 py-3"
-              onClick={goToCheckout}
-            >
+            <button className="btn btn-brand px-6 py-3" onClick={goToCheckout}>
               {t.goCheckout}
             </button>
           </>
