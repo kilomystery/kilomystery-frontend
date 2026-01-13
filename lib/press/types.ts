@@ -4,8 +4,9 @@ export type PressTag =
   | "press"
   | "pop-up"
   | "events"
-  | "news"
-  | "brand";
+  | "brand"
+  | "sustainability";
+
 
 export type Localized = Record<Lang, string>;
 
