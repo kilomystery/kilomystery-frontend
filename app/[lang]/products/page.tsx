@@ -2,7 +2,7 @@
 
 /* eslint-disable react/no-unescaped-entities */
 
-import { use, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -19,7 +19,6 @@ const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
    ✅ PREZZI FRONTEND (REAL + COMPARE) — ALLINEATI A SHOPIFY
    Standard: 1kg 22,90 (compare 25,90)
    Premium : 1kg 26,90 (compare 29,90)
-   Totali per KG già calcolati e scalari.
 ========================================================= */
 
 const PRICE_TABLE: Record<
@@ -52,11 +51,19 @@ function prices(kind: "Standard" | "Premium", kg: Kg) {
 const euro = (n: number) =>
   n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
-// === EXPLORER BOX (BUNDLE) ===
-const EXPLORER_SHOPIFY_ID = "52089141363026"; // variante Shopify
-const EXPLORER_TOTAL_KG = 16; // 15 kg + 1 kg omaggio
-const EXPLORER_PRICE_TOTAL = 270; // prezzo totale
-const EXPLORER_PRICE_PER_KG = EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG;
+// === EXPLORER BOX (BUNDLE) — ALLINEATA A SHOPIFY ===
+const EXPLORER_SHOPIFY_ID = "52089141363026";
+const EXPLORER_TOTAL_KG = 16; // 15kg + 1kg omaggio
+const EXPLORER_PRICE_TOTAL = 314.0; // prezzo reale
+const EXPLORER_COMPARE_TOTAL = 418.5; // prezzo di confronto
+
+const EXPLORER_PRICE_PER_KG = +(
+  EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG
+).toFixed(2);
+
+const EXPLORER_COMPARE_PER_KG = +(
+  EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG
+).toFixed(2);
 
 type CopyKey =
   | "heroTitleHighlight"
@@ -85,12 +92,10 @@ type CopyKey =
   | "explorerSubtitle"
   | "explorerBadge"
   | "explorerCta"
-  // 🔸 NUOVO: testi ruota
   | "wheelTitle"
   | "wheelText"
   | "wheelCtaStd"
   | "wheelCtaPrm"
-  // 🔥 SEO CTA
   | "seoCtaTitle"
   | "seoCtaText"
   | "seoCtaPrimary"
@@ -99,7 +104,6 @@ type CopyKey =
 
 type CopyPerLang = Record<CopyKey, string>;
 
-// 🔤 Testi per OGNI lingua (IT, EN, ES, FR, DE)
 const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
   it: {
     heroTitleHighlight: "Pesa il mistero",
@@ -145,14 +149,12 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     explorerBadge: "Best value",
     explorerCta: "Aggiungi Explorer Box",
 
-    // 🔸 ruota (nuova logica: al carrello)
     wheelTitle: "Ruota della fortuna",
     wheelText:
       "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine come peso extra.",
     wheelCtaStd: "Vai ai 10 kg Standard",
     wheelCtaPrm: "Vai ai 10 kg Premium",
 
-    // 🔥 SEO CTA
     seoCtaTitle: "Cerchi una Mystery Box?",
     seoCtaText:
       "Scopri la nostra guida completa: cos’è una mystery box, come funziona, cosa aspettarsi e come scegliere tra Standard e Premium.",
@@ -505,7 +507,6 @@ function PackCard({
       className={`card ${isStd ? "card--standard" : "card--premium"}`}
       id={anchorId}
     >
-      {/* badge piccolo sopra */}
       <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
         <span>{badgeTextTop}</span>
         <span className="pill pill--std">
@@ -537,12 +538,10 @@ function PackCard({
         </h4>
 
         <div className="text-right space-y-1">
-          {/* ✅ PREZZO DI CONFRONTO (SBARRATO) */}
           <div className="text-sm line-through text-white/45">
             {euro(compareTotal)}
           </div>
 
-          {/* ✅ PREZZO REALE */}
           <div
             className={`price-figure ${
               isStd ? "price-figure--std" : "price-figure--prm"
@@ -551,7 +550,6 @@ function PackCard({
             {euro(total)}
           </div>
 
-          {/* ✅ €/KG REALE */}
           <div className="price-perkg">({ppk.toFixed(2)} €/kg)</div>
 
           {co2Text && (
@@ -586,17 +584,16 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   const { addItem } = useCart();
 
   function handleAdd() {
-   addItem({
-  id: "Explorer-16",
-  shopifyId: EXPLORER_SHOPIFY_ID,
-  title: t.explorerTitle,
-  kind: "Premium",
-  kg: EXPLORER_TOTAL_KG,
-  price: EXPLORER_PRICE_TOTAL, // 🔥 NUMERO, NON OGGETTO
-  qty: 1,
-  image: "/videos/packs/ExplorerBox.mp4",
-});
-
+    addItem({
+      id: "Explorer-16",
+      shopifyId: EXPLORER_SHOPIFY_ID,
+      title: t.explorerTitle,
+      kind: "Premium",
+      kg: EXPLORER_TOTAL_KG,
+      price: EXPLORER_PRICE_TOTAL,
+      image: "/videos/packs/ExplorerBox.mp4",
+      qty: 1,
+    });
   }
 
   return (
@@ -689,11 +686,20 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
                       ? "Total du bundle"
                       : "Bundle-Gesamtpreis"}
                   </div>
+
+                  <div className="text-sm line-through text-white/45">
+                    {euro(EXPLORER_COMPARE_TOTAL)}
+                  </div>
+
                   <div className="text-3xl font-extrabold">
                     {euro(EXPLORER_PRICE_TOTAL)}
                   </div>
+
                   <div className="text-xs text-white/60">
-                    ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg
+                    ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg{" "}
+                    <span className="line-through ml-1 text-white/45">
+                      {EXPLORER_COMPARE_PER_KG.toFixed(2)} €/kg
+                    </span>
                   </div>
                 </div>
 
@@ -734,7 +740,6 @@ export default function ProductsPage({
   params: { lang: string };
 }) {
   const lang: Lang = normalizeLang(params?.lang);
-
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
 
@@ -785,7 +790,6 @@ export default function ProductsPage({
     };
   }, []);
 
-  // JSON-LD SEO per il prodotto / categoria
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
@@ -802,22 +806,17 @@ export default function ProductsPage({
         : lang === "fr"
         ? "Mystery box au kilo KiloMystery"
         : "Mystery Box zum Kilo-Preis KiloMystery",
-    brand: {
-      "@type": "Brand",
-      name: "KiloMystery",
-    },
+    brand: { "@type": "Brand", name: "KiloMystery" },
     url: `${siteUrl}/${lang}/products`,
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
-      // ✅ aggiornati ai nuovi prezzi €/kg reali (min = Standard 10kg, max = Premium 1kg)
       lowPrice: "20.15",
       highPrice: "26.90",
       availability: "https://schema.org/InStock",
     },
   };
 
-  // 🔥 JSON-LD pagina (aiuta anche per query generiche “mystery box”)
   const webPageJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebPage",
@@ -832,32 +831,23 @@ export default function ProductsPage({
         ? "Mystery Boxes et Mystery Box au Kilo | KiloMystery"
         : "Mystery Boxen & Mystery Box pro Kilo | KiloMystery",
     url: `${siteUrl}/${lang}/products`,
-    isPartOf: {
-      "@type": "WebSite",
-      name: "KiloMystery",
-      url: siteUrl,
-    },
+    isPartOf: { "@type": "WebSite", name: "KiloMystery", url: siteUrl },
   };
 
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(webPageJsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
       />
 
       <Header lang={lang} />
 
       <main className="container py-10 mb-16 space-y-10">
-        {/* LOGO + HERO */}
         <section className="space-y-6 text-center max-w-3xl mx-auto">
           <div className="mx-auto w-[160px] md:w-[220px] relative aspect-[3/1]">
             <Image
@@ -884,31 +874,20 @@ export default function ProductsPage({
             <p className="text-white/70">{t.heroSubtitle1}</p>
             <p className="text-white/70">{t.heroSubtitle2}</p>
 
-            {/* 🔥 SEO LINKS (internal linking “killer”) */}
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <a
-                href={`/${lang}/mystery-box`}
-                className="btn btn-brand px-5 py-2"
-              >
+              <a href={`/${lang}/mystery-box`} className="btn btn-brand px-5 py-2">
                 {t.seoCtaPrimary}
               </a>
-              <a
-                href={`/${lang}/how-it-works`}
-                className="btn btn-ghost px-5 py-2"
-              >
+              <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
                 {t.seoCtaSecondary}
               </a>
-              <a
-                href={`/${lang}/faq`}
-                className="btn btn-ghost px-5 py-2"
-              >
+              <a href={`/${lang}/faq`} className="btn btn-ghost px-5 py-2">
                 {t.seoCtaTertiary}
               </a>
             </div>
           </header>
         </section>
 
-        {/* STRIP TRUST */}
         <section className="grid gap-3 md:grid-cols-3 text-sm">
           <div className="card p-3 space-y-1">
             <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
@@ -930,7 +909,6 @@ export default function ProductsPage({
           </div>
         </section>
 
-        {/* 🔥 MINI LANDING (testo + link) per query “mystery box” */}
         <section className="card p-5 md:p-6 bg-gradient-to-br from-white/[0.04] via-[#111827]/60 to-white/[0.06]">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="space-y-2">
@@ -942,23 +920,16 @@ export default function ProductsPage({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <a
-                href={`/${lang}/mystery-box`}
-                className="btn btn-brand px-5 py-2"
-              >
+              <a href={`/${lang}/mystery-box`} className="btn btn-brand px-5 py-2">
                 {t.seoCtaPrimary}
               </a>
-              <a
-                href={`/${lang}/how-it-works`}
-                className="btn btn-ghost px-5 py-2"
-              >
+              <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
                 {t.seoCtaSecondary}
               </a>
             </div>
           </div>
         </section>
 
-        {/* 🔸 SEZIONE RUOTA – spiegazione (nuova logica: ruota al carrello) */}
         <section className="card flex flex-col md:flex-row items-center gap-5">
           <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
             <img
@@ -972,12 +943,9 @@ export default function ProductsPage({
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-extrabold">{t.wheelTitle}</h3>
-            <p className="text-white/70 text-sm md:text-base">
-              {t.wheelText}
-            </p>
+            <p className="text-white/70 text-sm md:text-base">{t.wheelText}</p>
           </div>
           <div className="flex flex-col gap-2 w-full md:w-auto">
-            {/* ✅ FIX anchor: era buy-Standard-10 (sbagliato), deve essere buy-standard-10 */}
             <a href="#buy-standard-10" className="btn btn-silver">
               {t.wheelCtaStd}
             </a>
@@ -987,15 +955,10 @@ export default function ProductsPage({
           </div>
         </section>
 
-        {/* STANDARD */}
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-silver-soft">
-              Standard
-            </h2>
-            <p className="text-xs text-white/60 max-w-md">
-              {t.standardDescription}
-            </p>
+            <h2 className="text-2xl font-extrabold text-silver-soft">Standard</h2>
+            <p className="text-xs text-white/60 max-w-md">{t.standardDescription}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -1012,15 +975,10 @@ export default function ProductsPage({
           </div>
         </section>
 
-        {/* PREMIUM */}
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-gold-soft">
-              Premium
-            </h2>
-            <p className="text-xs text-white/60 max-w-md">
-              {t.premiumDescription}
-            </p>
+            <h2 className="text-2xl font-extrabold text-gold-soft">Premium</h2>
+            <p className="text-xs text-white/60 max-w-md">{t.premiumDescription}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -1037,20 +995,14 @@ export default function ProductsPage({
           </div>
         </section>
 
-        {/* EXPLORER BUNDLE */}
         <ExplorerCard lang={lang} t={t} />
 
-        {/* COSA PUOI TROVARE NELLE BOX */}
         <SectionInsideBox lang={lang} />
 
-        {/* POLICY RESI */}
         <section id="policy" className="card">
           <h3 className="text-xl font-extrabold mb-2">{t.returnTitle}</h3>
           <p className="text-white/70 text-sm md:text-base">{t.returnText}</p>
-          <a
-            href={`/${lang}/policy/returns`}
-            className="btn btn-ghost mt-3 inline-flex"
-          >
+          <a href={`/${lang}/policy/returns`} className="btn btn-ghost mt-3 inline-flex">
             {t.returnCta}
           </a>
         </section>
