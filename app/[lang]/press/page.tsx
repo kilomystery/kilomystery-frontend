@@ -1,10 +1,11 @@
+// app/[lang]/press/page.tsx
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import type { Lang } from "@/i18n/lang";
 import type { Metadata } from "next";
 
 import { PRESS_LANGS, safeLang, getLocale, pressCopy } from "@/lib/press/i18n";
-import { getAllPressPostsMeta, getPressMentions } from "@/lib/press";
+import { getAllPressPostsMeta, getAllPressMentions } from "@/lib/press";
 
 export const dynamic = "force-static";
 
@@ -40,7 +41,7 @@ export default function PressPage({ params }: { params: { lang: string } }) {
   const locale = getLocale(lang);
 
   const posts = getAllPressPostsMeta();
-  const mentions = getPressMentions();
+  const mentions = getAllPressMentions();
 
   return (
     <>
@@ -127,7 +128,7 @@ export default function PressPage({ params }: { params: { lang: string } }) {
 
                 return (
                   <a
-                    key={idx}
+                    key={`${m.url}-${idx}`}
                     href={m.url}
                     target="_blank"
                     rel="noreferrer"
@@ -141,7 +142,9 @@ export default function PressPage({ params }: { params: { lang: string } }) {
                     </div>
 
                     <div className="mt-1 font-extrabold">{title}</div>
-                    {note && <p className="mt-2 text-white/70 text-sm">{note}</p>}
+                    {note && (
+                      <p className="mt-2 text-white/70 text-sm">{note}</p>
+                    )}
 
                     <div className="mt-3 text-sm text-emerald-200/90">
                       {c.openExternal}
@@ -159,7 +162,10 @@ export default function PressPage({ params }: { params: { lang: string } }) {
           <p className="text-white/70 mt-2">{c.mediaText}</p>
 
           <div className="mt-3">
-            <a className="btn btn-ghost inline-flex" href="mailto:info@kilomystery.com">
+            <a
+              className="btn btn-ghost inline-flex"
+              href="mailto:info@kilomystery.com"
+            >
               info@kilomystery.com
             </a>
           </div>

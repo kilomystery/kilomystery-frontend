@@ -1,19 +1,48 @@
 import Header from "../../../components/Header";
 import Footer from "../../../components/Footer";
-import type { Lang } from "@/i18n/lang";
+import { normalizeLang, type Lang } from "@/i18n/lang";
+import { getPressPostBySlug, getAllPressPostsMeta } from "@/lib/press";
+import { MDXRemote } from "next-mdx-remote/rsc";
 import type { Metadata } from "next";
 
-import { PRESS_LANGS, safeLang, getLocale } from "@/lib/press/i18n";
-import { getPressPostBySlug, getAllPressPostsMeta } from "@/lib/press";
+import Callout from "@/app/components/mdx/Callout";
+import ButtonLink from "@/app/components/mdx/ButtonLink";
+import ArticleCta from "@/app/components/mdx/ArticleCta";
 
 export const dynamic = "force-static";
+
+const LANGS: Lang[] = ["it", "en", "es", "fr", "de"];
+
+function formatDateByLang(dateISO: string, lang: Lang) {
+  const d = new Date(dateISO);
+  const locale =
+    lang === "it"
+      ? "it-IT"
+      : lang === "en"
+      ? "en-GB"
+      : lang === "es"
+      ? "es-ES"
+      : lang === "fr"
+      ? "fr-FR"
+      : "de-DE";
+
+  try {
+    return d.toLocaleDateString(locale, {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  } catch {
+    return d.toISOString().slice(0, 10);
+  }
+}
 
 export async function generateStaticParams() {
   const posts = getAllPressPostsMeta();
   const params: Array<{ lang: Lang; slug: string }> = [];
 
   for (const p of posts) {
-    for (const l of PRESS_LANGS) params.push({ lang: l, slug: p.slug });
+    for (const l of LANGS) params.push({ lang: l, slug: p.slug });
   }
   return params;
 }
@@ -23,14 +52,25 @@ export async function generateMetadata({
 }: {
   params: { lang: string; slug: string };
 }): Promise<Metadata> {
-  const lang: Lang = safeLang(params.lang);
-  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+  const lang: Lang = normalizeLang(params.lang);
+  const post = getPressPostBySlug(params.slug, lang);
 
-  const post = getPressPostBySlug(params.slug);
+  const site =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+
   if (!post) {
     return {
       title: "Press | KiloMystery",
-      description: "Press & media page for KiloMystery.",
+      description:
+        lang === "it"
+          ? "Comunicati, eventi e rassegna stampa."
+          : lang === "en"
+          ? "Press releases, events and media coverage."
+          : lang === "es"
+          ? "Comunicados, eventos y prensa."
+          : lang === "fr"
+          ? "Communiqués, événements et presse."
+          : "Presse, Events und Medienberichte.",
       alternates: { canonical: `${site}/${lang}/press` },
     };
   }
@@ -39,11 +79,13 @@ export async function generateMetadata({
   const description = post.description[lang] || post.description.it;
 
   return {
-    title: `${title} | KiloMystery`,
+    title,
     description,
-    alternates: { canonical: `${site}/${lang}/press/${post.slug}` },
+    alternates: {
+      canonical: `${site}/${lang}/press/${post.slug}`,
+    },
     openGraph: {
-      title: `${title} | KiloMystery`,
+      title,
       description,
       url: `${site}/${lang}/press/${post.slug}`,
       type: "article",
@@ -51,15 +93,13 @@ export async function generateMetadata({
   };
 }
 
-export default function PressSlugPage({
+export default async function PressPostPage({
   params,
 }: {
   params: { lang: string; slug: string };
 }) {
-  const lang: Lang = safeLang(params.lang);
-  const locale = getLocale(lang);
-
-  const post = getPressPostBySlug(params.slug);
+  const lang: Lang = normalizeLang(params.lang);
+  const post = getPressPostBySlug(params.slug, lang);
 
   if (!post) {
     return (
@@ -71,36 +111,23 @@ export default function PressSlugPage({
               {lang === "it"
                 ? "Articolo non trovato"
                 : lang === "en"
-                ? "Article not found"
+                ? "Post not found"
                 : lang === "es"
                 ? "Artículo no encontrado"
                 : lang === "fr"
                 ? "Article introuvable"
                 : "Artikel nicht gefunden"}
             </h1>
-
-            <p className="text-white/70 mt-2">
-              {lang === "it"
-                ? "Torna alla pagina Press per vedere gli articoli disponibili."
-                : lang === "en"
-                ? "Go back to Press to see available articles."
-                : lang === "es"
-                ? "Vuelve a Prensa para ver artículos disponibles."
-                : lang === "fr"
-                ? "Retourne sur Presse pour voir les articles."
-                : "Zurück zur Presse-Seite."}
-            </p>
-
             <a href={`/${lang}/press`} className="btn btn-ghost mt-4 inline-flex">
               {lang === "it"
-                ? "Vai a Press"
+                ? "Torna a Press"
                 : lang === "en"
-                ? "Go to Press"
+                ? "Back to Press"
                 : lang === "es"
-                ? "Ir a Prensa"
+                ? "Volver a Press"
                 : lang === "fr"
-                ? "Aller à Presse"
-                : "Zur Presse"}
+                ? "Retour à Press"
+                : "Zurück zur Presse"}
             </a>
           </div>
         </main>
@@ -111,53 +138,18 @@ export default function PressSlugPage({
 
   const title = post.title[lang] || post.title.it;
   const description = post.description[lang] || post.description.it;
-  const content = post.content[lang] || post.content.it;
+  const dateLabel = formatDateByLang(post.date, lang);
 
-  // JSON-LD Article
-  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
-  const articleJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    headline: title,
-    description,
-    datePublished: post.date,
-    dateModified: post.date,
-    author: {
-      "@type": "Organization",
-      name: "KiloMystery",
-      url: site,
-    },
-    publisher: {
-      "@type": "Organization",
-      name: "KiloMystery",
-      url: site,
-      logo: {
-        "@type": "ImageObject",
-        url: `${site}/logo.png`,
-      },
-    },
-    mainEntityOfPage: `${site}/${lang}/press/${post.slug}`,
-  };
+  // IMPORTANTISSIMO: content è Localized -> prendo SOLO la stringa per lingua
+  const mdxSource = post.content[lang] || post.content.it || "";
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }}
-      />
-
       <Header lang={lang} />
 
       <main className="container py-10 mb-16 space-y-6">
         <header className="space-y-3">
-          <div className="text-xs text-white/60">
-            {new Date(post.date).toLocaleDateString(locale, {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
-          </div>
-
+          <div className="text-xs text-white/60">{dateLabel}</div>
           <h1 className="text-3xl md:text-4xl font-extrabold">{title}</h1>
           <p className="text-white/70">{description}</p>
 
@@ -173,28 +165,29 @@ export default function PressSlugPage({
                 ? "Voir les Mystery Boxes"
                 : "Mystery Boxen ansehen"}
             </a>
-
             <a href={`/${lang}/press`} className="btn btn-ghost">
               {lang === "it"
                 ? "Torna a Press"
                 : lang === "en"
                 ? "Back to Press"
                 : lang === "es"
-                ? "Volver a Prensa"
+                ? "Volver a Press"
                 : lang === "fr"
-                ? "Retour à Presse"
+                ? "Retour à Press"
                 : "Zurück zur Presse"}
             </a>
           </div>
         </header>
 
         <article className="prose prose-invert max-w-none">
-          {/* content qui è HTML/MDX? In questa versione è stringa markdown */}
-          <div dangerouslySetInnerHTML={{ __html: content }} />
+          <MDXRemote
+            source={mdxSource}
+            components={{ Callout, ButtonLink, ArticleCta }}
+          />
         </article>
 
-        <section className="card p-6">
-          <h3 className="text-lg font-extrabold">
+        <section className="card p-5">
+          <div className="text-sm font-semibold">
             {lang === "it"
               ? "Contatto media"
               : lang === "en"
@@ -204,10 +197,8 @@ export default function PressSlugPage({
               : lang === "fr"
               ? "Contact presse"
               : "Pressekontakt"}
-          </h3>
-          <p className="text-white/70 mt-2">
-            info@kilomystery.com
-          </p>
+          </div>
+          <div className="text-white/70 mt-1">info@kilomystery.com</div>
         </section>
       </main>
 

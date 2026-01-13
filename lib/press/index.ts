@@ -3,7 +3,7 @@ import type { PressPost, PressMention } from "./types";
 import { PRESS_POSTS, PRESS_MENTIONS } from "./posts";
 
 export type { PressPost, PressMention } from "./types";
-export { PRESS_MENTIONS } from "./posts";
+export { PRESS_POSTS, PRESS_MENTIONS } from "./posts";
 
 export function getAllPressPostsMeta(): Array<{
   slug: string;
@@ -39,8 +39,6 @@ export function getPressPostBySlug(slug: string, lang: Lang): PressPost | null {
   return safe;
 }
 
-export function getPressMentions(): PressMention[] {
-  return [...PRESS_MENTIONS].sort((a, b) =>
-    (a.date || "") < (b.date || "") ? 1 : -1
-  );
+export function getAllPressMentions(): PressMention[] {
+  return [...PRESS_MENTIONS].sort((a, b) => (a.date < b.date ? 1 : -1));
 }
