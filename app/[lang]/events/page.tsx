@@ -26,7 +26,7 @@ const upcomingEvents: Event[] = [
     title: "KiloMystery Pop-Up – Mesagne (Brindisi)",
     description:
       "Tre giornate intere di mystery box al kg presso il Centro Commerciale Appia Antica.Un Iphone 17 si nasconde tra i pacchi!",
-    extraInfo: "VenerdiOrario 12:00 -21:00 , Sabato e Domenica  continuato 9:00–21:00.",
+    extraInfo: "Venerdi Orario 12:00 -21:00 , Sabato e Domenica  continuato 9:00–21:00.",
     image: "/events/brindisi-2025-01-03.png",
   },
   {
