@@ -2,11 +2,7 @@
 
 import { useState } from 'react';
 import { useCart } from '@/app/components/cart/CartProvider';
-import {
-  SHOPIFY_VARIANTS,
-  Kg,
-  Tier,
-} from '@/app/config/shopifyProducts';
+import { SHOPIFY_VARIANTS, Kg, Tier } from '@/app/config/shopifyProducts';
 
 type Lang = 'it' | 'en' | 'es' | 'fr' | 'de';
 type TabTier = 'std' | 'prm'; // solo per i tab UI (Standard/Premium)
@@ -43,8 +39,7 @@ const LABELS: Record<Lang, any> = {
     perkg: '€/kg',
     sectionTitleMain: 'Weigh the mystery,',
     sectionTitleAccent: 'unbox the surprise!',
-    sectionSubtitle1:
-      'Standard or Premium? 1 kg or 10 kg? You decide.',
+    sectionSubtitle1: 'Standard or Premium? 1 kg or 10 kg? You decide.',
     sectionSubtitle2:
       'Each box gives a second life to parcels that would otherwise be discarded: less waste, less CO₂, more value from what already exists.',
     bullet1: 'Mixed contents – pure surprise',
@@ -66,8 +61,7 @@ const LABELS: Record<Lang, any> = {
     perkg: '€/kg',
     sectionTitleMain: 'Pesa el misterio,',
     sectionTitleAccent: '¡desempaqueta la sorpresa!',
-    sectionSubtitle1:
-      '¿Standard o Premium? ¿1 kg o 10 kg? Tú eliges.',
+    sectionSubtitle1: '¿Standard o Premium? ¿1 kg o 10 kg? Tú eliges.',
     sectionSubtitle2:
       'Cada caja recupera paquetes que de otro modo acabarían desechados: menos residuos, menos CO₂ y más valor extraído de lo que ya existe.',
     bullet1: 'Contenido mixto – sorpresa',
@@ -89,8 +83,7 @@ const LABELS: Record<Lang, any> = {
     perkg: '€/kg',
     sectionTitleMain: 'Pèse le mystère,',
     sectionTitleAccent: 'déballes la surprise !',
-    sectionSubtitle1:
-      'Standard ou Premium ? 1 kg ou 10 kg ? À toi de choisir.',
+    sectionSubtitle1: 'Standard ou Premium ? 1 kg ou 10 kg ? À toi de choisir.',
     sectionSubtitle2:
       'Chaque box redonne vie à des colis qui auraient fini jetés : moins de déchets, moins de CO₂, plus de valeur extraite de l’existant.',
     bullet1: 'Contenu varié – surprise',
@@ -112,8 +105,7 @@ const LABELS: Record<Lang, any> = {
     perkg: '€/kg',
     sectionTitleMain: 'Wiege das Geheimnis,',
     sectionTitleAccent: 'pack die Überraschung aus!',
-    sectionSubtitle1:
-      'Standard oder Premium? 1 kg oder 10 kg? Du entscheidest.',
+    sectionSubtitle1: 'Standard oder Premium? 1 kg oder 10 kg? Du entscheidest.',
     sectionSubtitle2:
       'Jede Box rettet Pakete, die sonst entsorgt würden: weniger Müll, weniger CO₂ und mehr Wert aus dem, was schon da ist.',
     bullet1: 'Gemischter Inhalt – Überraschung',
@@ -131,15 +123,26 @@ const LABELS: Record<Lang, any> = {
 
 const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
-/** prezzi indicativi come avevamo prima */
-function priceForKg(weight: number, tier: TabTier) {
-  if (tier === 'prm') {
-    const perKg = weight <= 3 ? 25.99 : 20.99;
-    return { perKg, total: +(perKg * weight).toFixed(2) };
-  }
-  const perKg = weight <= 3 ? 19.9 : 17.99;
-  return { perKg, total: +(perKg * weight).toFixed(2) };
-}
+/**
+ * Prezzi REALI (Shopify) + Prezzo di confronto (compare-at)
+ * NOTA: teniamo total, non perKg “teorico”, così €/kg resta sempre coerente al centesimo.
+ */
+const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
+  std: {
+    1: { total: 22.99, compareAt: 25.90 },
+    2: { total: 44.88, compareAt: 51.80 },
+    3: { total: 65.28, compareAt: 77.70 },
+    5: { total: 105.35, compareAt: 129.50 },
+    10: { total: 201.50, compareAt: 259.00 },
+  },
+  prm: {
+    1: { total: 26.90, compareAt: 29.90 },
+    2: { total: 51.12, compareAt: 59.80 },
+    3: { total: 74.25, compareAt: 89.70 },
+    5: { total: 118.35, compareAt: 149.50 },
+    10: { total: 215.20, compareAt: 299.00 },
+  },
+};
 
 /** CO₂ indicativa evitata per kg (stima), per lingua */
 const co2ByKg: Record<Lang, Record<Kg, string>> = {
@@ -192,25 +195,17 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
 
   const supported = ['it', 'en', 'es', 'fr', 'de'] as const;
   const normalized = String(lang).toLowerCase();
-  const safeLang: Lang = (supported as readonly string[]).includes(
-    normalized as any,
-  )
+  const safeLang: Lang = (supported as readonly string[]).includes(normalized as any)
     ? (normalized as Lang)
     : 'it';
 
   const L = LABELS[safeLang];
 
   // kind “umano” per UI
-  const currentKind: 'Standard' | 'Premium' =
-    tab === 'std' ? 'Standard' : 'Premium';
+  const currentKind: 'Standard' | 'Premium' = tab === 'std' ? 'Standard' : 'Premium';
 
-  function handleAddToCart(
-    kind: 'Standard' | 'Premium',
-    kg: Kg,
-    perKg: number,
-  ) {
+  function handleAddToCart(kind: 'Standard' | 'Premium', kg: Kg, perKg: number) {
     const tier: Tier = kind === 'Standard' ? 'standard' : 'premium';
-
     const shopifyId = SHOPIFY_VARIANTS[tier][kg];
 
     addItem({
@@ -234,9 +229,7 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
           </span>
         </h2>
         <p className="text-white/70">{L.sectionSubtitle1}</p>
-        <p className="text-white/70 mt-2 text-sm md:text-base">
-          {L.sectionSubtitle2}
-        </p>
+        <p className="text-white/70 mt-2 text-sm md:text-base">{L.sectionSubtitle2}</p>
       </div>
 
       {/* Tabs */}
@@ -249,9 +242,11 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
               : 'bg-white/5 text-white/80 border-white/15 hover:bg-white/10',
           ].join(' ')}
           onClick={() => setTab('std')}
+          type="button"
         >
           {L?.standard || 'Standard'}
         </button>
+
         <button
           className={[
             'px-5 py-2 rounded-full font-semibold transition border',
@@ -260,6 +255,7 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
               : 'bg-white/5 text-white/80 border-white/15 hover:bg-white/10',
           ].join(' ')}
           onClick={() => setTab('prm')}
+          type="button"
         >
           {L?.premium || 'Premium'}
         </button>
@@ -268,44 +264,31 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
       {/* Grid prodotti + card ruota */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {WEIGHTS.map((w) => {
-          const { perKg, total } = priceForKg(w, tab);
-          const src = `/videos/packs/${
-            tab === 'std' ? 'std' : 'prm'
-          }-${w}.mp4`;
           const kg = w as Kg;
           const isStd = tab === 'std';
 
+          const { total, compareAt } = PRICE_TABLE[tab][kg];
+          const perKg = +(total / kg).toFixed(2);
+
+          const src = `/videos/packs/${tab === 'std' ? 'std' : 'prm'}-${w}.mp4`;
           const co2Text = co2ByKg[safeLang][kg];
 
           return (
             <article
               key={`${tab}-${w}`}
-              id={tab === 'std' && w === 10 ? 'buy-standard-10' : undefined}
-              className={`card ${
-                isStd ? 'card--standard' : 'card--premium'
-              }`}
+              id={tab === 'std' && w === 10 ? 'buy-standard-10' : tab === 'prm' && w === 10 ? 'buy-premium-10' : undefined}
+              className={`card ${isStd ? 'card--standard' : 'card--premium'}`}
             >
               {/* badge */}
               <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
-                <span>
-                  {isStd ? L.badgeStd : L.badgePrm}
-                </span>
-                <span
-                  className={`pill ${
-                    isStd ? 'pill--std' : 'pill--prm'
-                  }`}
-                >
-                  {w} {L.kg} ·{' '}
-                  {isStd ? L.standard : L.premium}
+                <span>{isStd ? L.badgeStd : L.badgePrm}</span>
+                <span className={`pill ${isStd ? 'pill--std' : 'pill--prm'}`}>
+                  {w} {L.kg} · {isStd ? L.standard : L.premium}
                 </span>
               </div>
 
-              {/* video stile products page */}
-              <div
-                className={`media-wrap ${
-                  isStd ? 'media-wrap--std' : 'media-wrap--prm'
-                }`}
-              >
+              {/* video */}
+              <div className={`media-wrap ${isStd ? 'media-wrap--std' : 'media-wrap--prm'}`}>
                 <div className="ratio-16-9">
                   <video
                     className="media rounded-[12px] object-cover"
@@ -322,23 +305,27 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
               {/* testo + prezzo */}
               <div className="mt-4 flex items-start justify-between gap-4">
                 <h3 className="product-title text-xl">
-                  {isStd ? L.standard : L.premium}{' '}
-                  <span className="dot" /> {w} {L.kg}
+                  {isStd ? L.standard : L.premium} <span className="dot" /> {w} {L.kg}
                 </h3>
 
                 <div className="text-right space-y-1">
+                  {/* ✅ prezzo di confronto sbarrato */}
+                  <div className="text-sm text-white/60 line-through">
+                    {euro(compareAt)}
+                  </div>
+
                   <div
                     className={`price-figure ${
-                      isStd
-                        ? 'price-figure--std'
-                        : 'price-figure--prm'
+                      isStd ? 'price-figure--std' : 'price-figure--prm'
                     } text-3xl`}
                   >
                     {euro(total)}
                   </div>
+
                   <div className="price-perkg">
                     ({perKg.toFixed(2)} {L.perkg || '€/kg'})
                   </div>
+
                   {co2Text && (
                     <div className="text-[0.7rem] text-emerald-200/90">
                       ♻ {co2Text}
@@ -358,16 +345,8 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
               {/* bottone */}
               <div className="mt-4">
                 <button
-                  className={`btn w-full ${
-                    isStd ? 'btn-silver' : 'btn-gold'
-                  }`}
-                  onClick={() =>
-                    handleAddToCart(
-                      currentKind,
-                      kg,
-                      perKg,
-                    )
-                  }
+                  className={`btn w-full ${isStd ? 'btn-silver' : 'btn-gold'}`}
+                  onClick={() => handleAddToCart(currentKind, kg, perKg)}
                   type="button"
                 >
                   {L?.add || 'Aggiungi al carrello'}
@@ -379,26 +358,16 @@ export default function ProductsTabs({ lang = 'it' as Lang }) {
 
         {/* 🔸 Card promo ruota – immagine quadrata e layout compatto */}
         <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4">
-          <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">
-            🎡 Bonus extra
-          </p>
+          <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">🎡 Bonus extra</p>
 
           {/* immagine quadrata */}
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
-            <img
-              src="/wheel/wheel.svg"
-              alt={L.wheelTitle}
-              className="w-full h-full object-contain"
-            />
+            <img src="/wheel/wheel.svg" alt={L.wheelTitle} className="w-full h-full object-contain" />
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-extrabold">
-              {L.wheelTitle}
-            </h3>
-            <p className="text-xs md:text-sm text-white/85">
-              {L.wheelText}
-            </p>
+            <h3 className="text-lg font-extrabold">{L.wheelTitle}</h3>
+            <p className="text-xs md:text-sm text-white/85">{L.wheelText}</p>
           </div>
 
           <a
