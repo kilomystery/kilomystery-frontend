@@ -15,9 +15,38 @@ type Kg = 1 | 2 | 3 | 5 | 10;
 const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
 const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
 
-function pricePerKg(kind: "Standard" | "Premium", kg: Kg) {
-  if (kind === "Premium") return kg <= 3 ? 25.99 : 20.99;
-  return kg <= 3 ? 19.9 : 17.99;
+/* =========================================================
+   ✅ PREZZI FRONTEND (REAL + COMPARE) — ALLINEATI A SHOPIFY
+   Standard: 1kg 22,90 (compare 25,90)
+   Premium : 1kg 26,90 (compare 29,90)
+   Totali per KG già calcolati e scalari.
+========================================================= */
+
+const PRICE_TABLE: Record<
+  "Standard" | "Premium",
+  Record<Kg, { total: number; compareTotal: number }>
+> = {
+  Standard: {
+    1: { total: 22.9, compareTotal: 25.9 },
+    2: { total: 44.88, compareTotal: 51.8 },
+    3: { total: 65.28, compareTotal: 77.7 },
+    5: { total: 105.35, compareTotal: 129.5 },
+    10: { total: 201.5, compareTotal: 259.0 },
+  },
+  Premium: {
+    1: { total: 26.9, compareTotal: 29.9 },
+    2: { total: 51.12, compareTotal: 59.8 },
+    3: { total: 74.25, compareTotal: 89.7 },
+    5: { total: 118.35, compareTotal: 149.5 },
+    10: { total: 215.2, compareTotal: 299.0 },
+  },
+};
+
+function prices(kind: "Standard" | "Premium", kg: Kg) {
+  const { total, compareTotal } = PRICE_TABLE[kind][kg];
+  const ppk = +(total / kg).toFixed(2);
+  const comparePpk = +(compareTotal / kg).toFixed(2);
+  return { total, compareTotal, ppk, comparePpk };
 }
 
 const euro = (n: number) =>
@@ -450,8 +479,7 @@ function PackCard({
 }) {
   const { addItem } = useCart();
 
-  const ppk = pricePerKg(kind, kg);
-  const total = +(ppk * kg).toFixed(2);
+  const { total, compareTotal, ppk } = prices(kind, kg);
   const isStd = kind === "Standard";
   const anchorId = kg === 10 ? `buy-${kind.toLowerCase()}-10` : undefined;
   const variantId = VARIANT_IDS[kind][kg];
@@ -509,6 +537,12 @@ function PackCard({
         </h4>
 
         <div className="text-right space-y-1">
+          {/* ✅ PREZZO DI CONFRONTO (SBARRATO) */}
+          <div className="text-sm line-through text-white/45">
+            {euro(compareTotal)}
+          </div>
+
+          {/* ✅ PREZZO REALE */}
           <div
             className={`price-figure ${
               isStd ? "price-figure--std" : "price-figure--prm"
@@ -516,7 +550,10 @@ function PackCard({
           >
             {euro(total)}
           </div>
+
+          {/* ✅ €/KG REALE */}
           <div className="price-perkg">({ppk.toFixed(2)} €/kg)</div>
+
           {co2Text && (
             <div className="text-[0.7rem] text-emerald-200/90">
               ♻ {co2Text}
@@ -772,8 +809,9 @@ export default function ProductsPage({
     offers: {
       "@type": "AggregateOffer",
       priceCurrency: "EUR",
-      lowPrice: "17.99",
-      highPrice: "25.99",
+      // ✅ aggiornati ai nuovi prezzi €/kg reali (min = Standard 10kg, max = Premium 1kg)
+      lowPrice: "20.15",
+      highPrice: "26.90",
       availability: "https://schema.org/InStock",
     },
   };
