@@ -586,16 +586,17 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   const { addItem } = useCart();
 
   function handleAdd() {
-    addItem({
-      id: "Explorer-16",
-      shopifyId: EXPLORER_SHOPIFY_ID,
-      title: t.explorerTitle,
-      tier: "Premium", // lo trattiamo come bundle "alto"
-      weightKg: EXPLORER_TOTAL_KG,
-      pricePerKg: EXPLORER_PRICE_PER_KG,
-      qty: 1,
-      image: "/videos/packs/ExplorerBox.mp4",
-    });
+   addItem({
+  id: "Explorer-16",
+  shopifyId: EXPLORER_SHOPIFY_ID,
+  title: t.explorerTitle,
+  kind: "Premium",
+  kg: EXPLORER_TOTAL_KG,
+  price: EXPLORER_PRICE_TOTAL, // 🔥 NUMERO, NON OGGETTO
+  qty: 1,
+  image: "/videos/packs/ExplorerBox.mp4",
+});
+
   }
 
   return (
