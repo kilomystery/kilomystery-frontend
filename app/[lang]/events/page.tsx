@@ -1,53 +1,15 @@
 "use client";
 
-import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
-
-type Event = {
-  id: string;
-  date: string;
-  city: string;
-  location: string;
-  title: string;
-  description: string;
-  extraInfo?: string;
-  image?: string;
-};
-
-const upcomingEvents: Event[] = [
-  {
-    id: "brindisi-2025-01-03",
-    date: "13-14-15 Febbraio 2026",
-    city: "Mesagne (Brindisi)",
-    location:
-      "Centro Commerciale Appia Antica – Spazio Conad, Mesagne (BR) 72023",
-    title: "KiloMystery Pop-Up – Mesagne (Brindisi)",
-    description:
-      "Tre giornate intere di mystery box al kg presso il Centro Commerciale Appia Antica.Un Iphone 17 si nasconde tra i pacchi!",
-    extraInfo: "Venerdi Orario 12:00 -21:00 , Sabato e Domenica  continuato 9:00–21:00.",
-    image: "/events/brindisi-2025-01-03.png",
-  },
-  {
-    id: "milano-2025-12-10",
-    date: "27-28-29 Marzo 2026",
-    city: "Surbo ,Lecce",
-    location: "Centro commerciale Mongolfiera Surbo (LE) 73014",
-    title: "KiloMystery Pop-Up – Surbo (Lecce)",
-    description:
-      "Mystery box  Premium, un Iphone 17 si cela tra i pacchi.",
-    extraInfo: "Dettagli in aggiornamento.",
-  },
-];
 
 type CopyKey =
   | "kicker"
   | "heroTitle"
   | "heroSubtitle"
-  | "upcomingTitle"
-  | "pillPopup"
-  | "infoDisclaimer"
+  | "calendarTitle"
+  | "calendarText"
   | "ctaTitle"
   | "ctaText"
   | "ctaButton";
@@ -60,9 +22,9 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     heroTitle: "Pop-Up & Eventi KiloMystery",
     heroSubtitle:
       "Vieni a scoprire le nostre mystery box dal vivo nei pop-up ufficiali.",
-    upcomingTitle: "Prossimi eventi",
-    pillPopup: "Pop-Up Store",
-    infoDisclaimer: "*Le informazioni potrebbero subire variazioni.",
+    calendarTitle: "Calendario eventi",
+    calendarText:
+      "Stiamo aggiornando il calendario. Torna presto per scoprire le prossime date.",
     ctaTitle: "Vuoi ospitare un pop-up KiloMystery?",
     ctaText: "Siamo aperti a collaborazioni con store, fiere ed eventi.",
     ctaButton: "Vai alla sezione contatti",
@@ -72,9 +34,9 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     heroTitle: "KiloMystery Pop-Up & Events",
     heroSubtitle:
       "Discover our mystery boxes in real life at our official pop-up events.",
-    upcomingTitle: "Upcoming events",
-    pillPopup: "Pop-Up Store",
-    infoDisclaimer: "*Information may be subject to change.",
+    calendarTitle: "Events calendar",
+    calendarText:
+      "We’re updating the calendar. Check back soon for upcoming dates.",
     ctaTitle: "Want to host a KiloMystery pop-up?",
     ctaText: "We are open to collaborations with stores, fairs and events.",
     ctaButton: "Go to contacts section",
@@ -84,12 +46,11 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     heroTitle: "Pop-Up y Eventos KiloMystery",
     heroSubtitle:
       "Descubre nuestras mystery boxes en directo en los pop-up oficiales.",
-    upcomingTitle: "Próximos eventos",
-    pillPopup: "Pop-Up Store",
-    infoDisclaimer: "*La información puede estar sujeta a cambios.",
+    calendarTitle: "Calendario de eventos",
+    calendarText:
+      "Estamos actualizando el calendario. Vuelve pronto para ver las próximas fechas.",
     ctaTitle: "¿Quieres acoger un pop-up de KiloMystery?",
-    ctaText:
-      "Estamos abiertos a colaborar con tiendas, ferias y eventos.",
+    ctaText: "Estamos abiertos a colaborar con tiendas, ferias y eventos.",
     ctaButton: "Ir a la sección de contacto",
   },
   fr: {
@@ -97,9 +58,9 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     heroTitle: "Pop-Up & Événements KiloMystery",
     heroSubtitle:
       "Découvre nos mystery box en vrai lors de nos pop-up officiels.",
-    upcomingTitle: "Prochains événements",
-    pillPopup: "Pop-Up Store",
-    infoDisclaimer: "*Les informations peuvent être amenées à changer.",
+    calendarTitle: "Calendrier des événements",
+    calendarText:
+      "Nous mettons à jour le calendrier. Reviens bientôt pour les prochaines dates.",
     ctaTitle: "Tu veux accueillir un pop-up KiloMystery ?",
     ctaText:
       "Nous sommes ouverts aux collaborations avec magasins, salons et événements.",
@@ -110,12 +71,11 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     heroTitle: "KiloMystery Pop-Up & Events",
     heroSubtitle:
       "Erlebe unsere Mystery Boxen live auf den offiziellen Pop-Up-Events.",
-    upcomingTitle: "Bevorstehende Events",
-    pillPopup: "Pop-Up Store",
-    infoDisclaimer: "*Informationen können sich noch ändern.",
+    calendarTitle: "Event-Kalender",
+    calendarText:
+      "Wir aktualisieren gerade den Kalender. Schau bald wieder vorbei für neue Termine.",
     ctaTitle: "Möchtest du ein KiloMystery Pop-Up hosten?",
-    ctaText:
-      "Wir sind offen für Kooperationen mit Shops, Messen und Events.",
+    ctaText: "Wir sind offen für Kooperationen mit Shops, Messen und Events.",
     ctaButton: "Zur Kontakt-Sektion",
   },
 };
@@ -148,86 +108,21 @@ export default function EventsPage({
           </p>
         </header>
 
-        {/* LISTA EVENTI */}
-        <section className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
-            {t.upcomingTitle} <span className="text-2xl">📍</span>
+        {/* PLACEHOLDER CALENDARIO */}
+        <section className="card text-center py-10 px-6 space-y-3">
+          <div className="text-4xl">🗓️</div>
+          <h2 className="text-2xl md:text-3xl font-extrabold">
+            {t.calendarTitle}
           </h2>
-
-          <div className="space-y-5">
-            {upcomingEvents.map((event) => (
-              <article
-                key={event.id}
-                className="card grid gap-4 md:grid-cols-[2fr_1fr] md:items-stretch"
-              >
-                {/* TESTO EVENTO */}
-                <div className="flex flex-col justify-between gap-3">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-2 text-xs">
-                      <span className="inline-flex items-center rounded-full border border-white/15 px-3 py-1 uppercase tracking-[.15em] text-[0.65rem] text-emerald-200/90 bg-white/5">
-                        {t.pillPopup}
-                      </span>
-
-                      <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-[0.7rem] text-white/75 bg-white/5">
-                        📍 {event.city}
-                      </span>
-
-                      <span className="inline-flex items-center rounded-full border border-white/10 px-3 py-1 text-[0.7rem] text-white/75 bg-white/5">
-                        🗓 {event.date}
-                      </span>
-                    </div>
-
-                    <h3 className="text-xl md:text-2xl font-extrabold">
-                      {event.title}
-                    </h3>
-
-                    <p className="text-sm text-white/70">{event.location}</p>
-                    <p className="mt-1 text-sm text-white/80">
-                      {event.description}
-                    </p>
-
-                    {event.extraInfo && (
-                      <p className="mt-1 text-xs text-white/60">
-                        {event.extraInfo}
-                      </p>
-                    )}
-                  </div>
-
-                  <p className="text-[0.7rem] text-white/40">
-                    {t.infoDisclaimer}
-                  </p>
-                </div>
-
-                {/* LOCANDINA (VERTICALE A4) */}
-                <div className="flex justify-center md:justify-end">
-                  <div className="relative w-40 sm:w-48 md:w-56 aspect-[3/4] rounded-xl overflow-hidden border border-white/18 bg-[#0b1714] shadow-[0_14px_36px_rgba(0,0,0,0.55)]">
-                    {event.image ? (
-                      <Image
-                        src={event.image}
-                        alt={event.title}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-xs text-white/50 px-3 text-center">
-                        Locandina in arrivo
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+          <p className="text-white/70 text-sm md:text-base max-w-2xl mx-auto">
+            {t.calendarText}
+          </p>
         </section>
 
         {/* CTA */}
         <section className="card space-y-3">
-          <h3 className="text-lg md:text-xl font-extrabold">
-            {t.ctaTitle}
-          </h3>
-          <p className="text-white/70 text-sm md:text-base">
-            {t.ctaText}
-          </p>
+          <h3 className="text-lg md:text-xl font-extrabold">{t.ctaTitle}</h3>
+          <p className="text-white/70 text-sm md:text-base">{t.ctaText}</p>
           <a
             href={`/${lang}#contattaci`}
             className="btn btn-ghost inline-flex mt-1"
