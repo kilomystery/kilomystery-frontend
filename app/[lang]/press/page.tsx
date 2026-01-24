@@ -66,6 +66,7 @@ export default function PressPage({ params }: { params: { lang: string } }) {
         {/* MEDIA KIT */}
         <section className="card p-6 space-y-3">
           <h2 className="text-2xl font-extrabold">{c.kitTitle}</h2>
+
           <ul className="text-white/75 space-y-1">
             <li>• {c.kitBrand}</li>
             <li>• {c.kitWhat}</li>
@@ -73,9 +74,15 @@ export default function PressPage({ params }: { params: { lang: string } }) {
             <li>• {c.kitSite}</li>
           </ul>
 
-          <div className="text-xs text-white/50">
-            Tip: quando avrai loghi/immagini ufficiali, possiamo aggiungere un
-            bottone “Download press kit”.
+          {/* Nota "pulita" (niente tip interni) */}
+          <div className="text-xs text-white/55">
+            {c.kitContact}{" "}
+            <a
+              href="mailto:info@kilomystery.com"
+              className="underline underline-offset-2 hover:opacity-90"
+            >
+              info@kilomystery.com
+            </a>
           </div>
         </section>
 
