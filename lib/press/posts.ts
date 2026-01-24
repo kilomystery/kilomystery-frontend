@@ -1,3 +1,6 @@
+// lib/press/posts.ts
+import type { PressPost, PressMention } from "./types";
+
 export const PRESS_POSTS: PressPost[] = [
   {
     slug: "pop-up-brindisi-marzo-2026",
@@ -116,3 +119,6 @@ Pressekontakt: info@kilomystery.com
     },
   },
 ];
+
+// Rassegna stampa (link esterni). Lascia vuoto finché non hai menzioni.
+export const PRESS_MENTIONS: PressMention[] = [];
