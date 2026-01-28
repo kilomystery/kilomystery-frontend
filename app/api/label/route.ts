@@ -1,20 +1,20 @@
+// app/api/label/route.ts
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
-import PDFDocument from "pdfkit/js/pdfkit.standalone.js";
+import PDFDocument from "pdfkit"; // usa pdfkit "normale"
 import { PassThrough } from "stream";
 import fs from "fs";
 import path from "path";
 
 export const runtime = "nodejs";
 
-type PdfDoc = InstanceType<typeof PDFDocument>;
-
-function toBuffer(doc: PdfDoc): Promise<Buffer> {
+// Helper: converte PDFKit stream -> Buffer
+function toBuffer(doc: any): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const stream = new PassThrough();
     const chunks: Buffer[] = [];
 
-    stream.on("data", (c) => chunks.push(c));
+    stream.on("data", (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
     stream.on("end", () => resolve(Buffer.concat(chunks)));
     stream.on("error", reject);
 
@@ -23,121 +23,148 @@ function toBuffer(doc: PdfDoc): Promise<Buffer> {
   });
 }
 
+function getRequiredParam(url: URL, key: string) {
+  const v = url.searchParams.get(key);
+  return (v ?? "").trim();
+}
+
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
+    const url = new URL(req.url);
 
-    const id = searchParams.get("id");
-    const product = searchParams.get("product");
-    const weightKg = searchParams.get("weightKg");
-    const date = searchParams.get("date");
-    const warehouse = searchParams.get("warehouse");
-    const lang = searchParams.get("lang") || "it";
+    // query params richiesti
+    const id = getRequiredParam(url, "id");
+    const product = getRequiredParam(url, "product");
+    const weightKg = getRequiredParam(url, "weightKg");
+    const date = getRequiredParam(url, "date");
+    const warehouse = getRequiredParam(url, "warehouse");
+    const lang = getRequiredParam(url, "lang") || "it";
 
     if (!id || !product || !weightKg || !date || !warehouse) {
       return NextResponse.json(
-        {
-          error:
-            "Missing query params: id, product, weightKg, date, warehouse (optional: lang)",
-        },
+        { error: "Missing query params: id, product, weightKg, date, warehouse (and optional lang)" },
         { status: 400 }
       );
     }
 
-    // ✅ Link QR: verifica lotto
-    const verifyUrl = `https://www.kilomystery.com/verify/${encodeURIComponent(
-      id
-    )}`;
+    // ✅ Font da /public/fonts (ATTENZIONE: nel tuo repo sono Inter-Regular.ttf e Inter-Bold.ttf)
+    const fontRegularPath = path.join(process.cwd(), "public", "fonts", "Inter-Regular.ttf");
+    const fontBoldPath = path.join(process.cwd(), "public", "fonts", "Inter-Bold.ttf");
 
-    const qr = await QRCode.toDataURL(verifyUrl);
+    const fontRegular = fs.readFileSync(fontRegularPath);
+    const fontBold = fs.readFileSync(fontBoldPath);
 
-    // ✅ Leggi i font dal filesystem (public/)
-    const regularPath = path.join(
-      process.cwd(),
-      "public",
-      "fonts",
-      "Inter-Regular.ttf"
-    );
-    const boldPath = path.join(
-      process.cwd(),
-      "public",
-      "fonts",
-      "Inter-Bold.ttf"
-    );
+    // Cosa deve fare il QR?
+    // 1) Semplice: va al sito
+    // const qrTarget = "https://www.kilomystery.com";
 
-    const regularFont = fs.readFileSync(regularPath);
-    const boldFont = fs.readFileSync(boldPath);
+    // 2) Meglio (consigliato): va alla pagina verify con lo stesso ID
+    // (se ancora non esiste, la crei dopo: /it/verify?id=XXX)
+    const qrTarget = `https://www.kilomystery.com/${lang}/verify?id=${encodeURIComponent(id)}`;
 
-    // 4x6 pollici -> 288x432 pt
-    const doc = new PDFDocument({
+    const qrDataUrl = await QRCode.toDataURL(qrTarget, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 300,
+    });
+
+    // PDF 4x6 pollici = 288 x 432 pt (72pt per pollice)
+    const doc: any = new (PDFDocument as any)({
       size: [288, 432],
-      margin: 20,
-    }) as PdfDoc;
+      margin: 18,
+    });
 
-    // ✅ Registra font (da Buffer)
-    doc.registerFont("regular", regularFont);
-    doc.registerFont("bold", boldFont);
+    // registra font (nome interno Inter)
+    doc.registerFont("Inter", fontRegular);
+    doc.registerFont("Inter-Bold", fontBold);
 
-    // ✅ Imposta subito un font di default (così non prova Helvetica)
-    doc.font("regular");
+    // Sfondo
+    doc.rect(0, 0, 288, 432).fill("#ffffff");
 
-    // Header
-    doc.font("bold").fontSize(22).text("KiloMystery", { align: "center" });
+    // Header brand
     doc
-      .moveDown(0.3)
-      .font("regular")
+      .fillColor("#0b0f14")
+      .font("Inter-Bold")
+      .fontSize(18)
+      .text("KILO MYSTERY", 18, 18, { align: "left" });
+
+    doc
+      .fillColor("#6b7280")
+      .font("Inter")
       .fontSize(10)
-      .text("Mystery Box Official", { align: "center" });
+      .text("Shipping label", 18, 42);
 
-    doc.moveDown(1);
+    // Linea separatore
+    doc
+      .moveTo(18, 60)
+      .lineTo(270, 60)
+      .lineWidth(1)
+      .stroke("#e5e7eb");
 
-    // Info
-    doc.font("bold").fontSize(12).text(lang === "it" ? "Prodotto:" : "Product:");
-    doc.font("regular").text(product);
+    // Box dati principali
+    const leftX = 18;
+    let y = 74;
 
-    doc.moveDown(0.5);
-    doc.font("bold").text(lang === "it" ? "Peso:" : "Weight:");
-    doc.font("regular").text(weightKg);
+    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Order ID", leftX, y);
+    y += 14;
+    doc.fillColor("#111827").font("Inter").fontSize(12).text(id, leftX, y);
+    y += 22;
 
-    doc.moveDown(0.5);
-    doc.font("bold").text(lang === "it" ? "Data:" : "Date:");
-    doc.font("regular").text(date);
+    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Product", leftX, y);
+    y += 14;
+    doc.fillColor("#111827").font("Inter").fontSize(12).text(product, leftX, y);
+    y += 22;
 
-    doc.moveDown(0.5);
-    doc.font("bold").text(lang === "it" ? "Magazzino:" : "Warehouse:");
-    doc.font("regular").text(warehouse);
+    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Weight", leftX, y);
+    y += 14;
+    doc.fillColor("#111827").font("Inter").fontSize(12).text(weightKg, leftX, y);
+    y += 22;
 
-    doc.moveDown(1);
-    doc.font("bold").text("ID Lotto:");
-    doc.font("regular").text(id);
+    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Date", leftX, y);
+    y += 14;
+    doc.fillColor("#111827").font("Inter").fontSize(12).text(date, leftX, y);
+    y += 22;
 
-    doc.moveDown(1.2);
+    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Warehouse", leftX, y);
+    y += 14;
+    doc.fillColor("#111827").font("Inter").fontSize(12).text(warehouse, leftX, y, { width: 160 });
 
-    // QR
-    const qrImage = Buffer.from(qr.replace(/^data:image\/png;base64,/, ""), "base64");
-    doc.image(qrImage, 74, doc.y, { width: 140, height: 140 });
+    // QR a destra
+    const qrSize = 110;
+    const qrX = 288 - 18 - qrSize;
+    const qrY = 110;
 
-    doc.moveDown(8.5);
-    doc.fontSize(9).font("regular").text(
-      lang === "it" ? "Scansiona per verifica" : "Scan to verify",
-      { align: "center" }
-    );
+    const base64 = qrDataUrl.split(",")[1];
+    const qrBuffer = Buffer.from(base64, "base64");
 
-    doc.fontSize(8).text("www.kilomystery.com", { align: "center" });
+    doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
 
-    const buffer = await toBuffer(doc);
+    doc
+      .fillColor("#6b7280")
+      .font("Inter")
+      .fontSize(8)
+      .text("Scan to verify", qrX, qrY + qrSize + 6, { width: qrSize, align: "center" });
 
-    return new NextResponse(buffer, {
+    // Footer (mini)
+    doc
+      .fillColor("#9ca3af")
+      .font("Inter")
+      .fontSize(8)
+      .text("www.kilomystery.com", 18, 432 - 24, { align: "left" });
+
+    const pdfBuffer = await toBuffer(doc);
+
+    return new NextResponse(pdfBuffer, {
+      status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename=label-${id}.pdf`,
+        "Content-Disposition": `inline; filename="label-${id}.pdf"`,
         "Cache-Control": "no-store",
       },
     });
   } catch (err: any) {
-    console.error("Label API error:", err);
     return NextResponse.json(
-      { error: "Failed to generate label", details: err?.message ?? "Unknown" },
+      { error: "Failed to generate label", details: String(err?.message ?? err) },
       { status: 500 }
     );
   }
