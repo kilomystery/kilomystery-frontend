@@ -323,136 +323,142 @@ export default function MysteryBoxPage({ params }: { params: { lang: string } })
   };
 
   return (
-    <main className="container py-10 space-y-10">
-      {/* JSON-LD */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
+    <>
+      <Header lang={lang} />
 
-      {/* HERO */}
-      <header className="max-w-3xl">
-        <p className="text-white/60 text-sm">
-          SEO hub: <b>mystery box</b> • keyword secondaria: <b>mystery box al kg</b>
-        </p>
-        <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mt-2">
-          {c.h1}
-        </h1>
-        <p className="text-white/75 mt-4 text-lg leading-relaxed">
-          {c.intro}
-        </p>
+      <main className="container py-10 space-y-10">
+        {/* JSON-LD */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        />
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href={`/${lang}/products`}
-            className="btn btn-brand px-6 py-3 font-bold"
-          >
-            {c.ctaPrimary}
-          </Link>
-          <Link
-            href={`/${lang}/how-it-works`}
-            className="btn btn-ghost px-6 py-3 font-bold"
-          >
-            {c.ctaSecondary}
-          </Link>
-        </div>
-      </header>
+        {/* HERO */}
+        <header className="max-w-3xl">
+          <p className="text-white/60 text-sm">
+            SEO hub: <b>mystery box</b> • keyword secondaria: <b>mystery box al kg</b>
+          </p>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mt-2">
+            {c.h1}
+          </h1>
+          <p className="text-white/75 mt-4 text-lg leading-relaxed">
+            {c.intro}
+          </p>
 
-      {/* WHY */}
-      <section className="card">
-        <h2 className="text-2xl font-extrabold">{c.bulletsTitle}</h2>
-        <ul className="mt-4 space-y-2 text-white/75">
-          {c.bullets.map((b, i) => (
-            <li key={i} className="flex gap-2">
-              <span aria-hidden className="mt-[2px]">✅</span>
-              <span>{b}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* SECTIONS */}
-      <section className="grid md:grid-cols-3 gap-5">
-        <article className="card">
-          <h3 className="text-xl font-extrabold">{c.section1Title}</h3>
-          <p className="text-white/75 mt-3 leading-relaxed">{c.section1Body}</p>
-        </article>
-        <article className="card">
-          <h3 className="text-xl font-extrabold">{c.section2Title}</h3>
-          <p className="text-white/75 mt-3 leading-relaxed">{c.section2Body}</p>
-        </article>
-        <article className="card">
-          <h3 className="text-xl font-extrabold">{c.section3Title}</h3>
-          <p className="text-white/75 mt-3 leading-relaxed">{c.section3Body}</p>
-        </article>
-      </section>
-
-      {/* INTERNAL LINKS (SEO) */}
-      <section className="card">
-        <h2 className="text-2xl font-extrabold">
-          Mystery box al kg: scegli il formato giusto
-        </h2>
-        <p className="text-white/75 mt-3">
-          Se stai cercando una <b>mystery box</b> (anche come regalo), il modo più semplice è
-          scegliere peso e fascia: <b>Standard</b> per iniziare, <b>Premium</b> per un livello più alto.
-        </p>
-        <div className="mt-5 flex flex-wrap gap-3">
-          <Link href={`/${lang}/products#buy-standard-10`} className="btn btn-silver">
-            Standard 10 kg
-          </Link>
-          <Link href={`/${lang}/products#buy-premium-10`} className="btn btn-gold">
-            Premium 10 kg
-          </Link>
-          <Link href={`/${lang}/policy/shipping`} className="btn btn-ghost">
-            Spedizioni
-          </Link>
-          <Link href={`/${lang}/policy/returns`} className="btn btn-ghost">
-            Resi
-          </Link>
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="card">
-        <h2 className="text-2xl font-extrabold">{c.faqTitle}</h2>
-        <p className="text-white/70 mt-2">{c.faqIntro}</p>
-
-        <div className="mt-5 space-y-3">
-          {c.faqs.map((f, idx) => (
-            <details
-              key={idx}
-              className="rounded-2xl border border-white/10 bg-white/5 p-4"
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={`/${lang}/products`}
+              className="btn btn-brand px-6 py-3 font-bold"
             >
-              <summary className="cursor-pointer font-bold">
-                {f.q}
-              </summary>
-              <p className="text-white/75 mt-2 leading-relaxed">{f.a}</p>
-            </details>
-          ))}
-        </div>
-      </section>
+              {c.ctaPrimary}
+            </Link>
+            <Link
+              href={`/${lang}/how-it-works`}
+              className="btn btn-ghost px-6 py-3 font-bold"
+            >
+              {c.ctaSecondary}
+            </Link>
+          </div>
+        </header>
 
-      {/* FINAL CTA */}
-      <section className="card text-center">
-        <h2 className="text-2xl font-extrabold">
-          Pronto per la tua mystery box?
-        </h2>
-        <p className="text-white/75 mt-2">
-          Se cercavi “mystery box” o “mystery box al kg”, sei nel posto giusto: scegli peso e fascia e inizia l’unboxing.
-        </p>
-        <div className="mt-5 flex justify-center gap-3 flex-wrap">
-          <Link href={`/${lang}/products`} className="btn btn-brand px-7 py-3 font-bold">
-            {c.ctaPrimary}
-          </Link>
-          <Link href={`/${lang}/contact`} className="btn btn-ghost px-7 py-3 font-bold">
-            Contattaci
-          </Link>
-        </div>
-      </section>
-    </main>
+        {/* WHY */}
+        <section className="card">
+          <h2 className="text-2xl font-extrabold">{c.bulletsTitle}</h2>
+          <ul className="mt-4 space-y-2 text-white/75">
+            {c.bullets.map((b, i) => (
+              <li key={i} className="flex gap-2">
+                <span aria-hidden className="mt-[2px]">✅</span>
+                <span>{b}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* SECTIONS */}
+        <section className="grid md:grid-cols-3 gap-5">
+          <article className="card">
+            <h3 className="text-xl font-extrabold">{c.section1Title}</h3>
+            <p className="text-white/75 mt-3 leading-relaxed">{c.section1Body}</p>
+          </article>
+          <article className="card">
+            <h3 className="text-xl font-extrabold">{c.section2Title}</h3>
+            <p className="text-white/75 mt-3 leading-relaxed">{c.section2Body}</p>
+          </article>
+          <article className="card">
+            <h3 className="text-xl font-extrabold">{c.section3Title}</h3>
+            <p className="text-white/75 mt-3 leading-relaxed">{c.section3Body}</p>
+          </article>
+        </section>
+
+        {/* INTERNAL LINKS (SEO) */}
+        <section className="card">
+          <h2 className="text-2xl font-extrabold">
+            Mystery box al kg: scegli il formato giusto
+          </h2>
+          <p className="text-white/75 mt-3">
+            Se stai cercando una <b>mystery box</b> (anche come regalo), il modo più semplice è
+            scegliere peso e fascia: <b>Standard</b> per iniziare, <b>Premium</b> per un livello più alto.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <Link href={`/${lang}/products#buy-standard-10`} className="btn btn-silver">
+              Standard 10 kg
+            </Link>
+            <Link href={`/${lang}/products#buy-premium-10`} className="btn btn-gold">
+              Premium 10 kg
+            </Link>
+            <Link href={`/${lang}/policy/shipping`} className="btn btn-ghost">
+              Spedizioni
+            </Link>
+            <Link href={`/${lang}/policy/returns`} className="btn btn-ghost">
+              Resi
+            </Link>
+          </div>
+        </section>
+
+        {/* FAQ */}
+        <section className="card">
+          <h2 className="text-2xl font-extrabold">{c.faqTitle}</h2>
+          <p className="text-white/70 mt-2">{c.faqIntro}</p>
+
+          <div className="mt-5 space-y-3">
+            {c.faqs.map((f, idx) => (
+              <details
+                key={idx}
+                className="rounded-2xl border border-white/10 bg-white/5 p-4"
+              >
+                <summary className="cursor-pointer font-bold">
+                  {f.q}
+                </summary>
+                <p className="text-white/75 mt-2 leading-relaxed">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </section>
+
+        {/* FINAL CTA */}
+        <section className="card text-center">
+          <h2 className="text-2xl font-extrabold">
+            Pronto per la tua mystery box?
+          </h2>
+          <p className="text-white/75 mt-2">
+            Se cercavi “mystery box” o “mystery box al kg”, sei nel posto giusto: scegli peso e fascia e inizia l’unboxing.
+          </p>
+          <div className="mt-5 flex justify-center gap-3 flex-wrap">
+            <Link href={`/${lang}/products`} className="btn btn-brand px-7 py-3 font-bold">
+              {c.ctaPrimary}
+            </Link>
+            <Link href={`/${lang}/contact`} className="btn btn-ghost px-7 py-3 font-bold">
+              Contattaci
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <Footer lang={lang} />
+    </>
   );
 }
