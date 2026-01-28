@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
-import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
 
 export const runtime = "nodejs";
 
@@ -31,11 +31,12 @@ export async function GET(req: Request) {
       );
     }
 
-    // === QR CODE (senza tipi TS, così non rompe build) ===
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const QRCode = require("qrcode") as any;
+    // ✅ Import dinamici (no require, no eslint)
+    const QRCode = (await import("qrcode")).default;
+    const fontkit = (await import("@pdf-lib/fontkit")).default;
 
-    const qrTarget = `https://www.kilomystery.com/${lang}/verify?id=${encodeURIComponent(
+    // ✅ QR: porta a /verify/[id] (pagina cliente)
+    const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(
       id
     )}`;
 
@@ -46,7 +47,7 @@ export async function GET(req: Request) {
       width: 300,
     });
 
-    // === Fonts ===
+    // ✅ Fonts
     const fontRegularPath = path.join(
       process.cwd(),
       "public",
@@ -63,17 +64,13 @@ export async function GET(req: Request) {
     const fontRegularBytes = fs.readFileSync(fontRegularPath);
     const fontBoldBytes = fs.readFileSync(fontBoldPath);
 
-    // === PDF 4x6 (in points) ===
     // 4x6 inch @ 72pt/in => 288 x 432
     const W = 288;
     const H = 432;
     const M = 18;
 
     const pdf = await PDFDocument.create();
-    pdf.registerFontkit(
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      require("@pdf-lib/fontkit")
-    );
+    pdf.registerFontkit(fontkit);
 
     const fontRegular = await pdf.embedFont(fontRegularBytes);
     const fontBold = await pdf.embedFont(fontBoldBytes);
@@ -95,7 +92,7 @@ export async function GET(req: Request) {
       y: H - M - 18,
       size: 18,
       font: fontBold,
-      color: rgb(0.043, 0.059, 0.078), // #0b0f14
+      color: rgb(0.043, 0.059, 0.078),
     });
 
     page.drawText("Shipping label", {
@@ -103,10 +100,10 @@ export async function GET(req: Request) {
       y: H - M - 40,
       size: 10,
       font: fontRegular,
-      color: rgb(0.42, 0.45, 0.51), // gray
+      color: rgb(0.42, 0.45, 0.51),
     });
 
-    // Separator line
+    // Separator
     page.drawLine({
       start: { x: M, y: H - 60 },
       end: { x: W - M, y: H - 60 },
@@ -123,16 +120,15 @@ export async function GET(req: Request) {
         y,
         size: 11,
         font: fontBold,
-        color: rgb(0.067, 0.094, 0.153), // #111827
+        color: rgb(0.067, 0.094, 0.153),
       });
       y -= 14;
     };
 
-    const value = (t: string, maxWidth = 160) => {
-      // pdf-lib non fa wrap automatico: facciamo una versione semplice
-      // Se è troppo lungo, tagliamo con "…"
-      const maxChars = Math.floor(maxWidth / 6.2); // stima per size 12
-      const out = t.length > maxChars ? t.slice(0, maxChars - 1) + "…" : t;
+    const value = (t: string, maxWidth = 170) => {
+      const approxChars = Math.max(10, Math.floor(maxWidth / 6.2));
+      const out =
+        t.length > approxChars ? t.slice(0, approxChars - 1) + "…" : t;
 
       page.drawText(out, {
         x: M,
@@ -145,25 +141,25 @@ export async function GET(req: Request) {
     };
 
     label("Order ID");
-    value(id, 170);
+    value(id);
 
     label("Product");
-    value(product, 170);
+    value(product);
 
     label("Weight");
-    value(weightKg, 170);
+    value(weightKg);
 
     label("Date");
-    value(date, 170);
+    value(date);
 
     label("Warehouse");
-    value(warehouse, 170);
+    value(warehouse);
 
-    // QR on right
+    // QR a destra
     const qrImage = await pdf.embedPng(qrPngBuffer);
     const qrSize = 110;
     const qrX = W - M - qrSize;
-    const qrY = H - 110 - qrSize; // circa come prima
+    const qrY = H - 110 - qrSize;
 
     page.drawImage(qrImage, {
       x: qrX,
@@ -172,7 +168,6 @@ export async function GET(req: Request) {
       height: qrSize,
     });
 
-    // "Scan to verify"
     page.drawText("Scan to verify", {
       x: qrX + 14,
       y: qrY - 12,
@@ -196,6 +191,7 @@ export async function GET(req: Request) {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
+        // ✅ meglio così: si apre e puoi stampare/subito salvare
         "Content-Disposition": `inline; filename="label-${id}.pdf"`,
         "Cache-Control": "no-store",
       },
