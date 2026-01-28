@@ -7,27 +7,29 @@ export const runtime = "nodejs";
 type Lang = "it" | "en" | "es" | "fr" | "de";
 
 function must(q: URLSearchParams, key: string) {
-  const v = (q.get(key) ?? "").trim();
-  return v;
+  return (q.get(key) ?? "").trim();
 }
 
-function toPdfBuffer(build: (doc: PDFDocument) => Promise<void> | void) {
+// ✅ Tipi corretti per PDFKit (niente errore TS)
+type PdfDoc = InstanceType<typeof PDFDocument>;
+
+function toPdfBuffer(build: (doc: PdfDoc) => Promise<void> | void) {
   return new Promise<Buffer>(async (resolve, reject) => {
     try {
       const doc = new PDFDocument({
-        size: [288, 432], // 4x6 inches @ 72dpi (standard PDF points)
+        size: [288, 432], // 4x6 inches @ 72dpi
         margin: 18,
       });
 
       const chunks: Buffer[] = [];
 
-      doc.on("data", (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
+      doc.on("data", (c: any) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
       doc.on("end", () => resolve(Buffer.concat(chunks)));
-      doc.on("error", (err) => reject(err));
+      doc.on("error", (err: any) => reject(err));
 
-      await build(doc);
+      await build(doc as PdfDoc);
 
-      // IMPORTANTISSIMO: chiude davvero il PDF
+      // IMPORTANTISSIMO
       doc.end();
     } catch (e) {
       reject(e);
@@ -56,7 +58,6 @@ export async function GET(req: Request) {
     );
   }
 
-  // QR: porta alla pagina verify del lotto
   const verifyUrl = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(id)}`;
 
   try {
@@ -92,11 +93,11 @@ export async function GET(req: Request) {
       const qrPng = Buffer.from(base64, "base64");
 
       const qrSize = 140;
-      const x = 288 - 18 - qrSize; // right aligned
-      const y = 432 - 18 - qrSize - 24; // bottom area + label
+      const x = 288 - 18 - qrSize;
+      const y = 432 - 18 - qrSize - 24;
+
       doc.image(qrPng, x, y, { width: qrSize, height: qrSize });
 
-      // QR caption
       doc.fontSize(9).font("Helvetica").fillColor("#333333");
       doc.text("Scansiona per verificare", x, y + qrSize + 6, {
         width: qrSize,
