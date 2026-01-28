@@ -1,161 +1,152 @@
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
 import PDFDocument from "pdfkit";
-import fs from "fs";
-import path from "path";
+import { PassThrough } from "stream";
 
 export const runtime = "nodejs";
 
-type Lang = "it" | "en" | "es" | "fr" | "de";
-type PdfDoc = InstanceType<typeof PDFDocument>;
+// Helper per convertire PDF in Buffer
+function toBuffer(doc: PDFDocument): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const stream = new PassThrough();
+    const chunks: Buffer[] = [];
 
-function must(q: URLSearchParams, key: string) {
-  return (q.get(key) ?? "").trim();
-}
+    stream.on("data", (c) => chunks.push(c));
+    stream.on("end", () => resolve(Buffer.concat(chunks)));
+    stream.on("error", reject);
 
-function toPdfBuffer(build: (doc: PdfDoc) => Promise<void> | void) {
-  return new Promise<Buffer>(async (resolve, reject) => {
-    try {
-      const doc = new PDFDocument({
-        size: [288, 432], // 4x6
-        margin: 18,
-      });
-
-      const chunks: Buffer[] = [];
-      doc.on("data", (c: any) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
-      doc.on("end", () => resolve(Buffer.concat(chunks)));
-      doc.on("error", (err: any) => reject(err));
-
-      await build(doc as PdfDoc);
-
-      doc.end();
-    } catch (e) {
-      reject(e);
-    }
+    doc.pipe(stream);
+    doc.end();
   });
 }
 
-function getFontPaths() {
-  // In produzione su Vercel, __dirname punta a .next/server/... quindi risaliamo fino a root
-  // e andiamo in /public/fonts
-  const root = process.cwd();
-  const regular = path.join(root, "public", "fonts", "Inter-Regular.ttf");
-  const bold = path.join(root, "public", "fonts", "Inter-Bold.ttf");
-  return { regular, bold };
-}
-
 export async function GET(req: Request) {
-  const url = new URL(req.url);
-  const q = url.searchParams;
-
-  const id = must(q, "id");
-  const product = must(q, "product");
-  const weightKg = must(q, "weightKg");
-  const date = must(q, "date");
-  const warehouse = must(q, "warehouse");
-  const lang = (must(q, "lang") || "it") as Lang;
-
-  if (!id || !product || !weightKg || !date || !warehouse) {
-    return NextResponse.json(
-      {
-        error:
-          "Missing query params: id, product, weightKg, date, warehouse (and optional lang)",
-      },
-      { status: 400 }
-    );
-  }
-
-  const verifyUrl = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(id)}`;
-
   try {
-    const { regular, bold } = getFontPaths();
+    const { searchParams } = new URL(req.url);
 
-    // check rapido: se mancano i file, errore chiaro
-    if (!fs.existsSync(regular) || !fs.existsSync(bold)) {
+    const id = searchParams.get("id");
+    const product = searchParams.get("product");
+    const weightKg = searchParams.get("weightKg");
+    const date = searchParams.get("date");
+    const warehouse = searchParams.get("warehouse");
+    const lang = searchParams.get("lang") || "it";
+
+    if (!id || !product || !weightKg || !date || !warehouse) {
       return NextResponse.json(
         {
-          error: "Fonts missing",
-          details:
-            "Add public/fonts/Inter-Regular.ttf and public/fonts/Inter-Bold.ttf",
+          error:
+            "Missing query params: id, product, weightKg, date, warehouse (optional: lang)",
         },
-        { status: 500 }
+        { status: 400 }
       );
     }
 
-    const qrDataUrl = await QRCode.toDataURL(verifyUrl, {
-      errorCorrectionLevel: "M",
-      margin: 0,
-      scale: 6,
+    // Link QR → verifica lotto
+    const verifyUrl = `https://www.kilomystery.com/verify/${id}`;
+
+    // Genera QR
+    const qr = await QRCode.toDataURL(verifyUrl);
+
+    // Percorso font
+    const regularFont =
+      process.cwd() + "/public/fonts/Inter-Regular.ttf";
+    const boldFont =
+      process.cwd() + "/public/fonts/Inter-Bold.ttf";
+
+    // PDF 4x6 pollici → 288x432 pt
+    const doc = new PDFDocument({
+      size: [288, 432],
+      margin: 20,
     });
 
-    const pdf = await toPdfBuffer(async (doc) => {
-      // ✅ registra font embedded
-      doc.registerFont("Inter", regular);
-      doc.registerFont("InterBold", bold);
+    // Registra font
+    doc.registerFont("regular", regularFont);
+    doc.registerFont("bold", boldFont);
 
-      // Header
-      doc.font("InterBold").fontSize(18).fillColor("#000000");
-      doc.text("KiloMystery", { align: "left" });
+    // Header
+    doc
+      .font("bold")
+      .fontSize(22)
+      .text("KiloMystery", { align: "center" });
 
-      doc.moveDown(0.2);
-      doc.font("Inter").fontSize(10).fillColor("#333333");
-      doc.text("Warehouse:", { continued: true });
-      doc.font("InterBold").text(` ${warehouse}`);
+    doc
+      .moveDown(0.3)
+      .font("regular")
+      .fontSize(10)
+      .text("Mystery Box Official", { align: "center" });
 
-      doc.moveDown(0.8);
+    doc.moveDown(1);
 
-      // Product
-      doc.font("InterBold").fontSize(13).fillColor("#000000");
-      doc.text(product);
+    // Info prodotto
+    doc.font("bold").fontSize(12).text("Prodotto:");
+    doc.font("regular").text(product);
 
-      doc.moveDown(0.2);
-      doc.font("Inter").fontSize(11);
-      doc.text(`Peso: ${weightKg}`);
-      doc.text(`Data: ${date}`);
+    doc.moveDown(0.5);
 
-      doc.moveDown(0.6);
+    doc.font("bold").text("Peso:");
+    doc.font("regular").text(weightKg);
 
-      // Lotto
-      doc.font("Inter").fontSize(11).fillColor("#333333").text("ID Lotto");
-      doc.font("InterBold").fontSize(16).fillColor("#000000").text(id);
+    doc.moveDown(0.5);
 
-      // QR
-      const base64 = qrDataUrl.split(",")[1];
-      const qrPng = Buffer.from(base64, "base64");
+    doc.font("bold").text("Data:");
+    doc.font("regular").text(date);
 
-      const qrSize = 140;
-      const x = 288 - 18 - qrSize;
-      const y = 432 - 18 - qrSize - 24;
+    doc.moveDown(0.5);
 
-      doc.image(qrPng, x, y, { width: qrSize, height: qrSize });
+    doc.font("bold").text("Magazzino:");
+    doc.font("regular").text(warehouse);
 
-      doc.font("Inter").fontSize(9).fillColor("#333333");
-      doc.text("Scansiona per verificare", x, y + qrSize + 6, {
-        width: qrSize,
+    doc.moveDown(1);
+
+    // Lotto
+    doc.font("bold").text("ID Lotto:");
+    doc.font("regular").text(id);
+
+    doc.moveDown(1.2);
+
+    // QR Code
+    const qrImage = Buffer.from(
+      qr.replace(/^data:image\/png;base64,/, ""),
+      "base64"
+    );
+
+    doc.image(qrImage, {
+      fit: [140, 140],
+      align: "center",
+    });
+
+    doc.moveDown(0.5);
+
+    doc
+      .fontSize(9)
+      .font("regular")
+      .text("Scansiona per verifica", {
         align: "center",
       });
 
-      // Footer line
-      doc.moveTo(18, 432 - 18)
-        .lineTo(288 - 18, 432 - 18)
-        .strokeColor("#DDDDDD")
-        .stroke();
-    });
+    // Footer
+    doc
+      .fontSize(8)
+      .text("www.kilomystery.com", {
+        align: "center",
+      });
 
-    const filename = `label_${id}.pdf`;
+    const buffer = await toBuffer(doc);
 
-    return new NextResponse(pdf, {
+    return new NextResponse(buffer, {
       headers: {
         "Content-Type": "application/pdf",
-        "Content-Disposition": `attachment; filename="${filename}"`,
-        "Content-Length": String(pdf.length),
-        "Cache-Control": "no-store",
+        "Content-Disposition": `inline; filename=label-${id}.pdf`,
       },
     });
   } catch (err: any) {
-    console.error("label api error:", err);
+    console.error("Label API error:", err);
+
     return NextResponse.json(
-      { error: "Failed to generate label", details: String(err?.message ?? err) },
+      {
+        error: "Failed to generate label",
+        details: err?.message || "Unknown error",
+      },
       { status: 500 }
     );
   }
