@@ -158,12 +158,15 @@ export async function POST(req: Request) {
 
     const { pdf, filename } = await makePdf({ id, product, weightKg, date, warehouse, lang });
 
-    return new NextResponse(pdf, {
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="${filename}"`,
-      },
-    });
+return new NextResponse(pdf, {
+  headers: {
+    "Content-Type": "application/pdf",
+    "Content-Disposition": `attachment; filename="${filename}"`,
+    "Content-Length": String(pdf.length),
+    "Cache-Control": "no-store",
+  },
+});
+
   } catch (e) {
     console.error("Label POST error:", e);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
