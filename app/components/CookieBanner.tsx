@@ -1,114 +1,101 @@
 "use client";
 
-import { useEffect, useCallback, useState } from "react";
+import { useEffect, useState } from "react";
 
-type Choice = "accept" | "reject";
+const SUPPORTED = ["it", "en", "es", "fr", "de"] as const;
+type Lang = (typeof SUPPORTED)[number];
+
+/**
+ * Rileva la lingua corrente:
+ * 1) localStorage
+ * 2) path /it /en ecc
+ * 3) fallback it
+ */
+function getLang(): Lang {
+  if (typeof window === "undefined") return "it";
+
+  // 1) Da localStorage
+  const saved = localStorage.getItem("km_lang");
+  if (saved && SUPPORTED.includes(saved as Lang)) {
+    return saved as Lang;
+  }
+
+  // 2) Dal path
+  const pathLang = window.location.pathname.split("/")[1];
+  if (SUPPORTED.includes(pathLang as Lang)) {
+    return pathLang as Lang;
+  }
+
+  // 3) Default
+  return "it";
+}
 
 export default function CookieBanner() {
   const [open, setOpen] = useState(false);
 
-  const setConsentDefault = useCallback(() => {
+  /**
+   * Applica consenso a Google Consent Mode
+   */
+  function applyConsent(choice: "accept" | "reject") {
     if (typeof window === "undefined") return;
-
-    // Crea dataLayer/gtag se non esistono ancora (safe)
-    (window as any).dataLayer = (window as any).dataLayer || [];
-    (window as any).gtag =
-      (window as any).gtag ||
-      function gtag() {
-        (window as any).dataLayer.push(arguments);
-      };
 
     const gtag = (window as any).gtag;
-
-    // Default "denied" finché non arriva una scelta
-    gtag("consent", "default", {
-      ad_storage: "denied",
-      analytics_storage: "denied",
-      functionality_storage: "denied",
-      personalization_storage: "denied",
-      security_storage: "granted",
-      wait_for_update: 500,
-    });
-  }, []);
-
-  const applyConsent = useCallback((choice: Choice) => {
-    if (typeof window === "undefined") return;
+    if (!gtag) return;
 
     const granted = choice === "accept";
 
-    // Se gtag non è pronto, lo inizializziamo comunque (safe)
-    (window as any).dataLayer = (window as any).dataLayer || [];
-    (window as any).gtag =
-      (window as any).gtag ||
-      function gtag() {
-        (window as any).dataLayer.push(arguments);
-      };
-
-    const gtag = (window as any).gtag;
-
     gtag("consent", "update", {
-      // Se vuoi ADS in futuro: metti granted solo se fai Google Ads
-      ad_storage: "denied",
       analytics_storage: granted ? "granted" : "denied",
+      ad_storage: granted ? "granted" : "denied",
 
-      functionality_storage: "granted", // cookie tecnici UI
-      personalization_storage: granted ? "granted" : "denied",
-      security_storage: "granted",
+      // Pronti per Google Ads futuri
+      ad_user_data: granted ? "granted" : "denied",
+      ad_personalization: granted ? "granted" : "denied",
     });
-  }, []);
+  }
 
   useEffect(() => {
-    // Ridondanza utile: mettiamo comunque default denied
-    setConsentDefault();
-
-    const saved = localStorage.getItem("km-cookie-consent") as Choice | null;
+    const saved = localStorage.getItem("km-cookie-consent");
 
     if (!saved) {
+      // Nessuna scelta → mostra banner
       setOpen(true);
-      return;
+    } else {
+      // Applica scelta precedente
+      applyConsent(saved === "accept" ? "accept" : "reject");
     }
+  }, []);
 
-    // Se c'è già una scelta, applicala.
-    // (In alcuni casi GA/gtag arriva dopo: facciamo 3 tentativi veloci)
-    applyConsent(saved);
-
-    let tries = 0;
-    const t = setInterval(() => {
-      tries += 1;
-      applyConsent(saved);
-      if (tries >= 3) clearInterval(t);
-    }, 400);
-
-    return () => clearInterval(t);
-  }, [applyConsent, setConsentDefault]);
-
-  const handle = (choice: Choice) => {
+  function handle(choice: "accept" | "reject") {
     localStorage.setItem("km-cookie-consent", choice);
     applyConsent(choice);
     setOpen(false);
-  };
+  }
 
   if (!open) return null;
+
+  const lang = getLang();
+  const privacyUrl = `/${lang}/policy/privacy`;
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[100] px-4 pb-4">
       <div className="container">
         <div className="card flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 bg-[#121622]/95 backdrop-blur-md border-white/15">
-          <div className="space-y-1">
-            <p className="text-sm md:text-base text-white/85">
-              Usiamo cookie tecnici e, con il tuo consenso, cookie analitici per
-              migliorare l’esperienza e misurare le visite.
-            </p>
 
-            <p className="text-xs text-white/55">
-              Puoi rifiutare o accettare. Leggi la{" "}
-              <a href="/it/privacy" className="btn-link">
-                Privacy Policy
-              </a>
-              .
-            </p>
-          </div>
+          {/* Testo */}
+          <p className="text-sm md:text-base text-white/85">
+            Usiamo cookie tecnici e, con il tuo consenso, cookie analitici per
+            migliorare l’esperienza di navigazione.
+            <br className="hidden md:block" />
+            <a
+              href={privacyUrl}
+              className="underline underline-offset-2 text-emerald-400 hover:text-emerald-300 ml-1"
+            >
+              Leggi la Privacy Policy
+            </a>
+          </p>
 
+          {/* Pulsanti */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               className="btn btn-ghost btn-sm"
@@ -117,12 +104,13 @@ export default function CookieBanner() {
             >
               Solo necessari
             </button>
+
             <button
               className="btn btn-brand btn-sm"
               onClick={() => handle("accept")}
               type="button"
             >
-              Accetta
+              Accetta tutti
             </button>
           </div>
         </div>
