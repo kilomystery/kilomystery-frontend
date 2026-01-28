@@ -12,8 +12,7 @@ const SUPPORTED: Lang[] = ["it", "en", "es", "fr", "de"];
 
 const INSTAGRAM_URL = "https://www.instagram.com/kilo.mystery/";
 const TIKTOK_URL = "https://www.tiktok.com/@kilomystery";
-const FACEBOOK_URL =
-  "https://www.facebook.com/profile.php?id=61584042208386";
+const FACEBOOK_URL = "https://www.facebook.com/profile.php?id=61584042208386";
 
 const LANGS = [
   { code: "it", label: "IT", flag: "🇮🇹" },
@@ -28,6 +27,7 @@ type Labels = {
   navHow: string;
   navAbout: string;
   navEvents: string;
+  navUgc: string;
   ariaInstagram: string;
   ariaTikTokDesktop: string;
   ariaTikTokMobile: string;
@@ -40,6 +40,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navHow: "Come funziona",
     navAbout: "Chi siamo",
     navEvents: "Eventi Pop-Up",
+    navUgc: "Unboxing Contest",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -50,6 +51,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navHow: "How it works",
     navAbout: "About us",
     navEvents: "Pop-up events",
+    navUgc: "Unboxing contest",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -60,6 +62,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navHow: "Cómo funciona",
     navAbout: "Quiénes somos",
     navEvents: "Eventos pop-up",
+    navUgc: "Concurso unboxing",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -70,6 +73,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navHow: "Comment ça marche",
     navAbout: "À propos",
     navEvents: "Événements pop-up",
+    navUgc: "Concours unboxing",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -80,6 +84,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navHow: "So funktioniert’s",
     navAbout: "Über uns",
     navEvents: "Pop-up-Events",
+    navUgc: "Unboxing-Wettbewerb",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -135,10 +140,7 @@ export default function Header({ lang = "it" as Lang }) {
 
       <div className="container h-16 flex items-center justify-between gap-3">
         {/* LOGO */}
-        <Link
-          href={`/${currentLang}`}
-          className="flex items-center gap-3 group"
-        >
+        <Link href={`/${currentLang}`} className="flex items-center gap-3 group">
           <div className="relative h-9 w-9 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_25px_rgba(122,32,255,0.45)]">
             <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
               <Image
@@ -166,16 +168,26 @@ export default function Header({ lang = "it" as Lang }) {
           >
             {labels.navProducts}
           </Link>
+
           <Link
             href={`/${currentLang}/how-it-works`}
             className={`nav-link ${
-              isActive(`/${currentLang}/how-it-works`)
-                ? "nav-link--active"
-                : ""
+              isActive(`/${currentLang}/how-it-works`) ? "nav-link--active" : ""
             }`}
           >
             {labels.navHow}
           </Link>
+
+          {/* ✅ UGC / Contest */}
+          <Link
+            href={`/${currentLang}/ugc`}
+            className={`nav-link ${
+              isActive(`/${currentLang}/ugc`) ? "nav-link--active" : ""
+            }`}
+          >
+            {labels.navUgc}
+          </Link>
+
           <Link
             href={`/${currentLang}/about`}
             className={`nav-link ${
@@ -184,6 +196,7 @@ export default function Header({ lang = "it" as Lang }) {
           >
             {labels.navAbout}
           </Link>
+
           <Link
             href={`/${currentLang}/events`}
             className={`nav-link ${
@@ -203,11 +216,7 @@ export default function Header({ lang = "it" as Lang }) {
               aria-label={labels.ariaInstagram}
               className="w-9 h-9 flex items-center justify-center rounded-full border border-white/15 bg-black/30 hover:bg-black/60 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
             >
-              <svg
-                viewBox="0 0 24 24"
-                className="w-5 h-5"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
                 <defs>
                   <linearGradient
                     id="igGradientDesktop"
@@ -247,11 +256,7 @@ export default function Header({ lang = "it" as Lang }) {
               aria-label={labels.ariaTikTokDesktop}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/30 hover:bg-black/60 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
             >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                className="h-4 w-4"
-              >
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
                 <path
                   d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
                   fill="#00f2ea"
@@ -271,19 +276,8 @@ export default function Header({ lang = "it" as Lang }) {
               aria-label="Facebook"
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/30 hover:bg-black/60 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
             >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                className="h-4 w-4"
-              >
-                <rect
-                  x="2"
-                  y="2"
-                  width="20"
-                  height="20"
-                  rx="5"
-                  fill="#1877F2"
-                />
+              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
+                <rect x="2" y="2" width="20" height="20" rx="5" fill="#1877F2" />
                 <path
                   d="M13.2 18.5v-4.7h1.6l.3-2h-1.9v-1.3c0-.6.2-.9 1-.9h.9V7.1A11 11 0 0 0 13.9 7c-1.5 0-2.6.9-2.6 2.7v2h-1.7v2h1.7v4.8Z"
                   fill="#fff"
@@ -304,9 +298,7 @@ export default function Header({ lang = "it" as Lang }) {
               aria-expanded={openLang}
             >
               <span>{LANGS.find((l) => l.code === currentLang)?.flag}</span>
-              <span className="font-semibold">
-                {currentLang.toUpperCase()}
-              </span>
+              <span className="font-semibold">{currentLang.toUpperCase()}</span>
               <span className="text-[10px] opacity-70">▾</span>
             </button>
 
@@ -348,11 +340,7 @@ export default function Header({ lang = "it" as Lang }) {
             aria-label={labels.ariaInstagram}
             className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="w-4 h-4"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
               <defs>
                 <linearGradient
                   id="igGradientMobileHeader"
@@ -368,14 +356,7 @@ export default function Header({ lang = "it" as Lang }) {
                   <stop offset="100%" stopColor="#4f5bd5" />
                 </linearGradient>
               </defs>
-              <rect
-                x="2"
-                y="2"
-                width="20"
-                height="20"
-                rx="5"
-                fill="url(#igGradientMobileHeader)"
-              />
+              <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#igGradientMobileHeader)" />
               <path
                 d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 6.5A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5Z"
                 fill="#fff"
@@ -391,11 +372,7 @@ export default function Header({ lang = "it" as Lang }) {
             aria-label={labels.ariaTikTokMobile}
             className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="w-4 h-4"
-              aria-hidden="true"
-            >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
               <path
                 d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
                 fill="#00f2ea"
@@ -414,19 +391,8 @@ export default function Header({ lang = "it" as Lang }) {
             aria-label="Facebook"
             className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
           >
-            <svg
-              viewBox="0 0 24 24"
-              className="w-4 h-4"
-              aria-hidden="true"
-            >
-              <rect
-                x="2"
-                y="2"
-                width="20"
-                height="20"
-                rx="5"
-                fill="#1877F2"
-              />
+            <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
+              <rect x="2" y="2" width="20" height="20" rx="5" fill="#1877F2" />
               <path
                 d="M13.2 18.5v-4.7h1.6l.3-2h-1.9v-1.3c0-.6.2-.9 1-.9h.9V7.1A11 11 0 0 0 13.9 7c-1.5 0-2.6.9-2.6 2.7v2h-1.7v2h1.7v4.8Z"
                 fill="#fff"
@@ -438,6 +404,7 @@ export default function Header({ lang = "it" as Lang }) {
             lang={currentLang}
             className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition shadow-[0_0_18px_rgba(0,0,0,0.7)]"
           />
+
           <button
             aria-label={labels.ariaOpenMenu}
             className="rounded-xl border border-white/20 bg-white/5 p-2 hover:bg-white/10 hover:border-white/40 transition shadow-[0_0_18px_rgba(0,0,0,0.7)]"
@@ -466,6 +433,16 @@ export default function Header({ lang = "it" as Lang }) {
             >
               {labels.navHow}
             </Link>
+
+            {/* ✅ UGC / Contest */}
+            <Link
+              href={`/${currentLang}/ugc`}
+              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
+              onClick={() => setOpen(false)}
+            >
+              {labels.navUgc}
+            </Link>
+
             <Link
               href={`/${currentLang}/about`}
               className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
