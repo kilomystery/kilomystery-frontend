@@ -8,7 +8,7 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 export async function POST(req: Request) {
   try {
     if (!process.env.RESEND_API_KEY) {
-      console.error("RESEND_API_KEY non impostata su Vercel");
+      console.error("RESEND_API_KEY non impostata");
       return NextResponse.json(
         { error: "Mail service not configured" },
         { status: 500 }
@@ -30,18 +30,19 @@ export async function POST(req: Request) {
     }
 
     const { data: sent, error } = await resend.emails.send({
-      // Mittente sicuro supportato da Resend con dominio non verificato
-      from: `KiloMystery Form <onboarding@resend.dev>`,
+      // MITTENTE UFFICIALE (tuo dominio)
+      from: "KiloMystery <sales@kilomystery.com>",
 
-      // QUI arrivano tutte le mail del contact form
-      to: ["kilomystery2025@gmail.com"],
+      // DOVE ARRIVANO I MESSAGGI
+      to: ["sales@kilomystery.com"],
 
-      // Quando fai "Rispondi", rispondi direttamente al cliente
-      replyTo: [email],
+      // Quando clicchi "Rispondi" → va al cliente
+      replyTo: email,
 
-      subject: subject || `Nuovo messaggio dal sito KiloMystery`,
+      subject: subject || "Nuovo messaggio dal sito KiloMystery",
+
       text: `
-Nuovo messaggio dal sito KiloMystery:
+Nuovo messaggio dal sito KiloMystery
 
 Nome: ${name}
 Email: ${email}
@@ -61,11 +62,13 @@ ${message}
       );
     }
 
-    console.log("Resend email sent:", sent);
+    console.log("Email inviata:", sent);
+
     return NextResponse.json({ ok: true });
 
   } catch (err) {
     console.error("Contact API error:", err);
+
     return NextResponse.json(
       { error: "Server error" },
       { status: 500 }
