@@ -1,7 +1,8 @@
 // app/[lang]/mystery-box/page.tsx
 import type { Metadata } from "next";
 import Link from "next/link";
-
+import Header from "../../components/Header";
+import Footer from "../../components/Footer";
 type Lang = "it" | "en" | "es" | "fr" | "de";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
