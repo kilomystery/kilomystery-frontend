@@ -1,160 +1,198 @@
 // app/api/label/route.ts
 import { NextResponse } from "next/server";
-import QRCode from "qrcode";
-import PDFDocument from "pdfkit"; // usa pdfkit "normale"
-import { PassThrough } from "stream";
 import fs from "fs";
 import path from "path";
+import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 
 export const runtime = "nodejs";
 
-// Helper: converte PDFKit stream -> Buffer
-function toBuffer(doc: any): Promise<Buffer> {
-  return new Promise((resolve, reject) => {
-    const stream = new PassThrough();
-    const chunks: Buffer[] = [];
-
-    stream.on("data", (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
-    stream.on("end", () => resolve(Buffer.concat(chunks)));
-    stream.on("error", reject);
-
-    doc.pipe(stream);
-    doc.end();
-  });
-}
-
-function getRequiredParam(url: URL, key: string) {
-  const v = url.searchParams.get(key);
-  return (v ?? "").trim();
+function reqParam(url: URL, key: string) {
+  return (url.searchParams.get(key) ?? "").trim();
 }
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
 
-    // query params richiesti
-    const id = getRequiredParam(url, "id");
-    const product = getRequiredParam(url, "product");
-    const weightKg = getRequiredParam(url, "weightKg");
-    const date = getRequiredParam(url, "date");
-    const warehouse = getRequiredParam(url, "warehouse");
-    const lang = getRequiredParam(url, "lang") || "it";
+    const id = reqParam(url, "id");
+    const product = reqParam(url, "product");
+    const weightKg = reqParam(url, "weightKg");
+    const date = reqParam(url, "date");
+    const warehouse = reqParam(url, "warehouse");
+    const lang = reqParam(url, "lang") || "it";
 
     if (!id || !product || !weightKg || !date || !warehouse) {
       return NextResponse.json(
-        { error: "Missing query params: id, product, weightKg, date, warehouse (and optional lang)" },
+        {
+          error:
+            "Missing query params: id, product, weightKg, date, warehouse (and optional lang)",
+        },
         { status: 400 }
       );
     }
 
-    // ✅ Font da /public/fonts (ATTENZIONE: nel tuo repo sono Inter-Regular.ttf e Inter-Bold.ttf)
-    const fontRegularPath = path.join(process.cwd(), "public", "fonts", "Inter-Regular.ttf");
-    const fontBoldPath = path.join(process.cwd(), "public", "fonts", "Inter-Bold.ttf");
+    // === QR CODE (senza tipi TS, così non rompe build) ===
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const QRCode = require("qrcode") as any;
 
-    const fontRegular = fs.readFileSync(fontRegularPath);
-    const fontBold = fs.readFileSync(fontBoldPath);
+    const qrTarget = `https://www.kilomystery.com/${lang}/verify?id=${encodeURIComponent(
+      id
+    )}`;
 
-    // Cosa deve fare il QR?
-    // 1) Semplice: va al sito
-    // const qrTarget = "https://www.kilomystery.com";
-
-    // 2) Meglio (consigliato): va alla pagina verify con lo stesso ID
-    // (se ancora non esiste, la crei dopo: /it/verify?id=XXX)
-    const qrTarget = `https://www.kilomystery.com/${lang}/verify?id=${encodeURIComponent(id)}`;
-
-    const qrDataUrl = await QRCode.toDataURL(qrTarget, {
+    const qrPngBuffer: Buffer = await QRCode.toBuffer(qrTarget, {
+      type: "png",
       errorCorrectionLevel: "M",
       margin: 1,
       width: 300,
     });
 
-    // PDF 4x6 pollici = 288 x 432 pt (72pt per pollice)
-    const doc: any = new (PDFDocument as any)({
-      size: [288, 432],
-      margin: 18,
+    // === Fonts ===
+    const fontRegularPath = path.join(
+      process.cwd(),
+      "public",
+      "fonts",
+      "Inter-Regular.ttf"
+    );
+    const fontBoldPath = path.join(
+      process.cwd(),
+      "public",
+      "fonts",
+      "Inter-Bold.ttf"
+    );
+
+    const fontRegularBytes = fs.readFileSync(fontRegularPath);
+    const fontBoldBytes = fs.readFileSync(fontBoldPath);
+
+    // === PDF 4x6 (in points) ===
+    // 4x6 inch @ 72pt/in => 288 x 432
+    const W = 288;
+    const H = 432;
+    const M = 18;
+
+    const pdf = await PDFDocument.create();
+    pdf.registerFontkit(
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require("@pdf-lib/fontkit")
+    );
+
+    const fontRegular = await pdf.embedFont(fontRegularBytes);
+    const fontBold = await pdf.embedFont(fontBoldBytes);
+
+    const page = pdf.addPage([W, H]);
+
+    // Background
+    page.drawRectangle({
+      x: 0,
+      y: 0,
+      width: W,
+      height: H,
+      color: rgb(1, 1, 1),
     });
 
-    // registra font (nome interno Inter)
-    doc.registerFont("Inter", fontRegular);
-    doc.registerFont("Inter-Bold", fontBold);
+    // Header
+    page.drawText("KILO MYSTERY", {
+      x: M,
+      y: H - M - 18,
+      size: 18,
+      font: fontBold,
+      color: rgb(0.043, 0.059, 0.078), // #0b0f14
+    });
 
-    // Sfondo
-    doc.rect(0, 0, 288, 432).fill("#ffffff");
+    page.drawText("Shipping label", {
+      x: M,
+      y: H - M - 40,
+      size: 10,
+      font: fontRegular,
+      color: rgb(0.42, 0.45, 0.51), // gray
+    });
 
-    // Header brand
-    doc
-      .fillColor("#0b0f14")
-      .font("Inter-Bold")
-      .fontSize(18)
-      .text("KILO MYSTERY", 18, 18, { align: "left" });
+    // Separator line
+    page.drawLine({
+      start: { x: M, y: H - 60 },
+      end: { x: W - M, y: H - 60 },
+      thickness: 1,
+      color: rgb(0.9, 0.91, 0.92),
+    });
 
-    doc
-      .fillColor("#6b7280")
-      .font("Inter")
-      .fontSize(10)
-      .text("Shipping label", 18, 42);
+    // Left content
+    let y = H - 74;
 
-    // Linea separatore
-    doc
-      .moveTo(18, 60)
-      .lineTo(270, 60)
-      .lineWidth(1)
-      .stroke("#e5e7eb");
+    const label = (t: string) => {
+      page.drawText(t, {
+        x: M,
+        y,
+        size: 11,
+        font: fontBold,
+        color: rgb(0.067, 0.094, 0.153), // #111827
+      });
+      y -= 14;
+    };
 
-    // Box dati principali
-    const leftX = 18;
-    let y = 74;
+    const value = (t: string, maxWidth = 160) => {
+      // pdf-lib non fa wrap automatico: facciamo una versione semplice
+      // Se è troppo lungo, tagliamo con "…"
+      const maxChars = Math.floor(maxWidth / 6.2); // stima per size 12
+      const out = t.length > maxChars ? t.slice(0, maxChars - 1) + "…" : t;
 
-    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Order ID", leftX, y);
-    y += 14;
-    doc.fillColor("#111827").font("Inter").fontSize(12).text(id, leftX, y);
-    y += 22;
+      page.drawText(out, {
+        x: M,
+        y,
+        size: 12,
+        font: fontRegular,
+        color: rgb(0.067, 0.094, 0.153),
+      });
+      y -= 22;
+    };
 
-    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Product", leftX, y);
-    y += 14;
-    doc.fillColor("#111827").font("Inter").fontSize(12).text(product, leftX, y);
-    y += 22;
+    label("Order ID");
+    value(id, 170);
 
-    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Weight", leftX, y);
-    y += 14;
-    doc.fillColor("#111827").font("Inter").fontSize(12).text(weightKg, leftX, y);
-    y += 22;
+    label("Product");
+    value(product, 170);
 
-    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Date", leftX, y);
-    y += 14;
-    doc.fillColor("#111827").font("Inter").fontSize(12).text(date, leftX, y);
-    y += 22;
+    label("Weight");
+    value(weightKg, 170);
 
-    doc.fillColor("#111827").font("Inter-Bold").fontSize(11).text("Warehouse", leftX, y);
-    y += 14;
-    doc.fillColor("#111827").font("Inter").fontSize(12).text(warehouse, leftX, y, { width: 160 });
+    label("Date");
+    value(date, 170);
 
-    // QR a destra
+    label("Warehouse");
+    value(warehouse, 170);
+
+    // QR on right
+    const qrImage = await pdf.embedPng(qrPngBuffer);
     const qrSize = 110;
-    const qrX = 288 - 18 - qrSize;
-    const qrY = 110;
+    const qrX = W - M - qrSize;
+    const qrY = H - 110 - qrSize; // circa come prima
 
-    const base64 = qrDataUrl.split(",")[1];
-    const qrBuffer = Buffer.from(base64, "base64");
+    page.drawImage(qrImage, {
+      x: qrX,
+      y: qrY,
+      width: qrSize,
+      height: qrSize,
+    });
 
-    doc.image(qrBuffer, qrX, qrY, { width: qrSize, height: qrSize });
+    // "Scan to verify"
+    page.drawText("Scan to verify", {
+      x: qrX + 14,
+      y: qrY - 12,
+      size: 8,
+      font: fontRegular,
+      color: rgb(0.42, 0.45, 0.51),
+    });
 
-    doc
-      .fillColor("#6b7280")
-      .font("Inter")
-      .fontSize(8)
-      .text("Scan to verify", qrX, qrY + qrSize + 6, { width: qrSize, align: "center" });
+    // Footer
+    page.drawText("www.kilomystery.com", {
+      x: M,
+      y: 12,
+      size: 8,
+      font: fontRegular,
+      color: rgb(0.6, 0.64, 0.69),
+    });
 
-    // Footer (mini)
-    doc
-      .fillColor("#9ca3af")
-      .font("Inter")
-      .fontSize(8)
-      .text("www.kilomystery.com", 18, 432 - 24, { align: "left" });
+    const pdfBytes = await pdf.save();
 
-    const pdfBuffer = await toBuffer(doc);
-
-    return new NextResponse(pdfBuffer, {
+    return new NextResponse(Buffer.from(pdfBytes), {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
