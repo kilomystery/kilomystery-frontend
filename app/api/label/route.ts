@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 import QRCode from "qrcode";
-import PDFDocument from "pdfkit";
+import PDFDocument from "pdfkit/js/pdfkit.standalone.js";
 import { PassThrough } from "stream";
+import fs from "fs";
+import path from "path";
 
 export const runtime = "nodejs";
 
-// Tipo corretto per l'istanza di pdfkit
 type PdfDoc = InstanceType<typeof PDFDocument>;
 
-// Helper per convertire PDF in Buffer
 function toBuffer(doc: PdfDoc): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const stream = new PassThrough();
@@ -44,27 +44,42 @@ export async function GET(req: Request) {
       );
     }
 
-    // Link QR → verifica lotto
+    // ✅ Link QR: verifica lotto
     const verifyUrl = `https://www.kilomystery.com/verify/${encodeURIComponent(
       id
     )}`;
 
-    // Genera QR
     const qr = await QRCode.toDataURL(verifyUrl);
 
-    // Percorso font (i tuoi file reali)
-    const regularFont = process.cwd() + "/public/fonts/Inter-Regular.ttf";
-    const boldFont = process.cwd() + "/public/fonts/Inter-Bold.ttf";
+    // ✅ Leggi i font dal filesystem (public/)
+    const regularPath = path.join(
+      process.cwd(),
+      "public",
+      "fonts",
+      "Inter-Regular.ttf"
+    );
+    const boldPath = path.join(
+      process.cwd(),
+      "public",
+      "fonts",
+      "Inter-Bold.ttf"
+    );
 
-    // PDF 4x6 pollici → 288x432 pt
+    const regularFont = fs.readFileSync(regularPath);
+    const boldFont = fs.readFileSync(boldPath);
+
+    // 4x6 pollici -> 288x432 pt
     const doc = new PDFDocument({
       size: [288, 432],
       margin: 20,
     }) as PdfDoc;
 
-    // Registra font
+    // ✅ Registra font (da Buffer)
     doc.registerFont("regular", regularFont);
     doc.registerFont("bold", boldFont);
+
+    // ✅ Imposta subito un font di default (così non prova Helvetica)
+    doc.font("regular");
 
     // Header
     doc.font("bold").fontSize(22).text("KiloMystery", { align: "center" });
@@ -76,51 +91,38 @@ export async function GET(req: Request) {
 
     doc.moveDown(1);
 
-    // Info prodotto
-    doc.font("bold").fontSize(12).text("Prodotto:");
+    // Info
+    doc.font("bold").fontSize(12).text(lang === "it" ? "Prodotto:" : "Product:");
     doc.font("regular").text(product);
 
     doc.moveDown(0.5);
-
-    doc.font("bold").text("Peso:");
+    doc.font("bold").text(lang === "it" ? "Peso:" : "Weight:");
     doc.font("regular").text(weightKg);
 
     doc.moveDown(0.5);
-
-    doc.font("bold").text("Data:");
+    doc.font("bold").text(lang === "it" ? "Data:" : "Date:");
     doc.font("regular").text(date);
 
     doc.moveDown(0.5);
-
-    doc.font("bold").text("Magazzino:");
+    doc.font("bold").text(lang === "it" ? "Magazzino:" : "Warehouse:");
     doc.font("regular").text(warehouse);
 
     doc.moveDown(1);
-
-    // Lotto
     doc.font("bold").text("ID Lotto:");
     doc.font("regular").text(id);
 
     doc.moveDown(1.2);
 
-    // QR Code
-    const qrImage = Buffer.from(
-      qr.replace(/^data:image\/png;base64,/, ""),
-      "base64"
+    // QR
+    const qrImage = Buffer.from(qr.replace(/^data:image\/png;base64,/, ""), "base64");
+    doc.image(qrImage, 74, doc.y, { width: 140, height: 140 });
+
+    doc.moveDown(8.5);
+    doc.fontSize(9).font("regular").text(
+      lang === "it" ? "Scansiona per verifica" : "Scan to verify",
+      { align: "center" }
     );
 
-    doc.image(qrImage, {
-      fit: [140, 140],
-      align: "center",
-    });
-
-    doc.moveDown(0.5);
-
-    doc.fontSize(9).font("regular").text("Scansiona per verifica", {
-      align: "center",
-    });
-
-    // Footer
     doc.fontSize(8).text("www.kilomystery.com", { align: "center" });
 
     const buffer = await toBuffer(doc);
@@ -134,12 +136,8 @@ export async function GET(req: Request) {
     });
   } catch (err: any) {
     console.error("Label API error:", err);
-
     return NextResponse.json(
-      {
-        error: "Failed to generate label",
-        details: err?.message || "Unknown error",
-      },
+      { error: "Failed to generate label", details: err?.message ?? "Unknown" },
       { status: 500 }
     );
   }
