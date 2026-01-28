@@ -10,8 +10,12 @@ import CartProviderRoot from "./CartProviderRoot";
 import { cookies, headers } from "next/headers";
 import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
 
-const SITE_URL =
-  (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(/\/$/, "");
+import { GoogleAnalytics } from "@next/third-parties/google";
+
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(
+  /\/$/,
+  ""
+);
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -24,7 +28,6 @@ export const metadata: Metadata = {
   description:
     "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata. Unboxing sorpresa e box da 1 kg a 10 kg.",
 
-  // SEO multilingua (aiuta Google e anche molte AI a capire le versioni lingua)
   alternates: {
     canonical: "/",
     languages: {
@@ -73,7 +76,6 @@ export const metadata: Metadata = {
     },
   },
 
-  // Se hai già favicon e icone, puoi aggiungere qui:
   icons: {
     icon: "/favicon.ico",
     apple: "/apple-touch-icon.png",
@@ -81,7 +83,6 @@ export const metadata: Metadata = {
 };
 
 async function getHtmlLang(): Promise<Lang> {
-  // ✅ cookies() / headers() sono async
   const c = (await cookies()).get("km_lang")?.value;
   if (c) return normalizeLang(c);
 
@@ -96,7 +97,6 @@ export default async function RootLayout({
 }) {
   const lang = await getHtmlLang();
 
-  // JSON-LD: Organization + WebSite + Store
   const jsonLd = [
     {
       "@context": "https://schema.org",
@@ -140,28 +140,26 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body>
-        {/* Google Analytics + Consent Mode */}
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-8MG904NJ76"
-        />
-
-        <Script id="google-analytics">
+        {/* ✅ Consent Mode: default negato finché l'utente non accetta */}
+        <Script id="ga-consent-default" strategy="beforeInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
 
-            // 🌍 CONSENT MODE — default: tutto negato finché l'utente non accetta
+            // Default: tutto negato finché l'utente non accetta dal CookieBanner
             gtag('consent', 'default', {
               ad_storage: 'denied',
-              analytics_storage: 'denied'
+              analytics_storage: 'denied',
+              functionality_storage: 'denied',
+              personalization_storage: 'denied',
+              security_storage: 'granted',
+              wait_for_update: 500
             });
-
-            // Configurazione GA4
-            gtag('config', 'G-8MG904NJ76');
           `}
         </Script>
+
+        {/* ✅ GA4 via Next third-parties */}
+        <GoogleAnalytics gaId="G-YEY91KKVR2" />
 
         {/* JSON-LD */}
         <Script
