@@ -5,8 +5,11 @@ import { PassThrough } from "stream";
 
 export const runtime = "nodejs";
 
+// Tipo corretto per l'istanza di pdfkit
+type PdfDoc = InstanceType<typeof PDFDocument>;
+
 // Helper per convertire PDF in Buffer
-function toBuffer(doc: PDFDocument): Promise<Buffer> {
+function toBuffer(doc: PdfDoc): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const stream = new PassThrough();
     const chunks: Buffer[] = [];
@@ -42,33 +45,29 @@ export async function GET(req: Request) {
     }
 
     // Link QR → verifica lotto
-    const verifyUrl = `https://www.kilomystery.com/verify/${id}`;
+    const verifyUrl = `https://www.kilomystery.com/verify/${encodeURIComponent(
+      id
+    )}`;
 
     // Genera QR
     const qr = await QRCode.toDataURL(verifyUrl);
 
-    // Percorso font
-    const regularFont =
-      process.cwd() + "/public/fonts/Inter-Regular.ttf";
-    const boldFont =
-      process.cwd() + "/public/fonts/Inter-Bold.ttf";
+    // Percorso font (i tuoi file reali)
+    const regularFont = process.cwd() + "/public/fonts/Inter-Regular.ttf";
+    const boldFont = process.cwd() + "/public/fonts/Inter-Bold.ttf";
 
     // PDF 4x6 pollici → 288x432 pt
     const doc = new PDFDocument({
       size: [288, 432],
       margin: 20,
-    });
+    }) as PdfDoc;
 
     // Registra font
     doc.registerFont("regular", regularFont);
     doc.registerFont("bold", boldFont);
 
     // Header
-    doc
-      .font("bold")
-      .fontSize(22)
-      .text("KiloMystery", { align: "center" });
-
+    doc.font("bold").fontSize(22).text("KiloMystery", { align: "center" });
     doc
       .moveDown(0.3)
       .font("regular")
@@ -117,19 +116,12 @@ export async function GET(req: Request) {
 
     doc.moveDown(0.5);
 
-    doc
-      .fontSize(9)
-      .font("regular")
-      .text("Scansiona per verifica", {
-        align: "center",
-      });
+    doc.fontSize(9).font("regular").text("Scansiona per verifica", {
+      align: "center",
+    });
 
     // Footer
-    doc
-      .fontSize(8)
-      .text("www.kilomystery.com", {
-        align: "center",
-      });
+    doc.fontSize(8).text("www.kilomystery.com", { align: "center" });
 
     const buffer = await toBuffer(doc);
 
@@ -137,6 +129,7 @@ export async function GET(req: Request) {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `inline; filename=label-${id}.pdf`,
+        "Cache-Control": "no-store",
       },
     });
   } catch (err: any) {
