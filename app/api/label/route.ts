@@ -36,9 +36,8 @@ export async function GET(req: Request) {
     const fontkit = (await import("@pdf-lib/fontkit")).default;
 
     // ✅ QR: porta a /verify/[id] (pagina cliente)
-    const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(
-      id
-    )}`;
+const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(id)}`;
+    
 
     const qrPngBuffer: Buffer = await QRCode.toBuffer(qrTarget, {
       type: "png",
