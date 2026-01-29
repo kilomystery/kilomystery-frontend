@@ -35,9 +35,10 @@ export async function GET(req: Request) {
     const QRCode = (await import("qrcode")).default;
     const fontkit = (await import("@pdf-lib/fontkit")).default;
 
-    // ✅ QR: porta a /verify/[id] (pagina cliente)
-const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(id)}`;
-    
+    // QR -> pagina verify con stesso id (anche se per ora è solo “formato”)
+    const qrTarget = `https://www.kilomystery.com/${lang}/verify?id=${encodeURIComponent(
+      id
+    )}`;
 
     const qrPngBuffer: Buffer = await QRCode.toBuffer(qrTarget, {
       type: "png",
@@ -46,7 +47,7 @@ const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponen
       width: 300,
     });
 
-    // ✅ Fonts
+    // ✅ Fonts (tu hai questi due file)
     const fontRegularPath = path.join(
       process.cwd(),
       "public",
@@ -126,8 +127,7 @@ const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponen
 
     const value = (t: string, maxWidth = 170) => {
       const approxChars = Math.max(10, Math.floor(maxWidth / 6.2));
-      const out =
-        t.length > approxChars ? t.slice(0, approxChars - 1) + "…" : t;
+      const out = t.length > approxChars ? t.slice(0, approxChars - 1) + "…" : t;
 
       page.drawText(out, {
         x: M,
@@ -190,7 +190,6 @@ const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponen
       status: 200,
       headers: {
         "Content-Type": "application/pdf",
-        // ✅ meglio così: si apre e puoi stampare/subito salvare
         "Content-Disposition": `inline; filename="label-${id}.pdf"`,
         "Cache-Control": "no-store",
       },
