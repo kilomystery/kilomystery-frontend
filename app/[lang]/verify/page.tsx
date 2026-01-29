@@ -1,41 +1,39 @@
-"use client";
+// app/[lang]/verify/page.tsx
+import type { Metadata } from "next";
+import VerifyForm from "./VerifyForm";
 
-import Link from "next/link";
-import { useState } from "react";
+export const metadata: Metadata = {
+  title: "Verifica autenticità",
+  description: "Verifica l’autenticità del tuo codice KiloMystery.",
+};
 
-export default function VerifyFormPage({ params }: { params: { lang: string } }) {
-  const lang = params?.lang || "it";
-  const [code, setCode] = useState("");
-
-  const href = code.trim() ? `/${lang}/verify/${encodeURIComponent(code.trim())}` : `/${lang}/verify`;
-
+export default function VerifyPage({
+  params,
+}: {
+  params: { lang: string };
+}) {
   return (
     <main className="container py-10">
-      <div className="card border-white/15 bg-[#0b0f14]/60">
-        <div className="p-6">
-          <h1 className="text-2xl font-bold">Verifica autenticità</h1>
-          <p className="mt-2 text-white/70">
-            Inserisci il codice lotto presente sull’etichetta KiloMystery.
-          </p>
+      <div className="card bg-[#0b0f14]/70 border-white/10 backdrop-blur-md">
+        <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+          Verifica autenticità
+        </h1>
+        <p className="mt-2 text-white/70">
+          Inserisci il <span className="font-semibold text-white/85">codice lotto</span> presente
+          sull’etichetta per verificare che sia un prodotto originale KiloMystery.
+        </p>
 
-          <div className="mt-6 grid gap-3">
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              placeholder="es: KM-20260129-PRM-5KG-1234-01"
-              className="w-full rounded-xl border border-white/15 bg-black/30 px-4 py-3 text-white outline-none focus:border-white/30"
-            />
+        <div className="mt-6">
+          <VerifyForm lang={params.lang} />
+        </div>
 
-            <Link
-              href={href}
-              className={`btn btn-brand ${!code.trim() ? "pointer-events-none opacity-50" : ""}`}
-            >
-              Verifica
-            </Link>
-
-            <p className="text-xs text-white/60">
-              Scansioni il QR? Ti porta qui automaticamente con il codice.
-            </p>
+        <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-white/70">
+          <div className="font-semibold text-white/85">Esempio formato:</div>
+          <div className="mt-1 font-mono text-white/80">
+            KM-20260128-PRM-5KG-0001
+          </div>
+          <div className="mt-2">
+            Se hai scansionato il QR, questa pagina si apre automaticamente con il codice già compilato.
           </div>
         </div>
       </div>
