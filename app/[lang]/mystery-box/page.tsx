@@ -3,9 +3,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import ProductsTabs from "../../components/ProductsTabs"; // ✅ aggiunto
+
 type Lang = "it" | "en" | "es" | "fr" | "de";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
 function normLang(l: string): Lang {
   const x = String(l || "it").toLowerCase();
@@ -15,25 +18,28 @@ function normLang(l: string): Lang {
 
 type FAQ = { q: string; a: string };
 
-const COPY: Record<Lang, {
-  title: string;
-  description: string;
-  h1: string;
-  intro: string;
-  bulletsTitle: string;
-  bullets: string[];
-  ctaPrimary: string;
-  ctaSecondary: string;
-  section1Title: string;
-  section1Body: string;
-  section2Title: string;
-  section2Body: string;
-  section3Title: string;
-  section3Body: string;
-  faqTitle: string;
-  faqIntro: string;
-  faqs: FAQ[];
-}> = {
+const COPY: Record<
+  Lang,
+  {
+    title: string;
+    description: string;
+    h1: string;
+    intro: string;
+    bulletsTitle: string;
+    bullets: string[];
+    ctaPrimary: string;
+    ctaSecondary: string;
+    section1Title: string;
+    section1Body: string;
+    section2Title: string;
+    section2Body: string;
+    section3Title: string;
+    section3Body: string;
+    faqTitle: string;
+    faqIntro: string;
+    faqs: FAQ[];
+  }
+> = {
   it: {
     title: "Mystery Box: guida + FAQ | KiloMystery",
     description:
@@ -107,7 +113,6 @@ const COPY: Record<Lang, {
         q: "Cosa succede se arriva danneggiata?",
         a: "Contatta l’assistenza con foto e numero ordine: ti aiutiamo a risolvere velocemente.",
       },
-      
     ],
   },
 
@@ -141,14 +146,38 @@ const COPY: Record<Lang, {
     faqIntro:
       "Fast answers about mystery boxes: shipping, returns, safety and payments.",
     faqs: [
-      { q: "What is a mystery box?", a: "A mystery box is a surprise box with curated items. You don’t know the exact item list, but you know the rules (tier, weight, and format)." },
-      { q: "What is a mystery box by kg?", a: "It’s a mystery box where price is linked to weight. Choose the kg and receive a sealed, weighed box." },
-      { q: "Is it reliable?", a: "Yes when rules are transparent. KiloMystery uses sealed boxes, net weight and traceability." },
-      { q: "Standard vs Premium?", a: "Different tiers. Premium targets higher average value; Standard is a more accessible entry." },
-      { q: "How much does it cost?", a: "Depends on tier and weight. In the “by kg” format price is €/kg and varies by tier." },
-      { q: "Do you ship nationwide?", a: "Yes, with tracking. Details are on the Shipping policy page." },
-      { q: "Can I return it?", a: "Mystery boxes are sealed surprise products; returns are typically not available. See Returns policy." },
-      { q: "Good gift idea?", a: "Yes—surprise + unboxing makes it a great gift. Choose weight and tier to match budget." },
+      {
+        q: "What is a mystery box?",
+        a: "A mystery box is a surprise box with curated items. You don’t know the exact item list, but you know the rules (tier, weight, and format).",
+      },
+      {
+        q: "What is a mystery box by kg?",
+        a: "It’s a mystery box where price is linked to weight. Choose the kg and receive a sealed, weighed box.",
+      },
+      {
+        q: "Is it reliable?",
+        a: "Yes when rules are transparent. KiloMystery uses sealed boxes, net weight and traceability.",
+      },
+      {
+        q: "Standard vs Premium?",
+        a: "Different tiers. Premium targets higher average value; Standard is a more accessible entry.",
+      },
+      {
+        q: "How much does it cost?",
+        a: "Depends on tier and weight. In the “by kg” format price is €/kg and varies by tier.",
+      },
+      {
+        q: "Do you ship nationwide?",
+        a: "Yes, with tracking. Details are on the Shipping policy page.",
+      },
+      {
+        q: "Can I return it?",
+        a: "Mystery boxes are sealed surprise products; returns are typically not available. See Returns policy.",
+      },
+      {
+        q: "Good gift idea?",
+        a: "Yes—surprise + unboxing makes it a great gift. Choose weight and tier to match budget.",
+      },
     ],
   },
 
@@ -181,9 +210,18 @@ const COPY: Record<Lang, {
     faqTitle: "FAQ – Mystery Box",
     faqIntro: "Respuestas rápidas sobre envíos, devoluciones y seguridad.",
     faqs: [
-      { q: "¿Qué es una mystery box?", a: "Una caja sorpresa con productos seleccionados. No conoces la lista exacta antes de abrirla, pero sí las reglas." },
-      { q: "¿Qué es una mystery box por kg?", a: "Precio ligado al peso: eliges los kg y recibes una caja sellada y pesada." },
-      { q: "¿Standard o Premium?", a: "Son dos niveles diferentes: Premium apunta a un valor medio mayor." },
+      {
+        q: "¿Qué es una mystery box?",
+        a: "Una caja sorpresa con productos seleccionados. No conoces la lista exacta antes de abrirla, pero sí las reglas.",
+      },
+      {
+        q: "¿Qué es una mystery box por kg?",
+        a: "Precio ligado al peso: eliges los kg y recibes una caja sellada y pesada.",
+      },
+      {
+        q: "¿Standard o Premium?",
+        a: "Son dos niveles diferentes: Premium apunta a un valor medio mayor.",
+      },
     ],
   },
 
@@ -216,9 +254,18 @@ const COPY: Record<Lang, {
     faqTitle: "FAQ – Mystery Box",
     faqIntro: "Réponses rapides : livraison, retours, sécurité.",
     faqs: [
-      { q: "Qu’est-ce qu’une mystery box ?", a: "Une boîte surprise avec des produits sélectionnés. Vous ne connaissez pas la liste exacte avant l’ouverture." },
-      { q: "Mystery box au kg ?", a: "Le prix dépend du poids. Vous choisissez les kg et recevez une box scellée et pesée." },
-      { q: "Standard ou Premium ?", a: "Deux gammes différentes. Premium vise une valeur moyenne plus élevée." },
+      {
+        q: "Qu’est-ce qu’une mystery box ?",
+        a: "Une boîte surprise avec des produits sélectionnés. Vous ne connaissez pas la liste exacte avant l’ouverture.",
+      },
+      {
+        q: "Mystery box au kg ?",
+        a: "Le prix dépend du poids. Vous choisissez les kg et recevez une box scellée et pesée.",
+      },
+      {
+        q: "Standard ou Premium ?",
+        a: "Deux gammes différentes. Premium vise une valeur moyenne plus élevée.",
+      },
     ],
   },
 
@@ -251,14 +298,27 @@ const COPY: Record<Lang, {
     faqTitle: "FAQ – Mystery Box",
     faqIntro: "Kurze Antworten zu Versand, Rückgabe, Sicherheit.",
     faqs: [
-      { q: "Was ist eine Mystery Box?", a: "Eine Überraschungsbox mit kuratierten Produkten. Du kennst nicht die exakte Liste, aber die Regeln." },
-      { q: "Mystery Box pro kg?", a: "Preis ist ans Gewicht gekoppelt: kg wählen, versiegelte Box erhalten." },
-      { q: "Standard oder Premium?", a: "Zwei Tiers. Premium zielt auf höheren Durchschnittswert." },
+      {
+        q: "Was ist eine Mystery Box?",
+        a: "Eine Überraschungsbox mit kuratierten Produkten. Du kennst nicht die exakte Liste, aber die Regeln.",
+      },
+      {
+        q: "Mystery Box pro kg?",
+        a: "Preis ist ans Gewicht gekoppelt: kg wählen, versiegelte Box erhalten.",
+      },
+      {
+        q: "Standard oder Premium?",
+        a: "Zwei Tiers. Premium zielt auf höheren Durchschnittswert.",
+      },
     ],
   },
 };
 
-export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: { lang: string };
+}): Promise<Metadata> {
   const lang = normLang(params?.lang);
   const c = COPY[lang];
   const url = `${SITE_URL}/${lang}/mystery-box`;
@@ -340,7 +400,8 @@ export default function MysteryBoxPage({ params }: { params: { lang: string } })
         {/* HERO */}
         <header className="max-w-3xl">
           <p className="text-white/60 text-sm">
-            SEO hub: <b>mystery box</b> • keyword secondaria: <b>mystery box al kg</b>
+            SEO hub: <b>mystery box</b> • keyword secondaria:{" "}
+            <b>mystery box al kg</b>
           </p>
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mt-2">
             {c.h1}
@@ -371,26 +432,60 @@ export default function MysteryBoxPage({ params }: { params: { lang: string } })
           <ul className="mt-4 space-y-2 text-white/75">
             {c.bullets.map((b, i) => (
               <li key={i} className="flex gap-2">
-                <span aria-hidden className="mt-[2px]">✅</span>
+                <span aria-hidden className="mt-[2px]">
+                  ✅
+                </span>
                 <span>{b}</span>
               </li>
             ))}
           </ul>
         </section>
 
+        {/* BUY NOW (PRODUCT TABS) */}
+        <section className="card" id="buy-now">
+          <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+            <div>
+              <h2 className="text-2xl font-extrabold">
+                Scegli la tua Mystery Box e inizia l’unboxing
+              </h2>
+              <p className="text-white/70 mt-2">
+                Seleziona fascia e peso: <b>Standard</b> per iniziare,{" "}
+                <b>Premium</b> per un livello più alto.
+              </p>
+            </div>
+
+            <Link
+              href={`/${lang}/products`}
+              className="btn btn-ghost font-bold whitespace-nowrap"
+            >
+              Vai a tutti i prodotti →
+            </Link>
+          </div>
+
+          <div className="mt-6">
+            <ProductsTabs lang={lang} />
+          </div>
+        </section>
+
         {/* SECTIONS */}
         <section className="grid md:grid-cols-3 gap-5">
           <article className="card">
             <h3 className="text-xl font-extrabold">{c.section1Title}</h3>
-            <p className="text-white/75 mt-3 leading-relaxed">{c.section1Body}</p>
+            <p className="text-white/75 mt-3 leading-relaxed">
+              {c.section1Body}
+            </p>
           </article>
           <article className="card">
             <h3 className="text-xl font-extrabold">{c.section2Title}</h3>
-            <p className="text-white/75 mt-3 leading-relaxed">{c.section2Body}</p>
+            <p className="text-white/75 mt-3 leading-relaxed">
+              {c.section2Body}
+            </p>
           </article>
           <article className="card">
             <h3 className="text-xl font-extrabold">{c.section3Title}</h3>
-            <p className="text-white/75 mt-3 leading-relaxed">{c.section3Body}</p>
+            <p className="text-white/75 mt-3 leading-relaxed">
+              {c.section3Body}
+            </p>
           </article>
         </section>
 
@@ -400,14 +495,21 @@ export default function MysteryBoxPage({ params }: { params: { lang: string } })
             Mystery box al kg: scegli il formato giusto
           </h2>
           <p className="text-white/75 mt-3">
-            Se stai cercando una <b>mystery box</b> (anche come regalo), il modo più semplice è
-            scegliere peso e fascia: <b>Standard</b> per iniziare, <b>Premium</b> per un livello più alto.
+            Se stai cercando una <b>mystery box</b> (anche come regalo), il modo
+            più semplice è scegliere peso e fascia: <b>Standard</b> per iniziare,{" "}
+            <b>Premium</b> per un livello più alto.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            <Link href={`/${lang}/products#buy-standard-10`} className="btn btn-silver">
+            <Link
+              href={`/${lang}/mystery-box#buy-now`}
+              className="btn btn-silver"
+            >
               Standard 10 kg
             </Link>
-            <Link href={`/${lang}/products#buy-premium-10`} className="btn btn-gold">
+            <Link
+              href={`/${lang}/mystery-box#buy-now`}
+              className="btn btn-gold"
+            >
               Premium 10 kg
             </Link>
             <Link href={`/${lang}/policy/shipping`} className="btn btn-ghost">
@@ -430,9 +532,7 @@ export default function MysteryBoxPage({ params }: { params: { lang: string } })
                 key={idx}
                 className="rounded-2xl border border-white/10 bg-white/5 p-4"
               >
-                <summary className="cursor-pointer font-bold">
-                  {f.q}
-                </summary>
+                <summary className="cursor-pointer font-bold">{f.q}</summary>
                 <p className="text-white/75 mt-2 leading-relaxed">{f.a}</p>
               </details>
             ))}
@@ -441,17 +541,22 @@ export default function MysteryBoxPage({ params }: { params: { lang: string } })
 
         {/* FINAL CTA */}
         <section className="card text-center">
-          <h2 className="text-2xl font-extrabold">
-            Pronto per la tua mystery box?
-          </h2>
+          <h2 className="text-2xl font-extrabold">Pronto per la tua mystery box?</h2>
           <p className="text-white/75 mt-2">
-            Se cercavi “mystery box” o “mystery box al kg”, sei nel posto giusto: scegli peso e fascia e inizia l’unboxing.
+            Se cercavi “mystery box” o “mystery box al kg”, sei nel posto giusto:
+            scegli peso e fascia e inizia l’unboxing.
           </p>
           <div className="mt-5 flex justify-center gap-3 flex-wrap">
-            <Link href={`/${lang}/products`} className="btn btn-brand px-7 py-3 font-bold">
+            <Link
+              href={`/${lang}/products`}
+              className="btn btn-brand px-7 py-3 font-bold"
+            >
               {c.ctaPrimary}
             </Link>
-            <Link href={`/${lang}/contact`} className="btn btn-ghost px-7 py-3 font-bold">
+            <Link
+              href={`/${lang}/contact`}
+              className="btn btn-ghost px-7 py-3 font-bold"
+            >
               Contattaci
             </Link>
           </div>

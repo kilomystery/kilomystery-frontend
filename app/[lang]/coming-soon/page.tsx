@@ -194,6 +194,7 @@ const COMING_COPY: Record<Lang, ComingCopyPerLang> = {
     info1Value: "Frühjahr 2025",
     info2Title: "Pop-up-Tour",
     info2Value: "Mailand • Madrid • Paris",
+
     info3Title: "Warteliste",
     info3Value: "4.300 Personen",
     comingTitle: "Woran wir arbeiten",
