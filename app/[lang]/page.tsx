@@ -67,7 +67,7 @@ type CopyPerLang = Record<CopyKey, string>;
 
 const HOME_COPY: Record<Lang, CopyPerLang> = {
   it: {
-    heroTitle: "Mystery box al Kg",
+    heroTitle: "Mystery box di Pacchi Smarriti al Kg",
     heroSubtitle:
       "Scegli Standard o Premium, seleziona il peso e aggiungi al carrello. Trasparenza, tracciabilità, sorpresa vera.",
     ctaPrices: "Vedi prezzi",
