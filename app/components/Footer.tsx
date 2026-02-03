@@ -21,6 +21,9 @@ type Labels = {
   blog: string;
   press: string;
 
+  // ✅ NEW: Pacchi Smarriti page
+  lostParcels: string;
+
   privacy: string;
   terms: string;
   returns: string;
@@ -49,6 +52,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
 
     // ✅ NEW
     faq: "Mystery Box – FAQ",
+    lostParcels: "Pacchi Smarriti",
     blog: "Blog",
     press: "Press",
 
@@ -72,6 +76,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
 
     // ✅ NEW
     faq: "Mystery Box – FAQ",
+    lostParcels: "Lost Parcels",
     blog: "Blog",
     press: "Press",
 
@@ -95,6 +100,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
 
     // ✅ NEW
     faq: "Mystery Box – Preguntas frecuentes",
+    lostParcels: "Paquetes perdidos",
     blog: "Blog",
     press: "Prensa",
 
@@ -118,6 +124,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
 
     // ✅ NEW
     faq: "Mystery Box – FAQ",
+    lostParcels: "Colis perdus",
     blog: "Blog",
     press: "Presse",
 
@@ -141,6 +148,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
 
     // ✅ NEW
     faq: "Mystery Box – FAQ",
+    lostParcels: "Verlorene Pakete",
     blog: "Blog",
     press: "Presse",
 
@@ -252,6 +260,17 @@ export default function Footer({
                   className="footer-link"
                 >
                   {L.faq}
+                </Link>
+              </li>
+
+              {/* ✅ NEW: Pacchi Smarriti SEO page */}
+              <li>
+                <Link
+                  href={safePath(lang, "/pacchi-smarriti")}
+                  prefetch={false}
+                  className="footer-link"
+                >
+                  {L.lostParcels}
                 </Link>
               </li>
 

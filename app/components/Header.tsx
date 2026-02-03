@@ -28,6 +28,10 @@ type Labels = {
   navAbout: string;
   navEvents: string;
   navUgc: string;
+
+  // ✅ NEW: Pacchi smarriti
+  navLostParcels: string;
+
   ariaInstagram: string;
   ariaTikTokDesktop: string;
   ariaTikTokMobile: string;
@@ -41,6 +45,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navAbout: "Chi siamo",
     navEvents: "Eventi Pop-Up",
     navUgc: "Unboxing Contest",
+    navLostParcels: "Pacchi Smarriti",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -52,6 +57,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navAbout: "About us",
     navEvents: "Pop-up events",
     navUgc: "Unboxing contest",
+    navLostParcels: "Lost Parcels",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -63,6 +69,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navAbout: "Quiénes somos",
     navEvents: "Eventos pop-up",
     navUgc: "Concurso unboxing",
+    navLostParcels: "Paquetes perdidos",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -74,6 +81,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navAbout: "À propos",
     navEvents: "Événements pop-up",
     navUgc: "Concours unboxing",
+    navLostParcels: "Colis perdus",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -85,6 +93,7 @@ const HEADER_LABELS: Record<Lang, Labels> = {
     navAbout: "Über uns",
     navEvents: "Pop-up-Events",
     navUgc: "Unboxing-Wettbewerb",
+    navLostParcels: "Verlorene Pakete",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -176,6 +185,16 @@ export default function Header({ lang = "it" as Lang }) {
             }`}
           >
             {labels.navHow}
+          </Link>
+
+          {/* ✅ NEW: Pacchi smarriti (SEO hub) */}
+          <Link
+            href={`/${currentLang}/pacchi-smarriti`}
+            className={`nav-link ${
+              isActive(`/${currentLang}/pacchi-smarriti`) ? "nav-link--active" : ""
+            }`}
+          >
+            {labels.navLostParcels}
           </Link>
 
           {/* ✅ UGC / Contest */}
@@ -356,7 +375,14 @@ export default function Header({ lang = "it" as Lang }) {
                   <stop offset="100%" stopColor="#4f5bd5" />
                 </linearGradient>
               </defs>
-              <rect x="2" y="2" width="20" height="20" rx="5" fill="url(#igGradientMobileHeader)" />
+              <rect
+                x="2"
+                y="2"
+                width="20"
+                height="20"
+                rx="5"
+                fill="url(#igGradientMobileHeader)"
+              />
               <path
                 d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 6.5A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5Z"
                 fill="#fff"
@@ -426,12 +452,22 @@ export default function Header({ lang = "it" as Lang }) {
             >
               {labels.navProducts}
             </Link>
+
             <Link
               href={`/${currentLang}/how-it-works`}
               className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
               onClick={() => setOpen(false)}
             >
               {labels.navHow}
+            </Link>
+
+            {/* ✅ NEW: Pacchi smarriti (mobile menu) */}
+            <Link
+              href={`/${currentLang}/pacchi-smarriti`}
+              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
+              onClick={() => setOpen(false)}
+            >
+              {labels.navLostParcels}
             </Link>
 
             {/* ✅ UGC / Contest */}
@@ -450,6 +486,7 @@ export default function Header({ lang = "it" as Lang }) {
             >
               {labels.navAbout}
             </Link>
+
             <Link
               href={`/${currentLang}/events`}
               className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
