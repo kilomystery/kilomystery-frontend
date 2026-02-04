@@ -1,18 +1,15 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 
 type Props = React.VideoHTMLAttributes<HTMLVideoElement> & {
   src: string;
   poster?: string;
-  className?: string;
+  className?: string; // qui passa "media rounded-[12px] object-cover"
 };
 
 export default function LazyHoverVideo({ src, poster, className, ...rest }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
-
-  const [isReady, setIsReady] = useState(false);
 
   const canHover = useMemo(() => {
     if (typeof window === "undefined") return true;
@@ -28,12 +25,11 @@ export default function LazyHoverVideo({ src, poster, className, ...rest }: Prop
     const v = videoRef.current;
     if (!v) return;
     try {
-      // su iOS è importante che sia muted + playsInline
       v.muted = true;
       v.playsInline = true;
       await v.play();
     } catch {
-      // se blocca, non facciamo nulla (su mobile spesso serve interazione)
+      // su mobile spesso serve interazione: ok
     }
   }
 
@@ -47,72 +43,61 @@ export default function LazyHoverVideo({ src, poster, className, ...rest }: Prop
   }
 
   // ✅ Desktop hover
-  function onEnter() {
+  const onEnter = () => {
     if (prefersReduced) return;
     safePlay();
-  }
-  function onLeave() {
+  };
+  const onLeave = () => {
     if (prefersReduced) return;
     safePause();
-  }
+  };
 
-  // ✅ Mobile: tap / touch (non esiste hover)
-  function onPointerDown() {
+  // ✅ Mobile tap (hover non esiste)
+  const onPointerDown = () => {
     if (prefersReduced) return;
     if (!canHover) safePlay();
-  }
+  };
 
-  // ✅ Mobile: autoplay quando entra in viewport (muted+inline)
+  // ✅ Mobile: autoplay quando entra in viewport (solo mobile)
   useEffect(() => {
-    if (canHover) return; // desktop già gestito con hover
+    if (canHover) return;
     if (prefersReduced) return;
 
-    const el = wrapRef.current;
-    if (!el) return;
+    const v = videoRef.current;
+    if (!v) return;
 
     const io = new IntersectionObserver(
       (entries) => {
         const e = entries[0];
         if (!e) return;
-        if (e.isIntersecting && e.intersectionRatio >= 0.5) {
-          safePlay();
-        } else {
-          safePause();
-        }
+        if (e.isIntersecting && e.intersectionRatio >= 0.5) safePlay();
+        else safePause();
       },
       { threshold: [0, 0.5, 1] }
     );
 
-    io.observe(el);
+    io.observe(v);
     return () => io.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canHover, prefersReduced]);
 
   return (
-    <div
-      ref={wrapRef}
+    <video
+      ref={videoRef}
+      className={className}
+      src={src}
+      poster={poster}
+      preload="none"
+      muted
+      playsInline
+      loop
+      controls={false}
+      // attributo utile per alcuni Safari
+      {...({ "webkit-playsinline": "true" } as any)}
       onMouseEnter={canHover ? onEnter : undefined}
       onMouseLeave={canHover ? onLeave : undefined}
       onPointerDown={onPointerDown}
-      className="h-full w-full"
-    >
-      <video
-        ref={videoRef}
-        className={className}
-        src={src}
-        poster={poster}
-        preload="none"
-        muted
-        playsInline
-        loop
-        // 👇 attributo extra utile per alcuni Safari/iOS
-        {...({ "webkit-playsinline": "true" } as any)}
-        // appena pronto, segna ready (facoltativo)
-        onCanPlay={() => setIsReady(true)}
-        // se vuoi: evita controlli
-        controls={false}
-        {...rest}
-      />
-    </div>
+      {...rest}
+    />
   );
 }
