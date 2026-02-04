@@ -11,6 +11,7 @@ import { Lang, normalizeLang } from "@/i18n/lang";
 import SectionInsideBox from "../../components/SectionInsideBox";
 import { WHEEL_IMAGE } from "@/lib/staticImages";
 import LazyHoverVideo from "../../components/LazyHoverVideo";
+import { useImageFallback } from "@/lib/useImageFallback";
 
 // ✅ GA4 helpers
 import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
@@ -748,6 +749,10 @@ export default function ProductsPage({
   const lang: Lang = normalizeLang(params?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
+  const { src: wheelSrc, handleError: handleWheelError } = useImageFallback(
+    WHEEL_IMAGE.webp,
+    WHEEL_IMAGE.png
+  );
 
   // ✅ GA4: view_item_list una volta (anti doppioni)
   const listTrackedRef = useRef<string>("");
@@ -1002,18 +1007,15 @@ export default function ProductsPage({
 
         <section className="card flex flex-col md:flex-row items-center gap-5">
           <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
-            <picture>
-              <source srcSet={WHEEL_IMAGE.webp} type="image/webp" />
-              <source srcSet={WHEEL_IMAGE.png} type="image/png" />
-              <img
-                src={WHEEL_IMAGE.png}
-                alt={t.wheelTitle}
-                width={500}
-                height={250}
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
+            <Image
+              src={wheelSrc}
+              alt={t.wheelTitle}
+              width={500}
+              height={250}
+              loading="lazy"
+              sizes="(min-width: 768px) 500px, 100vw"
+              onError={handleWheelError}
+            />
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-extrabold">{t.wheelTitle}</h3>

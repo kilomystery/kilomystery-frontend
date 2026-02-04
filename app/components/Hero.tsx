@@ -3,15 +3,7 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useImageFallback } from '@/lib/useImageFallback'
-import { HERO_IMAGE } from '@/lib/staticImages'
-
 export default function Hero({ lang = 'it' }: { lang?: string }) {
-  const { src: heroSrc, handleError: handleHeroError } = useImageFallback(
-    HERO_IMAGE.webp,
-    HERO_IMAGE.png
-  )
-
   return (
     <section className="container pt-10 md:pt-14 pb-10">
       {/* LOGO */}
@@ -22,14 +14,13 @@ export default function Hero({ lang = 'it' }: { lang?: string }) {
         className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]"
       >
         <Image
-          src={heroSrc}
-          alt={HERO_IMAGE.alt}
+          src="/logo.png"
+          alt="KiloMystery"
           width={320}
-          height={320}
-          className="block h-auto w-full drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+          height={120}
+          className="mx-auto block h-auto w-full drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
           priority
           sizes="(min-width: 768px) 320px, 220px"
-          onError={handleHeroError}
         />
       </motion.div>
 
