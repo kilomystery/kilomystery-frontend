@@ -7,7 +7,12 @@ import { useCart } from "@/app/components/cart/CartProvider";
 import { normalizeLang, Lang } from "@/i18n/lang";
 import SpinWheel from "@/app/components/SpinWheel";
 
-import { gaViewCart, gaAddToCart, gaRemoveFromCart, gaBeginCheckout } from "@/app/lib/ga";
+import {
+  gaViewCart,
+  gaAddToCart,
+  gaRemoveFromCart,
+  gaBeginCheckout,
+} from "@/app/lib/ga";
 
 // === UPSSELL: COSTANTI CON ID REALI ===
 const UPSELL_STD_1KG_SHOPIFY_ID = "52089042567506";
@@ -19,6 +24,7 @@ const UPSELL_PRM_1KG_TOTAL = 16.9;
 const UPSELL_STD_WEIGHT_KG = 1;
 const UPSELL_PRM_WEIGHT_KG = 1;
 
+// LOCK ruota – vale finché non passiamo dalla pagina di success
 const WHEEL_LOCK_KEY = "km_wheel_can_play";
 
 type CartCopyKey =
@@ -175,6 +181,11 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
   },
 };
 
+function safeNumber(n: any, fallback = 0) {
+  const x = Number(n);
+  return Number.isFinite(x) ? x : fallback;
+}
+
 export default function CartPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
@@ -209,12 +220,13 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
   const totalEligibleKg = useMemo(() => {
     return mainItems.reduce((sum: number, item: any) => {
-      const w = Number(item.weightKg || 0);
-      const q = Number(item.qty || 0);
+      const w = safeNumber(item.weightKg, 0);
+      const q = Math.max(0, safeNumber(item.qty, 0));
       return sum + w * q;
     }, 0);
   }, [mainItems]);
 
+  // lock wheel
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -225,15 +237,17 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     }
   }, []);
 
+  // auto open wheel
   useEffect(() => {
     if (hasPlayedWheel) return;
     if (totalEligibleKg < 10) return;
-    if (items.length === 0) return;
+    if (!items?.length) return;
     setShowWheel(true);
-  }, [hasPlayedWheel, totalEligibleKg, items.length]);
+  }, [hasPlayedWheel, totalEligibleKg, items?.length]);
 
   const handleWheelFinish = (bonusKg: number) => {
-    setWheelBonusKg(bonusKg);
+    const safeBonus = Math.max(0, safeNumber(bonusKg, 0));
+    setWheelBonusKg(safeBonus);
     setHasPlayedWheel(true);
     setShowWheel(false);
 
@@ -254,7 +268,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   useEffect(() => {
     if (!items?.length) return;
 
-    // Firma stabile: id + qty + pricePerKg + weightKg
+    // firma stabile
     const sig = items
       .map((i: any) => `${i.id}:${i.qty}:${i.pricePerKg}:${i.weightKg}`)
       .sort()
@@ -270,21 +284,20 @@ export default function CartPage({ params }: { params: { lang: string } }) {
      Helpers: qty +/- e remove
   ========================= */
   function incQty(item: any) {
-    setQty(item.id, Number(item.qty || 0) + 1);
-    // GA: +1 pezzo
+    const next = safeNumber(item.qty, 0) + 1;
+    setQty(item.id, next);
     gaAddToCart(item, 1);
   }
 
   function decQty(item: any) {
-    const qty = Number(item.qty || 0);
+    const qty = safeNumber(item.qty, 0);
     if (qty <= 1) return;
     setQty(item.id, qty - 1);
-    // GA: -1 pezzo
     gaRemoveFromCart(item, 1);
   }
 
   function removeLine(item: any) {
-    const qty = Math.max(1, Number(item.qty || 1));
+    const qty = Math.max(1, safeNumber(item.qty, 1));
     removeItem(item.id);
     gaRemoveFromCart(item, qty);
   }
@@ -317,34 +330,80 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     gaAddToCart(item as any, 1);
   }
 
-  function goToCheckout() {
-    if (items.length === 0) return;
+  /* =========================
+     Checkout: versione robusta via API
+     - manda originQuery (utm/_gl/gclid)
+     - manda orderNote (bonus ruota)
+  ========================= */
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
-    // GA: begin_checkout (prima del redirect)
+  async function goToCheckout() {
+    if (!items?.length) return;
+    if (checkoutLoading) return;
+
+    setCheckoutLoading(true);
+
+    // GA begin_checkout
     gaBeginCheckout(items, {
-      // utile per debugging/segmentazioni
-      checkout_flow: "direct_cart_url",
+      checkout_flow: "storefront_cartcreate",
       locale: lang,
       wheel_bonus_kg: wheelBonusKg > 0 ? Number(wheelBonusKg.toFixed(2)) : 0,
     });
 
-    const base = "https://shop.kilomystery.com/cart/";
-    const cartPart = items
-      .filter((i: any) => i.shopifyId && i.qty)
-      .map((i: any) => `${i.shopifyId}:${i.qty}`)
-      .join(",");
+    // ✅ order note bonus ruota
+    const orderNote =
+      wheelBonusKg > 0 ? `🎁 Bonus ruota: ${wheelBonusKg.toFixed(2)} kg` : "";
 
-    const url = new URL(base + cartPart);
-    url.searchParams.set("locale", lang);
+    // ✅ query corrente per attribution passthrough
+    const originQuery =
+      typeof window !== "undefined" ? window.location.search : "";
 
-    if (wheelBonusKg > 0) {
-      url.searchParams.set(
-        "note",
-        `🎁 Bonus ruota: ${wheelBonusKg.toFixed(2)} kg`
-      );
+    // return url (opzionale, se ti serve)
+    const returnUrl =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/${lang}/reward`
+        : "";
+
+    try {
+      const totalKg = items.reduce((s: number, i: any) => {
+        const w = safeNumber(i.weightKg ?? i.kg, 0);
+        const q = Math.max(0, safeNumber(i.qty, 0));
+        return s + w * q;
+      }, 0);
+
+      const res = await fetch("/api/checkout/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items,
+          totalKg,
+          lang,
+          returnUrl,
+          originQuery,
+          orderNote, // ✅ IMPORTANTISSIMO
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data?.url) {
+        // 👇 opzionale: aggiungo anche note in URL (compatibilità)
+        // ma la vera “nota” ce l’hai già come cart attribute orderNote
+        const u = new URL(data.url);
+        if (orderNote) u.searchParams.set("note", orderNote);
+
+        window.location.href = u.toString();
+        return;
+      }
+
+      console.error("Checkout create failed", data);
+      alert("Errore avvio checkout");
+      setCheckoutLoading(false);
+    } catch (e) {
+      console.error("Checkout error", e);
+      alert("Errore avvio checkout");
+      setCheckoutLoading(false);
     }
-
-    window.location.href = url.toString();
   }
 
   return (
@@ -358,6 +417,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
           <p className="text-white/70">{t.empty}</p>
         ) : (
           <>
+            {/* Banner ruota */}
             {totalEligibleKg >= 10 && (
               <section className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
@@ -380,6 +440,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </section>
             )}
 
+            {/* Lista items */}
             <div className="space-y-4">
               {items.map((item: any) => {
                 const pricePerKg =
@@ -389,8 +450,8 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                     ? item.price / item.weightKg
                     : 0;
 
-                const weightKg = Number(item.weightKg || 0);
-                const qty = Number(item.qty || 0);
+                const weightKg = safeNumber(item.weightKg, 0);
+                const qty = Math.max(1, safeNumber(item.qty, 1));
 
                 return (
                   <div
@@ -438,17 +499,11 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                           <span className="px-3 py-1 text-white/60">
                             {t.qtyLabel}
                           </span>
-                          <button
-                            className="px-3 py-1"
-                            onClick={() => decQty(item)}
-                          >
+                          <button className="px-3 py-1" onClick={() => decQty(item)}>
                             −
                           </button>
                           <span className="px-3 font-semibold">{qty}</span>
-                          <button
-                            className="px-3 py-1"
-                            onClick={() => incQty(item)}
-                          >
+                          <button className="px-3 py-1" onClick={() => incQty(item)}>
                             +
                           </button>
                         </div>
@@ -466,6 +521,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               })}
             </div>
 
+            {/* Upsell */}
             {(showStdUpsell || showPrmUpsell) && (
               <section className="mt-4 space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
                 <h2 className="text-xs font-bold uppercase tracking-[.15em] text-emerald-300">
@@ -529,6 +585,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </section>
             )}
 
+            {/* Totale */}
             <div className="border-t border-white/10 pt-4 flex justify-between items-center gap-3">
               <div className="flex flex-col text-xs text-white/60">
                 <span>{t.total}</span>
@@ -543,13 +600,19 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </div>
             </div>
 
-            <button className="btn btn-brand px-6 py-3" onClick={goToCheckout}>
-              {t.goCheckout}
+            {/* CTA Checkout */}
+            <button
+              className="btn btn-brand px-6 py-3"
+              onClick={goToCheckout}
+              disabled={checkoutLoading}
+            >
+              {checkoutLoading ? "Redirect…" : t.goCheckout}
             </button>
           </>
         )}
       </main>
 
+      {/* Modale ruota */}
       {showWheel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-3 py-6">
           <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/15 bg-[#020617] shadow-[0_24px_80px_rgba(0,0,0,0.85)]">
