@@ -9,6 +9,14 @@ import CartProviderRoot from "./CartProviderRoot";
 import { cookies, headers } from "next/headers";
 import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
 
+import { Inter } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
 const GA_ID = "G-YEY91KKVR2";
 
 const SITE_URL = (
@@ -88,30 +96,21 @@ export default async function RootLayout({
 
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
-      <body>
+      <body className={`${inter.className} antialiased`}>
         {/* =========================
-            GA INIT + CONSENT (Consent Mode)
+            GA INIT + CONSENT (Consent Mode) — MINIMAL
+            (deve stare beforeInteractive per non settare cookie prima del consenso)
         ========================= */}
-        <Script id="ga-init-consent" strategy="beforeInteractive">
+        <Script id="ga-consent-default" strategy="beforeInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             window.gtag = gtag;
 
-            function getCookie(name){
-              var match = document.cookie
-                .split('; ')
-                .find(function(r){
-                  return r.indexOf(name + '=') === 0;
-                });
-
-              return match
-                ? decodeURIComponent(match.split('=')[1] || '')
-                : '';
-            }
-
-            var consent = getCookie('km_cookie_consent');
-            var granted = (consent === 'accept');
+            // Legge km_cookie_consent=accept|reject
+            var m = document.cookie.match(/(?:^|;\\s*)km_cookie_consent=([^;]+)/);
+            var consent = m ? decodeURIComponent(m[1]) : "";
+            var granted = consent === "accept";
 
             gtag('consent','default',{
               analytics_storage: granted ? 'granted' : 'denied',
@@ -127,7 +126,7 @@ export default async function RootLayout({
         </Script>
 
         {/* =========================
-            Load gtag.js
+            Load gtag.js (non blocca LCP)
         ========================= */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
@@ -140,11 +139,8 @@ export default async function RootLayout({
         <Script id="ga-config" strategy="afterInteractive">
           {`
             gtag('js', new Date());
-
             gtag('config','${GA_ID}',{
               send_page_view: true,
-
-              // Cross-domain tracking
               linker:{
                 domains:[
                   'www.kilomystery.com',
@@ -165,7 +161,7 @@ export default async function RootLayout({
           {children}
           <CookieBanner />
 
-          {/* ✅ IMPORTANTISSIMO: il modal NON deve influenzare LCP */}
+          {/* ✅ Modal ritardato: non deve influenzare LCP */}
           <NewsletterModalDelayed />
         </CartProviderRoot>
       </body>

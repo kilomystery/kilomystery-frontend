@@ -1,123 +1,89 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  VideoHTMLAttributes,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type LazyHoverVideoProps = VideoHTMLAttributes<HTMLVideoElement> & {
+type Props = React.VideoHTMLAttributes<HTMLVideoElement> & {
   src: string;
-  poster: string;
+  poster?: string;
+  className?: string;
 };
 
 export default function LazyHoverVideo({
   src,
   poster,
-  preload = "none",
   className,
-  onMouseEnter,
-  onMouseLeave,
-  muted = true,
-  loop = true,
-  playsInline = true,
   ...rest
-}: LazyHoverVideoProps) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-  const [shouldLoad, setShouldLoad] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(false);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+}: Props) {
+  const ref = useRef<HTMLVideoElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    const reduceQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const pointerQuery = window.matchMedia("(pointer: fine)");
-
-    const handleReduce = (event: MediaQueryListEvent | MediaQueryList) => {
-      setPrefersReducedMotion(event.matches);
-    };
-    const handlePointer = (event: MediaQueryListEvent | MediaQueryList) => {
-      setIsDesktop(event.matches);
-    };
-
-    handleReduce(reduceQuery);
-    handlePointer(pointerQuery);
-
-    reduceQuery.addEventListener("change", handleReduce);
-    pointerQuery.addEventListener("change", handlePointer);
-
-    return () => {
-      reduceQuery.removeEventListener("change", handleReduce);
-      pointerQuery.removeEventListener("change", handlePointer);
-    };
+  const isCoarsePointer = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia?.("(pointer: coarse)")?.matches ?? false;
   }, []);
 
-  useEffect(() => {
-    if (isDesktop) return;
-    const el = videoRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setShouldLoad(true);
-            if (!prefersReducedMotion) {
-              requestAnimationFrame(() => {
-                el.play().catch(() => {});
-              });
-            }
-          } else {
-            el.pause();
-          }
-        });
-      },
-      { root: null, rootMargin: "200px 0px", threshold: 0.1 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isDesktop, prefersReducedMotion]);
-
-  const handleDesktopEnter = useCallback(() => {
-    if (!isDesktop) return;
-    const el = videoRef.current;
-    if (!el) return;
-
-    setShouldLoad(true);
-    if (!prefersReducedMotion) {
-      el.play().catch(() => {});
+  async function play() {
+    const v = ref.current;
+    if (!v) return;
+    try {
+      await v.play();
+      setIsPlaying(true);
+    } catch {
+      // su iOS può fallire se non è muted/playsInline
+      setIsPlaying(false);
     }
-  }, [isDesktop, prefersReducedMotion]);
+  }
 
-  const handleDesktopLeave = useCallback(() => {
-    if (!isDesktop) return;
-    videoRef.current?.pause();
-  }, [isDesktop]);
+  function pause() {
+    const v = ref.current;
+    if (!v) return;
+    v.pause();
+    setIsPlaying(false);
+  }
+
+  // Desktop: hover
+  function onEnter() {
+    if (isCoarsePointer) return;
+    play();
+  }
+  function onLeave() {
+    if (isCoarsePointer) return;
+    pause();
+  }
+
+  // Mobile: tap
+  function onTap() {
+    if (!isCoarsePointer) return;
+    if (isPlaying) pause();
+    else play();
+  }
+
+  // sicurezza: su mobile lascia sempre muted + playsInline
+  useEffect(() => {
+    const v = ref.current;
+    if (!v) return;
+    v.muted = true;
+    v.playsInline = true;
+    v.loop = true;
+    v.preload = "none";
+  }, []);
 
   return (
     <video
-      {...rest}
-      ref={videoRef}
+      ref={ref}
       className={className}
       poster={poster}
-      preload={preload}
-      playsInline={playsInline}
-      muted={muted}
-      loop={loop}
-      autoPlay={false}
-      src={shouldLoad ? src : undefined}
-      onMouseEnter={(event) => {
-        handleDesktopEnter();
-        onMouseEnter?.(event);
-      }}
-      onMouseLeave={(event) => {
-        handleDesktopLeave();
-        onMouseLeave?.(event);
-      }}
-    />
+      muted
+      playsInline
+      loop
+      preload="none"
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onClick={onTap}
+      onTouchStart={onTap}
+      {...rest}
+    >
+      <source src={src} type="video/mp4" />
+    </video>
   );
 }
