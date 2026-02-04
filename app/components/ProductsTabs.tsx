@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/app/components/cart/CartProvider";
+import LazyHoverVideo from "@/app/components/LazyHoverVideo";
 import { SHOPIFY_VARIANTS, Kg, Tier } from "@/app/config/shopifyProducts";
+import { WHEEL_IMAGE } from "@/lib/staticImages";
+import { useImageFallback } from "@/lib/useImageFallback";
 
 // ✅ GA4 helpers
 import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
-type TabTier = "std" | "prm"; // solo per i tab UI (Standard/Premium)
+type TabTier = "std" | "prm";
 
 const LABELS: Record<Lang, any> = {
   it: {
@@ -28,7 +32,6 @@ const LABELS: Record<Lang, any> = {
     badgeStd: "Perfetta per iniziare",
     badgePrm: "Per chi vuole il massimo",
 
-    // testi ruota
     wheelTitle: "Ruota della fortuna",
     wheelText:
       "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine.",
@@ -126,10 +129,6 @@ const LABELS: Record<Lang, any> = {
 
 const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
-/**
- * Prezzi REALI (Shopify) + Prezzo di confronto (compare-at)
- * NOTA: teniamo total, non perKg “teorico”, così €/kg resta sempre coerente al centesimo.
- */
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
     1: { total: 22.99, compareAt: 25.9 },
@@ -147,50 +146,16 @@ const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number
   },
 };
 
-/** CO₂ indicativa evitata per kg (stima), per lingua */
 const co2ByKg: Record<Lang, Record<Kg, string>> = {
-  it: {
-    1: "≈0,25 kg di CO₂ evitati",
-    2: "≈0,5 kg di CO₂ evitati",
-    3: "≈0,75 kg di CO₂ evitati",
-    5: "≈1,25 kg di CO₂ evitati",
-    10: "≈2,5 kg di CO₂ evitati",
-  },
-  en: {
-    1: "≈0.25 kg of CO₂ avoided",
-    2: "≈0.5 kg of CO₂ avoided",
-    3: "≈0.75 kg of CO₂ avoided",
-    5: "≈1.25 kg of CO₂ avoided",
-    10: "≈2.5 kg of CO₂ avoided",
-  },
-  es: {
-    1: "≈0,25 kg de CO₂ evitados",
-    2: "≈0,5 kg de CO₂ evitados",
-    3: "≈0,75 kg de CO₂ evitados",
-    5: "≈1,25 kg de CO₂ evitados",
-    10: "≈2,5 kg de CO₂ evitados",
-  },
-  fr: {
-    1: "≈0,25 kg de CO₂ évités",
-    2: "≈0,5 kg de CO₂ évités",
-    3: "≈0,75 kg de CO₂ évités",
-    5: "≈1,25 kg de CO₂ évités",
-    10: "≈2,5 kg de CO₂ évités",
-  },
-  de: {
-    1: "≈0,25 kg CO₂ eingespart",
-    2: "≈0,5 kg CO₂ eingespart",
-    3: "≈0,75 kg CO₂ eingespart",
-    5: "≈1,25 kg CO₂ eingespart",
-    10: "≈2,5 kg CO₂ eingespart",
-  },
+  it: { 1: "≈0,25 kg di CO₂ evitati", 2: "≈0,5 kg di CO₂ evitati", 3: "≈0,75 kg di CO₂ evitati", 5: "≈1,25 kg di CO₂ evitati", 10: "≈2,5 kg di CO₂ evitati" },
+  en: { 1: "≈0.25 kg of CO₂ avoided", 2: "≈0.5 kg of CO₂ avoided", 3: "≈0.75 kg of CO₂ avoided", 5: "≈1.25 kg of CO₂ avoided", 10: "≈2.5 kg of CO₂ avoided" },
+  es: { 1: "≈0,25 kg de CO₂ evitados", 2: "≈0,5 kg de CO₂ evitados", 3: "≈0,75 kg de CO₂ evitados", 5: "≈1,25 kg de CO₂ evitados", 10: "≈2,5 kg de CO₂ evitados" },
+  fr: { 1: "≈0,25 kg de CO₂ évités", 2: "≈0,5 kg de CO₂ évités", 3: "≈0,75 kg de CO₂ évités", 5: "≈1,25 kg de CO₂ évités", 10: "≈2,5 kg de CO₂ évités" },
+  de: { 1: "≈0,25 kg CO₂ eingespart", 2: "≈0,5 kg CO₂ eingespart", 3: "≈0,75 kg CO₂ eingespart", 5: "≈1,25 kg CO₂ eingespart", 10: "≈2,5 kg CO₂ eingespart" },
 };
 
 const euro = (n: number) =>
-  n.toLocaleString("it-IT", {
-    style: "currency",
-    currency: "EUR",
-  });
+  n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
 export default function ProductsTabs({ lang = "it" as Lang }) {
   const [tab, setTab] = useState<TabTier>("std");
@@ -203,8 +168,10 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
     : "it";
 
   const L = LABELS[safeLang];
-
-  // kind “umano” per UI
+  const { src: wheelSrc, handleError: handleWheelError } = useImageFallback(
+    WHEEL_IMAGE.webp,
+    WHEEL_IMAGE.png
+  );
   const currentKind: "Standard" | "Premium" = tab === "std" ? "Standard" : "Premium";
 
   // ✅ GA4: view_item_list una volta per tab+lingua (anti doppioni)
@@ -242,7 +209,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
     const cartItem = {
       id: `${kind}-${kg}`,
       title: `${kind} · ${kg} kg`,
-      tier: kind, // ✅ Standard/Premium (coerente col tuo CartProvider)
+      tier: kind,
       weightKg: kg,
       pricePerKg: perKg,
       qty: 1,
@@ -255,7 +222,6 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
   return (
     <section className="container py-10 space-y-6">
-      {/* Titolo sezione */}
       <div className="text-center max-w-2xl mx-auto">
         <h2 className="text-3xl md:text-4xl font-extrabold mb-2">
           <span className="bg-gradient-to-r from-[#7A20FF] via-emerald-300 to-[#20D27A] bg-clip-text text-transparent">
@@ -266,7 +232,6 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
         <p className="text-white/70 mt-2 text-sm md:text-base">{L.sectionSubtitle2}</p>
       </div>
 
-      {/* Tabs */}
       <div className="flex items-center justify-center gap-3">
         <button
           className={[
@@ -278,7 +243,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           onClick={() => setTab("std")}
           type="button"
         >
-          {L?.standard || "Standard"}
+          {L.standard}
         </button>
 
         <button
@@ -291,11 +256,10 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           onClick={() => setTab("prm")}
           type="button"
         >
-          {L?.premium || "Premium"}
+          {L.premium}
         </button>
       </div>
 
-      {/* Grid prodotti + card ruota */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {WEIGHTS.map((w) => {
           const kg = w as Kg;
@@ -305,6 +269,10 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const perKg = +(total / kg).toFixed(2);
 
           const src = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.mp4`;
+
+          // ✅ poster: immagine leggera per LCP (mettila in public)
+          const poster = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.jpg`;
+
           const co2Text = co2ByKg[safeLang][kg];
 
           return (
@@ -319,7 +287,6 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
               }
               className={`card ${isStd ? "card--standard" : "card--premium"}`}
             >
-              {/* badge */}
               <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
                 <span>{isStd ? L.badgeStd : L.badgePrm}</span>
                 <span className={`pill ${isStd ? "pill--std" : "pill--prm"}`}>
@@ -327,29 +294,23 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 </span>
               </div>
 
-              {/* video */}
               <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
                 <div className="ratio-16-9">
-                  <video
-                    className="media rounded-[12px] object-cover"
+                  <LazyHoverVideo
                     src={src}
-                    muted
-                    autoPlay
-                    loop
-                    playsInline
-                    preload="metadata"
+                    poster={poster}
+                    className="media rounded-[12px] object-cover"
+                    preload="none"
                   />
                 </div>
               </div>
 
-              {/* testo + prezzo */}
               <div className="mt-4 flex items-start justify-between gap-4">
                 <h3 className="product-title text-xl">
                   {isStd ? L.standard : L.premium} <span className="dot" /> {w} {L.kg}
                 </h3>
 
                 <div className="text-right space-y-1">
-                  {/* ✅ prezzo di confronto sbarrato */}
                   <div className="text-sm text-white/60 line-through">{euro(compareAt)}</div>
 
                   <div
@@ -361,7 +322,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   </div>
 
                   <div className="price-perkg">
-                    ({perKg.toFixed(2)} {L.perkg || "€/kg"})
+                    ({perKg.toFixed(2)} {L.perkg})
                   </div>
 
                   {co2Text && (
@@ -370,40 +331,41 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 </div>
               </div>
 
-              {/* bullets */}
               <ul className="bullets mt-3 space-y-1">
                 <li>{L.bullet1}</li>
                 <li>{L.bullet2}</li>
                 <li>{L.bullet3}</li>
-                <li>{co2Text}</li>
+                {co2Text ? <li>{co2Text}</li> : null}
               </ul>
 
-              {/* bottone */}
               <div className="mt-4">
                 <button
                   className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}
                   onClick={() => handleAddToCart(currentKind, kg, perKg)}
                   type="button"
                 >
-                  {L?.add || "Aggiungi al carrello"}
+                  {L.add}
                 </button>
               </div>
             </article>
           );
         })}
 
-        {/* 🔸 Card promo ruota – immagine quadrata e layout compatto */}
         <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4">
           <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">
             🎡 Bonus extra
           </p>
 
-          {/* immagine quadrata */}
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
-            <img
-              src="/wheel/wheel.svg"
+            <Image
+              src={wheelSrc}
               alt={L.wheelTitle}
-              className="w-full h-full object-contain"
+              width={128}
+              height={128}
+              className="h-full w-full object-contain"
+              loading="lazy"
+              sizes="(min-width: 768px) 128px, 112px"
+              onError={handleWheelError}
             />
           </div>
 

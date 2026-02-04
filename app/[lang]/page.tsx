@@ -493,7 +493,7 @@ export default async function HomePage({
           {/* LOGO */}
           <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
             <Image
-              src="/hero/hero.svg"
+              src="/public/logo.png"
               alt="KiloMistery"
               width={320}
               height={180}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
+import { HERO_IMAGE } from "@/lib/staticImages";
 
 export default function Newsletter() {
   const [email, setEmail] = useState("");
@@ -31,13 +31,18 @@ export default function Newsletter() {
   return (
     <div className="card max-w-md mx-auto">
       <div className="flex justify-center mb-3">
-        <Image
-          src="/hero/hero.svg"
-          alt="KiloMystery"
-          width={120}
-          height={40}
-          className="drop-shadow-[0_0_20px_rgba(124,58,237,0.3)]"
-        />
+        <picture className="drop-shadow-[0_0_20px_rgba(124,58,237,0.3)]">
+          <source srcSet={HERO_IMAGE.webp} type="image/webp" />
+          <source srcSet={HERO_IMAGE.png} type="image/png" />
+          <img
+            src={HERO_IMAGE.png}
+            alt={HERO_IMAGE.alt}
+            width={120}
+            height={40}
+            loading="lazy"
+            decoding="async"
+          />
+        </picture>
       </div>
 
       <h3 className="text-lg font-bold mb-1">Newsletter</h3>

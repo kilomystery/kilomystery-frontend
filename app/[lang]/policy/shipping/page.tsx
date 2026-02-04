@@ -1,8 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
-import Image from "next/image";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
+import { HERO_IMAGE } from "@/lib/staticImages";
 import type { Metadata } from "next";
 import { getPageMetadata } from "@/src/seo/meta";
 
@@ -339,13 +339,19 @@ export default async function ShippingPage({
         {/* HERO */}
         <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6">
           <div className="mx-auto mb-6 grid place-items-center">
-            <Image
-              src="/hero/hero.svg"
-              alt="KiloMystery"
-              width={320}
-              height={320}
-              className="w-[240px] h-[240px] object-contain drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
-            />
+            <picture className="w-[240px] h-[240px] object-contain drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]">
+              <source srcSet={HERO_IMAGE.webp} type="image/webp" />
+              <source srcSet={HERO_IMAGE.png} type="image/png" />
+              <img
+                src={HERO_IMAGE.png}
+                alt={HERO_IMAGE.alt}
+                width={320}
+                height={320}
+                className="w-full h-full object-contain"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </div>
           <h1 className="section-title text-center text-3xl md:text-4xl font-extrabold">
             <span className="brand-text">{t.heroTitle}</span>

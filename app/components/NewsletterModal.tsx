@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
+import { HERO_IMAGE } from "@/lib/staticImages";
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
 
@@ -139,13 +139,19 @@ export default function NewsletterModal({ lang = "it" as Lang }) {
         {/* LOGO */}
         <div className="flex flex-col items-center gap-3 mb-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/20 bg-black/70 overflow-hidden">
-            <Image
-              src="/hero/hero.svg" // 👈 uso lo stesso logo dell’hero che sappiamo esistere
-              alt="KiloMystery"
-              width={80}
-              height={80}
-              className="object-contain"
-            />
+            <picture className="flex h-full w-full items-center justify-center">
+              <source srcSet={HERO_IMAGE.webp} type="image/webp" />
+              <source srcSet={HERO_IMAGE.png} type="image/png" />
+              <img
+                src={HERO_IMAGE.png}
+                alt={HERO_IMAGE.alt}
+                width={80}
+                height={80}
+                className="object-contain"
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </div>
 
           <h2 className="text-xl md:text-2xl font-extrabold text-center">

@@ -2,13 +2,15 @@
 
 /* eslint-disable react/no-unescaped-entities */
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { useCart } from "../../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
 import SectionInsideBox from "../../components/SectionInsideBox";
+import { WHEEL_IMAGE } from "@/lib/staticImages";
+import LazyHoverVideo from "../../components/LazyHoverVideo";
 
 // ✅ GA4 helpers
 import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
@@ -17,11 +19,11 @@ type Kg = 1 | 2 | 3 | 5 | 10;
 
 const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
 const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
+const stdJ = (kg: Kg) => `/videos/packs/std-${kg}.jpg`;
+const prmJ = (kg: Kg) => `/videos/packs/prm-${kg}.jpg`;
 
 /* =========================================================
    ✅ PREZZI FRONTEND (REAL + COMPARE) — ALLINEATI A SHOPIFY
-   Standard: 1kg 22,90 (compare 25,90)
-   Premium : 1kg 26,90 (compare 29,90)
 ========================================================= */
 
 const PRICE_TABLE: Record<
@@ -107,6 +109,9 @@ type CopyKey =
 
 type CopyPerLang = Record<CopyKey, string>;
 
+/* =========================
+   COPY (identico al tuo)
+========================= */
 const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
   it: {
     heroTitleHighlight: "Pesa il mistero",
@@ -473,12 +478,14 @@ function PackCard({
   kind,
   kg,
   video,
+  poster,
   lang,
   t,
 }: {
   kind: "Standard" | "Premium";
   kg: Kg;
   video: string;
+  poster: string;
   lang: Lang;
   t: CopyPerLang;
 }) {
@@ -498,7 +505,7 @@ function PackCard({
       weightKg: kg,
       pricePerKg: +(total / kg).toFixed(2),
       qty: 1,
-      image: `/videos/packs/${isStd ? "std" : "prm"}-${kg}.mp4`,
+      image: video,
     };
 
     addItem(cartItem as any);
@@ -515,25 +522,18 @@ function PackCard({
     >
       <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
         <span>{badgeTextTop}</span>
-        <span className="pill pill--std">
+        <span className={`pill ${isStd ? "pill--std" : "pill--prm"}`}>
           {kg} kg · {isStd ? "Standard" : "Premium"}
         </span>
       </div>
 
-      <div
-        className={`media-wrap ${
-          isStd ? "media-wrap--std" : "media-wrap--prm"
-        }`}
-      >
+      <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
         <div className="ratio-16-9">
-          <video
+          <LazyHoverVideo
             className="media rounded-[12px] object-cover"
             src={video}
-            muted
-            autoPlay
-            loop
-            playsInline
-            preload="metadata"
+            poster={poster}
+            preload="none"
           />
         </div>
       </div>
@@ -627,14 +627,11 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
           <div className="relative flex flex-col md:flex-row gap-4 items-center md:items-stretch">
             <div className="w-full md:w-1/2">
               <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
-                <video
+                <LazyHoverVideo
                   src="/videos/packs/ExplorerBox.mp4"
+                  poster="/videos/packs/ExplorerBox.jpg"
                   className="w-full h-full object-cover"
-                  muted
-                  autoPlay
-                  loop
-                  playsInline
-                  preload="metadata"
+                  preload="none"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-xs text-white/80 flex items-center justify-between">
                   <span className="tracking-[.18em] uppercase text-emerald-200/90">
@@ -795,6 +792,7 @@ export default function ProductsPage({
   useEffect(() => {
     let destroyed = false;
     let anim: import("lottie-web").AnimationItem | null = null;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const prefersReduced =
       typeof window !== "undefined" &&
@@ -803,36 +801,41 @@ export default function ProductsPage({
 
     if (prefersReduced) return;
 
-    (async () => {
-      try {
-        const { default: lottie } = await import("lottie-web");
+    timer = setTimeout(() => {
+      (async () => {
+        try {
+          const { default: lottie } = await import("lottie-web");
 
-        const res = await fetch("/lottie/products-animation.json", {
-          cache: "no-store",
-        });
-        if (!res.ok) {
-          safeError("Lottie load error", `HTTP ${res.status}`);
-          return;
-        }
-        const data = await res.json();
-
-        if (!destroyed && animRef.current) {
-          anim = lottie.loadAnimation({
-            container: animRef.current,
-            renderer: "svg",
-            loop: true,
-            autoplay: true,
-            animationData: data,
+          const res = await fetch("/lottie/products-animation.json", {
+            cache: "force-cache",
           });
-          (animRef.current.style as any).willChange = "transform";
+          if (!res.ok) {
+            safeError("Lottie load error", `HTTP ${res.status}`);
+            return;
+          }
+          const data = await res.json();
+
+          if (!destroyed && animRef.current) {
+            anim = lottie.loadAnimation({
+              container: animRef.current,
+              renderer: "svg",
+              loop: true,
+              autoplay: true,
+              animationData: data,
+            });
+            (animRef.current.style as any).willChange = "transform";
+          }
+        } catch (e) {
+          safeError("Lottie load error", e);
         }
-      } catch (e) {
-        safeError("Lottie load error", e);
-      }
-    })();
+      })();
+    }, 2000);
 
     return () => {
       destroyed = true;
+      if (timer) {
+        clearTimeout(timer);
+      }
       try {
         anim?.destroy();
       } catch {}
@@ -842,46 +845,52 @@ export default function ProductsPage({
   const siteUrl =
     process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
-  const productJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name:
-      lang === "it"
-        ? "Mystery box al kg KiloMystery"
-        : lang === "en"
-        ? "KiloMystery mystery boxes by the kilo"
-        : lang === "es"
-        ? "Mystery box al kilo KiloMystery"
-        : lang === "fr"
-        ? "Mystery box au kilo KiloMystery"
-        : "Mystery Box zum Kilo-Preis KiloMystery",
-    brand: { "@type": "Brand", name: "KiloMystery" },
-    url: `${siteUrl}/${lang}/products`,
-    offers: {
-      "@type": "AggregateOffer",
-      priceCurrency: "EUR",
-      lowPrice: "20.15",
-      highPrice: "26.90",
-      availability: "https://schema.org/InStock",
-    },
-  };
+  const productJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name:
+        lang === "it"
+          ? "Mystery box al kg KiloMystery"
+          : lang === "en"
+          ? "KiloMystery mystery boxes by the kilo"
+          : lang === "es"
+          ? "Mystery box al kilo KiloMystery"
+          : lang === "fr"
+          ? "Mystery box au kilo KiloMystery"
+          : "Mystery Box zum Kilo-Preis KiloMystery",
+      brand: { "@type": "Brand", name: "KiloMystery" },
+      url: `${siteUrl}/${lang}/products`,
+      offers: {
+        "@type": "AggregateOffer",
+        priceCurrency: "EUR",
+        lowPrice: "20.15",
+        highPrice: "26.90",
+        availability: "https://schema.org/InStock",
+      },
+    }),
+    [lang, siteUrl]
+  );
 
-  const webPageJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    name:
-      lang === "it"
-        ? "Mystery Box e Mystery Box al Kg | KiloMystery"
-        : lang === "en"
-        ? "Mystery Boxes & Mystery Boxes by the Kilo | KiloMystery"
-        : lang === "es"
-        ? "Mystery Boxes y Mystery Box por Kilo | KiloMystery"
-        : lang === "fr"
-        ? "Mystery Boxes et Mystery Box au Kilo | KiloMystery"
-        : "Mystery Boxen & Mystery Box pro Kilo | KiloMystery",
-    url: `${siteUrl}/${lang}/products`,
-    isPartOf: { "@type": "WebSite", name: "KiloMystery", url: siteUrl },
-  };
+  const webPageJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name:
+        lang === "it"
+          ? "Mystery Box e Mystery Box al Kg | KiloMystery"
+          : lang === "en"
+          ? "Mystery Boxes & Mystery Boxes by the Kilo | KiloMystery"
+          : lang === "es"
+          ? "Mystery Boxes y Mystery Box por Kilo | KiloMystery"
+          : lang === "fr"
+          ? "Mystery Boxes et Mystery Box au Kilo | KiloMystery"
+          : "Mystery Boxen & Mystery Box pro Kilo | KiloMystery",
+      url: `${siteUrl}/${lang}/products`,
+      isPartOf: { "@type": "WebSite", name: "KiloMystery", url: siteUrl },
+    }),
+    [lang, siteUrl]
+  );
 
   return (
     <>
@@ -924,10 +933,16 @@ export default function ProductsPage({
             <p className="text-white/70">{t.heroSubtitle2}</p>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <a href={`/${lang}/mystery-box`} className="btn btn-brand px-5 py-2">
+              <a
+                href={`/${lang}/mystery-box`}
+                className="btn btn-brand px-5 py-2"
+              >
                 {t.seoCtaPrimary}
               </a>
-              <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
+              <a
+                href={`/${lang}/how-it-works`}
+                className="btn btn-ghost px-5 py-2"
+              >
                 {t.seoCtaSecondary}
               </a>
               <a href={`/${lang}/faq`} className="btn btn-ghost px-5 py-2">
@@ -969,10 +984,16 @@ export default function ProductsPage({
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <a href={`/${lang}/mystery-box`} className="btn btn-brand px-5 py-2">
+              <a
+                href={`/${lang}/mystery-box`}
+                className="btn btn-brand px-5 py-2"
+              >
                 {t.seoCtaPrimary}
               </a>
-              <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
+              <a
+                href={`/${lang}/how-it-works`}
+                className="btn btn-ghost px-5 py-2"
+              >
                 {t.seoCtaSecondary}
               </a>
             </div>
@@ -981,14 +1002,18 @@ export default function ProductsPage({
 
         <section className="card flex flex-col md:flex-row items-center gap-5">
           <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
-            <img
-              src="/wheel/wheel.svg"
-              alt={t.wheelTitle}
-              width={500}
-              height={250}
-              loading="lazy"
-              decoding="async"
-            />
+            <picture>
+              <source srcSet={WHEEL_IMAGE.webp} type="image/webp" />
+              <source srcSet={WHEEL_IMAGE.png} type="image/png" />
+              <img
+                src={WHEEL_IMAGE.png}
+                alt={t.wheelTitle}
+                width={500}
+                height={250}
+                loading="lazy"
+                decoding="async"
+              />
+            </picture>
           </div>
           <div className="flex-1">
             <h3 className="text-xl font-extrabold">{t.wheelTitle}</h3>
@@ -1006,8 +1031,12 @@ export default function ProductsPage({
 
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-silver-soft">Standard</h2>
-            <p className="text-xs text-white/60 max-w-md">{t.standardDescription}</p>
+            <h2 className="text-2xl font-extrabold text-silver-soft">
+              Standard
+            </h2>
+            <p className="text-xs text-white/60 max-w-md">
+              {t.standardDescription}
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -1017,6 +1046,7 @@ export default function ProductsPage({
                 kind="Standard"
                 kg={kg as Kg}
                 video={stdV(kg as Kg)}
+                poster={stdJ(kg as Kg)}
                 lang={lang}
                 t={t}
               />
@@ -1027,7 +1057,9 @@ export default function ProductsPage({
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-2xl font-extrabold text-gold-soft">Premium</h2>
-            <p className="text-xs text-white/60 max-w-md">{t.premiumDescription}</p>
+            <p className="text-xs text-white/60 max-w-md">
+              {t.premiumDescription}
+            </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -1037,6 +1069,7 @@ export default function ProductsPage({
                 kind="Premium"
                 kg={kg as Kg}
                 video={prmV(kg as Kg)}
+                poster={prmJ(kg as Kg)}
                 lang={lang}
                 t={t}
               />
@@ -1051,7 +1084,10 @@ export default function ProductsPage({
         <section id="policy" className="card">
           <h3 className="text-xl font-extrabold mb-2">{t.returnTitle}</h3>
           <p className="text-white/70 text-sm md:text-base">{t.returnText}</p>
-          <a href={`/${lang}/policy/returns`} className="btn btn-ghost mt-3 inline-flex">
+          <a
+            href={`/${lang}/policy/returns`}
+            className="btn btn-ghost mt-3 inline-flex"
+          >
             {t.returnCta}
           </a>
         </section>
