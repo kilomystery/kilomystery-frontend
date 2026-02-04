@@ -1,18 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/app/components/cart/CartProvider";
 import LazyHoverVideo from "@/app/components/LazyHoverVideo";
 import { SHOPIFY_VARIANTS, Kg, Tier } from "@/app/config/shopifyProducts";
-import { WHEEL_IMAGE } from "@/lib/staticImages";
-import { useImageFallback } from "@/lib/useImageFallback";
 
 // ✅ GA4 helpers
 import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
 type TabTier = "std" | "prm";
+
+/* =========================
+   LABELS
+========================= */
 
 const LABELS: Record<Lang, any> = {
   it: {
@@ -127,9 +129,16 @@ const LABELS: Record<Lang, any> = {
   },
 };
 
+/* =========================
+   DATA
+========================= */
+
 const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
-const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
+const PRICE_TABLE: Record<
+  TabTier,
+  Record<Kg, { total: number; compareAt: number }>
+> = {
   std: {
     1: { total: 22.99, compareAt: 25.9 },
     2: { total: 44.88, compareAt: 51.8 },
@@ -147,15 +156,49 @@ const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number
 };
 
 const co2ByKg: Record<Lang, Record<Kg, string>> = {
-  it: { 1: "≈0,25 kg di CO₂ evitati", 2: "≈0,5 kg di CO₂ evitati", 3: "≈0,75 kg di CO₂ evitati", 5: "≈1,25 kg di CO₂ evitati", 10: "≈2,5 kg di CO₂ evitati" },
-  en: { 1: "≈0.25 kg of CO₂ avoided", 2: "≈0.5 kg of CO₂ avoided", 3: "≈0.75 kg of CO₂ avoided", 5: "≈1.25 kg of CO₂ avoided", 10: "≈2.5 kg of CO₂ avoided" },
-  es: { 1: "≈0,25 kg de CO₂ evitados", 2: "≈0,5 kg de CO₂ evitados", 3: "≈0,75 kg de CO₂ evitados", 5: "≈1,25 kg de CO₂ evitados", 10: "≈2,5 kg de CO₂ evitados" },
-  fr: { 1: "≈0,25 kg de CO₂ évités", 2: "≈0,5 kg de CO₂ évités", 3: "≈0,75 kg de CO₂ évités", 5: "≈1,25 kg de CO₂ évités", 10: "≈2,5 kg de CO₂ évités" },
-  de: { 1: "≈0,25 kg CO₂ eingespart", 2: "≈0,5 kg CO₂ eingespart", 3: "≈0,75 kg CO₂ eingespart", 5: "≈1,25 kg CO₂ eingespart", 10: "≈2,5 kg CO₂ eingespart" },
+  it: {
+    1: "≈0,25 kg di CO₂ evitati",
+    2: "≈0,5 kg di CO₂ evitati",
+    3: "≈0,75 kg di CO₂ evitati",
+    5: "≈1,25 kg di CO₂ evitati",
+    10: "≈2,5 kg di CO₂ evitati",
+  },
+  en: {
+    1: "≈0.25 kg of CO₂ avoided",
+    2: "≈0.5 kg of CO₂ avoided",
+    3: "≈0.75 kg of CO₂ avoided",
+    5: "≈1.25 kg of CO₂ avoided",
+    10: "≈2.5 kg of CO₂ avoided",
+  },
+  es: {
+    1: "≈0,25 kg de CO₂ evitados",
+    2: "≈0,5 kg de CO₂ evitados",
+    3: "≈0,75 kg de CO₂ evitados",
+    5: "≈1,25 kg de CO₂ evitados",
+    10: "≈2,5 kg de CO₂ evitados",
+  },
+  fr: {
+    1: "≈0,25 kg de CO₂ évités",
+    2: "≈0,5 kg de CO₂ évités",
+    3: "≈0,75 kg de CO₂ évités",
+    5: "≈1,25 kg de CO₂ évités",
+    10: "≈2,5 kg de CO₂ évités",
+  },
+  de: {
+    1: "≈0,25 kg CO₂ eingespart",
+    2: "≈0,5 kg CO₂ eingespart",
+    3: "≈0,75 kg CO₂ eingespart",
+    5: "≈1,25 kg CO₂ eingespart",
+    10: "≈2,5 kg CO₂ eingespart",
+  },
 };
 
 const euro = (n: number) =>
   n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+
+/* =========================
+   COMPONENT
+========================= */
 
 export default function ProductsTabs({ lang = "it" as Lang }) {
   const [tab, setTab] = useState<TabTier>("std");
@@ -163,15 +206,13 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
   const supported = ["it", "en", "es", "fr", "de"] as const;
   const normalized = String(lang).toLowerCase();
-  const safeLang: Lang = (supported as readonly string[]).includes(normalized as any)
+  const safeLang: Lang = (supported as readonly string[]).includes(
+    normalized as any
+  )
     ? (normalized as Lang)
     : "it";
 
   const L = LABELS[safeLang];
-  const { src: wheelSrc, handleError: handleWheelError } = useImageFallback(
-    WHEEL_IMAGE.webp,
-    WHEEL_IMAGE.png
-  );
   const currentKind: "Standard" | "Premium" = tab === "std" ? "Standard" : "Premium";
 
   // ✅ GA4: view_item_list una volta per tab+lingua (anti doppioni)
@@ -269,10 +310,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const perKg = +(total / kg).toFixed(2);
 
           const src = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.mp4`;
-
-          // ✅ poster: immagine leggera per LCP (mettila in public)
           const poster = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.jpg`;
-
           const co2Text = co2ByKg[safeLang][kg];
 
           return (
@@ -314,16 +352,12 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   <div className="text-sm text-white/60 line-through">{euro(compareAt)}</div>
 
                   <div
-                    className={`price-figure ${
-                      isStd ? "price-figure--std" : "price-figure--prm"
-                    } text-3xl`}
+                    className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}
                   >
                     {euro(total)}
                   </div>
 
-                  <div className="price-perkg">
-                    ({perKg.toFixed(2)} {L.perkg})
-                  </div>
+                  <div className="price-perkg">({perKg.toFixed(2)} {L.perkg})</div>
 
                   {co2Text && (
                     <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>
@@ -335,7 +369,6 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 <li>{L.bullet1}</li>
                 <li>{L.bullet2}</li>
                 <li>{L.bullet3}</li>
-                {co2Text ? <li>{co2Text}</li> : null}
               </ul>
 
               <div className="mt-4">
@@ -351,6 +384,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           );
         })}
 
+        {/* BONUS CARD (wheel png) */}
         <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4">
           <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">
             🎡 Bonus extra
@@ -358,14 +392,13 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
             <Image
-              src={wheelSrc}
+              src="/wheel/wheel.png"
               alt={L.wheelTitle}
-              width={128}
-              height={128}
+              width={256}
+              height={256}
               className="h-full w-full object-contain"
               loading="lazy"
               sizes="(min-width: 768px) 128px, 112px"
-              onError={handleWheelError}
             />
           </div>
 

@@ -9,7 +9,6 @@ import ProductsTabs from "../components/ProductsTabs";
 import ContactForm from "../components/ContactForm";
 import SectionMarquee from "../components/SectionMarquee";
 
-
 type CopyKey =
   | "heroTitle"
   | "heroSubtitle"
@@ -135,8 +134,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Condividi l'esperienza, scopri cosa hanno trovato gli altri, scatta foto con la tua box e porta a casa un ricordo.",
 
     contactTitle: "Contattaci",
-    contactSubtitle:
-      "Domande su ordini, spedizioni o partnership? Scrivici:",
+    contactSubtitle: "Domande su ordini, spedizioni o partnership? Scrivici:",
   },
 
   en: {
@@ -223,12 +221,10 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     howTitle: "Cómo funciona KiloMystery",
     howCard1Title: "Elige peso y tipo",
     howCard1Subtitle: "Standard o Premium de 1 a 10 kg.",
-    howCard1Bullet1:
-      "Precios claros, sin sorpresas en el checkout",
+    howCard1Bullet1: "Precios claros, sin sorpresas en el checkout",
     howCard1Bullet2: "Etiqueta con ID de lote",
     howCard2Title: "Paga con seguridad",
-    howCard2Subtitle:
-      "Métodos seguros y resumen del pedido por email.",
+    howCard2Subtitle: "Métodos seguros y resumen del pedido por email.",
     howCard2Bullet1: "Confirmación inmediata",
     howCard2Bullet2: "Atención dedicada",
     howCard3Title: "Envío con seguimiento",
@@ -243,10 +239,8 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Así convertimos el desperdicio en juego, reduciendo el impacto ambiental ligado al desecho y a la producción de nueva mercancía, dando una segunda vida a lo que ya existe. 🌿",
     sustainBullet1:
       "Segunda vida para los paquetes: menos residuos que eliminar.",
-    sustainBullet2:
-      "CO₂ evitado frente a vertederos e incineración.",
-    sustainBullet3:
-      "Packaging esencial y reciclable siempre que sea posible.",
+    sustainBullet2: "CO₂ evitado frente a vertederos e incineración.",
+    sustainBullet3: "Packaging esencial y reciclable siempre que sea posible.",
     sustainBullet4:
       "Lotes trazables: siempre sabes de dónde viene lo que desempaquetas.",
 
@@ -263,8 +257,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     faq4Q: "¿Los productos son nuevos o usados?",
     faq4A:
       "Los productos pueden ser nuevos, usados o proceder de devoluciones y stock parado. Pueden mostrar signos de uso o embalaje imperfecto, pero se seleccionan para garantizar una experiencia de unboxing interesante.",
-    faq5Q:
-      "¿El valor de la caja es siempre superior al precio?",
+    faq5Q: "¿El valor de la caja es siempre superior al precio?",
     faq5A:
       "La experiencia está pensada como una mystery: el valor percibido puede variar de una caja a otra. De media buscamos ofrecer una buena relación calidad/precio, pero no podemos garantizar un valor mínimo fijo para cada caja.",
     faq6Q: "¿Puedo recoger la caja en un evento pop-up?",
@@ -276,18 +269,15 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Ven a conocernos en persona: eventos pop-up, ferias y corners temporales donde puedes ver las mystery box, hablar con el equipo y vivir el ambiente de la comunidad KiloMystery. ✨",
     eventsCta: "Ver calendario de eventos",
     eventsCard1Kicker: "Pop-ups en la ciudad",
-    eventsCard1Title:
-      "Paradas en las principales ciudades italianas 🇮🇹",
+    eventsCard1Title: "Paradas en las principales ciudades italianas 🇮🇹",
     eventsCard1Text:
       "Descubre cuándo estaremos cerca de ti, acércate al corner y conoce de cerca el mundo KiloMystery.",
     eventsCard2Kicker: "Zona sostenibilidad",
-    eventsCard2Title:
-      "Descubre cómo recuperamos paquetes y stock ♻️",
+    eventsCard2Title: "Descubre cómo recuperamos paquetes y stock ♻️",
     eventsCard2Text:
       "Un espacio dedicado para explicarte cómo funcionan los lotes, por qué evitamos el desperdicio y cómo funciona la economía circular detrás de las cajas.",
     eventsCard3Kicker: "Comunidad",
-    eventsCard3Title:
-      "Conoce a otros fans de las mystery box 🤝",
+    eventsCard3Title: "Conoce a otros fans de las mystery box 🤝",
     eventsCard3Text:
       "Comparte la experiencia, descubre qué han encontrado los demás, haz fotos con tu caja y llévate un recuerdo a casa.",
 
@@ -315,8 +305,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     howCard2Bullet1: "Confirmation immédiate",
     howCard2Bullet2: "Support dédié",
     howCard3Title: "Expédition suivie",
-    howCard3Subtitle:
-      "Numéro de suivi en général sous 24–72 h.",
+    howCard3Subtitle: "Numéro de suivi en général sous 24–72 h.",
     howCard3Bullet1: "Emballage sécurisé",
     howCard3Bullet2: "La surprise commence à l’ouverture",
 
@@ -361,18 +350,15 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Viens nous voir en vrai : événements pop-up, salons et corners temporaires où tu peux découvrir les mystery box, parler avec l’équipe et vivre l’ambiance de la communauté KiloMystery. ✨",
     eventsCta: "Voir le calendrier des événements",
     eventsCard1Kicker: "Pop-up en ville",
-    eventsCard1Title:
-      "Étapes dans les principales villes italiennes 🇮🇹",
+    eventsCard1Title: "Étapes dans les principales villes italiennes 🇮🇹",
     eventsCard1Text:
       "Découvre quand nous serons près de chez toi, passe au corner et découvre l’univers KiloMystery de près.",
     eventsCard2Kicker: "Espace durabilité",
-    eventsCard2Title:
-      "Découvre comment nous récupérons colis et stocks ♻️",
+    eventsCard2Title: "Découvre comment nous récupérons colis et stocks ♻️",
     eventsCard2Text:
       "Un espace dédié pour t’expliquer le fonctionnement des lots, pourquoi nous évitons le gaspillage et comment fonctionne l’économie circulaire derrière les box.",
     eventsCard3Kicker: "Communauté",
-    eventsCard3Title:
-      "Rencontre d’autres fans de mystery box 🤝",
+    eventsCard3Title: "Rencontre d’autres fans de mystery box 🤝",
     eventsCard3Text:
       "Partage ton expérience, découvre ce que les autres ont trouvé, prends des photos avec ta box et repars avec un souvenir.",
 
@@ -444,8 +430,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Komm vorbei und triff uns live: Pop-up-Events, Messen und temporäre Corner, bei denen du die Mystery Boxen sehen, mit dem Team sprechen und die KiloMystery-Community erleben kannst. ✨",
     eventsCta: "Eventkalender ansehen",
     eventsCard1Kicker: "Pop-ups in der Stadt",
-    eventsCard1Title:
-      "Stops in den wichtigsten italienischen Städten 🇮🇹",
+    eventsCard1Title: "Stops in den wichtigsten italienischen Städten 🇮🇹",
     eventsCard1Text:
       "Finde heraus, wann wir in deiner Nähe sind, besuche unseren Corner und entdecke die Welt von KiloMystery aus nächster Nähe.",
     eventsCard2Kicker: "Nachhaltigkeitsbereich",
@@ -493,8 +478,8 @@ export default async function HomePage({
           {/* LOGO */}
           <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
             <Image
-              src="/public/logo.png"
-              alt="KiloMistery"
+              src="/logo.png"
+              alt="KiloMystery"
               width={320}
               height={180}
               className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
@@ -687,9 +672,7 @@ export default async function HomePage({
                 {t.eventsCard1Kicker}
               </p>
               <p className="font-semibold">{t.eventsCard1Title}</p>
-              <p className="text-xs text-white/60 mt-1">
-                {t.eventsCard1Text}
-              </p>
+              <p className="text-xs text-white/60 mt-1">{t.eventsCard1Text}</p>
             </div>
 
             <div className="card">
@@ -697,9 +680,7 @@ export default async function HomePage({
                 {t.eventsCard2Kicker}
               </p>
               <p className="font-semibold">{t.eventsCard2Title}</p>
-              <p className="text-xs text-white/60 mt-1">
-                {t.eventsCard2Text}
-              </p>
+              <p className="text-xs text-white/60 mt-1">{t.eventsCard2Text}</p>
             </div>
 
             <div className="card">
@@ -707,9 +688,7 @@ export default async function HomePage({
                 {t.eventsCard3Kicker}
               </p>
               <p className="font-semibold">{t.eventsCard3Title}</p>
-              <p className="text-xs text-white/60 mt-1">
-                {t.eventsCard3Text}
-              </p>
+              <p className="text-xs text-white/60 mt-1">{t.eventsCard3Text}</p>
             </div>
           </div>
         </section>
