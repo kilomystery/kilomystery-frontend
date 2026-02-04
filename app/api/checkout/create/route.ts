@@ -13,7 +13,6 @@ const LOCALE_MAP: Record<string, string> = {
   de: "de",
 };
 
-// ✅ parametri marketing che vogliamo propagare AL CHECKOUT (NON ai cartAttributes)
 const PASS_THROUGH_KEYS = [
   "_gl",
   "gclid",
@@ -37,10 +36,13 @@ type IncomingItem = {
   tier?: string;
 };
 
-function clampStr(v: string, max = 220) {
-  // Shopify attributes/URL safe-ish: non vogliamo roba enorme
+function clampStr(v: string, max = 500) {
   const s = String(v ?? "");
   return s.length > max ? s.slice(0, max) : s;
+}
+
+function jsonError(status: number, payload: any) {
+  return NextResponse.json(payload, { status });
 }
 
 export async function POST(req: NextRequest) {
@@ -54,33 +56,22 @@ export async function POST(req: NextRequest) {
     const bodyLang = typeof body?.lang === "string" ? body.lang : "it";
     const shopifyLocale = LOCALE_MAP[bodyLang] ?? "it";
 
-    const originQuery =
-      typeof body?.originQuery === "string" ? body.originQuery : "";
+    const originQuery = typeof body?.originQuery === "string" ? body.originQuery : "";
+    const orderNote = typeof body?.orderNote === "string" ? body.orderNote : "";
 
-    // ✅ Nota ruota (opzionale)
-    const orderNote =
-      typeof body?.orderNote === "string" ? body.orderNote : "";
-
-    // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
-      return NextResponse.json(
-        {
-          error: "Missing Shopify configuration",
-          code: "NO_ENV",
-          details: {
-            hasDomain: !!STOREFRONT_DOMAIN,
-            hasToken: !!STOREFRONT_TOKEN,
-          },
+      return jsonError(500, {
+        error: "Missing Shopify configuration",
+        code: "NO_ENV",
+        details: {
+          hasDomain: !!STOREFRONT_DOMAIN,
+          hasToken: !!STOREFRONT_TOKEN,
         },
-        { status: 500 }
-      );
+      });
     }
 
     if (!Array.isArray(itemsRaw) || itemsRaw.length === 0) {
-      return NextResponse.json(
-        { error: "Missing items", code: "NO_ITEMS" },
-        { status: 400 }
-      );
+      return jsonError(400, { error: "Missing items", code: "NO_ITEMS" });
     }
 
     // ✅ normalizzazione + validazione items
@@ -96,16 +87,13 @@ export async function POST(req: NextRequest) {
       .filter((i: IncomingItem) => !!i.shopifyId && Number(i.qty || 0) >= 1);
 
     if (items.length === 0) {
-      return NextResponse.json(
-        {
-          error: "All items invalid (missing shopifyId/qty)",
-          code: "INVALID_ITEMS",
-        },
-        { status: 400 }
-      );
+      return jsonError(400, {
+        error: "All items invalid (missing shopifyId/qty)",
+        code: "INVALID_ITEMS",
+        debug: { itemsRaw },
+      });
     }
 
-    // 🧮 totale kg ricalcolato lato server
     const totalKg =
       typeof clientTotalKg === "number" && !Number.isNaN(clientTotalKg)
         ? clientTotalKg
@@ -115,7 +103,6 @@ export async function POST(req: NextRequest) {
             return sum + w * q;
           }, 0);
 
-    // 🧱 linee carrello per Storefront API
     const lines = items.map((i: IncomingItem) => {
       const qty = Number(i.qty ?? 1) || 1;
       const weight = Number(i.weightKg ?? 0) || 0;
@@ -133,21 +120,15 @@ export async function POST(req: NextRequest) {
       return line;
     });
 
-    // ✅ cartAttributes: SOLO roba corta e utile (NO _gl/utm qui)
+    // ✅ cart attributes LEGGERI (non mettiamo _gl/utm qui)
     const cartAttributes: { key: string; value: string }[] = [
       { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
       { key: "orderedKg", value: String(totalKg) },
       { key: "locale", value: shopifyLocale },
     ];
 
-    if (returnUrl) {
-      cartAttributes.push({ key: "returnUrl", value: clampStr(String(returnUrl), 220) });
-    }
-
-    // ✅ salva nota ruota in cart attributes (corta)
-    if (orderNote) {
-      cartAttributes.push({ key: "orderNote", value: clampStr(orderNote, 220) });
-    }
+    if (returnUrl) cartAttributes.push({ key: "returnUrl", value: clampStr(String(returnUrl), 220) });
+    if (orderNote) cartAttributes.push({ key: "orderNote", value: clampStr(orderNote, 220) });
 
     const query = `
       mutation CartCreate($input: CartInput!) {
@@ -160,75 +141,70 @@ export async function POST(req: NextRequest) {
 
     const variables = { input: { lines, attributes: cartAttributes } };
 
-    const response = await fetch(
-      `https://${STOREFRONT_DOMAIN}/api/${API_VERSION}/graphql.json`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN!,
-        },
-        body: JSON.stringify({ query, variables }),
-      }
-    );
+    const response = await fetch(`https://${STOREFRONT_DOMAIN}/api/${API_VERSION}/graphql.json`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Storefront-Access-Token": STOREFRONT_TOKEN!,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
 
     const data = await response.json();
 
-    const graphqlErrors = data?.errors;
+    const graphqlErrors = data?.errors ?? [];
     const cart = data?.data?.cartCreate?.cart;
-    const userErrors = data?.data?.cartCreate?.userErrors;
+    const userErrors = data?.data?.cartCreate?.userErrors ?? [];
 
-    if (graphqlErrors?.length || userErrors?.length) {
-      return NextResponse.json(
-        {
-          error: "Checkout error",
-          code: "SHOPIFY_CARTCREATE_FAILED",
-          message: "Shopify non ha creato il checkout",
-          shopify: {
-            graphqlErrors: graphqlErrors ?? [],
-            userErrors: userErrors ?? [],
-          },
+    // ✅ DEBUG: in caso di failure ritorniamo TUTTO quello che serve
+    if (!response.ok || graphqlErrors.length || userErrors.length) {
+      return jsonError(500, {
+        error: "Checkout error",
+        code: "SHOPIFY_CARTCREATE_FAILED",
+        message: "Shopify cartCreate failed",
+        debug: {
+          httpStatus: response.status,
+          graphqlErrors,
+          userErrors,
+          // utile per capire se merchandiseId o altro è sbagliato
+          sent: { lines, cartAttributes, shopifyLocale, totalKg },
+          raw: data,
         },
-        { status: 500 }
-      );
+      });
     }
 
     if (!cart?.checkoutUrl) {
-      return NextResponse.json(
-        { error: "Checkout error", code: "NO_CHECKOUT_URL", message: "Missing checkoutUrl" },
-        { status: 500 }
-      );
+      return jsonError(500, {
+        error: "Checkout error",
+        code: "NO_CHECKOUT_URL",
+        message: "Missing checkoutUrl",
+        debug: { raw: data },
+      });
     }
 
-    // 🔗 checkoutUrl finale: locale + pass-through params + (tentativo) note
     const url = new URL(cart.checkoutUrl as string);
     url.searchParams.set("locale", shopifyLocale);
 
-    // ✅ pass-through marketing SOLO nell'URL (non rompe cartCreate)
+    // ✅ marketing params SOLO nel checkoutUrl
     if (originQuery) {
-      const qp = new URLSearchParams(
-        originQuery.startsWith("?") ? originQuery : `?${originQuery}`
-      );
+      const qp = new URLSearchParams(originQuery.startsWith("?") ? originQuery : `?${originQuery}`);
       for (const key of PASS_THROUGH_KEYS) {
         const v = qp.get(key as PassKey);
         if (v) url.searchParams.set(String(key), clampStr(v, 500));
       }
     }
 
-    // ✅ Nota ruota anche in URL come "note" (se Shopify la supporta sul checkoutUrl)
+    // ✅ nota ruota anche su URL (se Shopify la supporta)
     if (orderNote) {
       url.searchParams.set("note", clampStr(orderNote, 220));
     }
 
     return NextResponse.json({ url: url.toString() });
   } catch (err: any) {
-    return NextResponse.json(
-      {
-        error: "Internal server error",
-        code: "SERVER_ERROR",
-        message: err?.message || "Unknown error",
-      },
-      { status: 500 }
-    );
+    return jsonError(500, {
+      error: "Internal server error",
+      code: "SERVER_ERROR",
+      message: err?.message || "Unknown error",
+    });
   }
 }
