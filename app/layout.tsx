@@ -3,7 +3,7 @@ import Script from "next/script";
 import "./globals.css";
 
 import CookieBanner from "./components/CookieBanner";
-import NewsletterModal from "./components/NewsletterModal";
+import NewsletterModalDelayed from "./components/NewsletterModalDelayed";
 import CartProviderRoot from "./CartProviderRoot";
 
 import { cookies, headers } from "next/headers";
@@ -11,10 +11,9 @@ import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
 
 const GA_ID = "G-YEY91KKVR2";
 
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(
-  /\/$/,
-  ""
-);
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+).replace(/\/$/, "");
 
 /* =========================
    Metadata
@@ -61,8 +60,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "KiloMystery | Mystery Box",
-    description:
-      "Mystery Box e Mystery Box al kg (Standard e Premium).",
+    description: "Mystery Box e Mystery Box al kg (Standard e Premium).",
     images: [`${SITE_URL}/og.jpg`],
   },
 };
@@ -91,7 +89,6 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body>
-
         {/* =========================
             GA INIT + CONSENT
         ========================= */}
@@ -147,7 +144,7 @@ export default async function RootLayout({
             gtag('config','${GA_ID}',{
               linker:{
                 domains:[
-                'www.kilomystery.com',
+                  'www.kilomystery.com',
                   'kilomystery.com',
                   'shop.kilomystery.com',
                   'account.kilomystery.com'
@@ -163,9 +160,10 @@ export default async function RootLayout({
         <CartProviderRoot>
           {children}
           <CookieBanner />
-          <NewsletterModal />
-        </CartProviderRoot>
 
+          {/* ✅ IMPORTANTISSIMO: il modal NON deve influenzare LCP */}
+          <NewsletterModalDelayed />
+        </CartProviderRoot>
       </body>
     </html>
   );
