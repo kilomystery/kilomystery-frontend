@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useCart } from "@/app/components/cart/CartProvider";
+import { gaBeginCheckout } from "@/app/lib/ga";
 
 export default function CheckoutButton() {
   const { items } = useCart();
@@ -10,9 +11,14 @@ export default function CheckoutButton() {
   async function goCheckout() {
     if (!items.length) return;
 
+    // GA: begin_checkout prima di qualsiasi redirect
+    gaBeginCheckout(items, {
+      checkout_flow: "api_checkout_create",
+    });
+
     setLoading(true);
 
-    const totalKg = items.reduce((s, i) => s + i.weightKg * i.qty, 0);
+    const totalKg = items.reduce((s, i: any) => s + (Number(i.weightKg || 0) * Number(i.qty || 0)), 0);
 
     const returnUrl = `${window.location.origin}/it/reward`;
 
@@ -33,11 +39,7 @@ export default function CheckoutButton() {
   }
 
   return (
-    <button
-      onClick={goCheckout}
-      disabled={loading}
-      className="btn-brand w-full"
-    >
+    <button onClick={goCheckout} disabled={loading} className="btn-brand w-full">
       {loading ? "Redirect…" : "Procedi al Checkout"}
     </button>
   );

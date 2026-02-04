@@ -5,37 +5,53 @@ import { useEffect, useState } from "react";
 const SUPPORTED = ["it", "en", "es", "fr", "de"] as const;
 type Lang = (typeof SUPPORTED)[number];
 
-/**
- * Rileva la lingua corrente:
- * 1) localStorage
- * 2) path /it /en ecc
- * 3) fallback it
- */
+/* =========================
+   Lingua
+========================= */
 function getLang(): Lang {
   if (typeof window === "undefined") return "it";
 
-  // 1) Da localStorage
   const saved = localStorage.getItem("km_lang");
-  if (saved && SUPPORTED.includes(saved as Lang)) {
-    return saved as Lang;
-  }
+  if (saved && SUPPORTED.includes(saved as Lang)) return saved as Lang;
 
-  // 2) Dal path
   const pathLang = window.location.pathname.split("/")[1];
-  if (SUPPORTED.includes(pathLang as Lang)) {
-    return pathLang as Lang;
-  }
+  if (SUPPORTED.includes(pathLang as Lang)) return pathLang as Lang;
 
-  // 3) Default
   return "it";
 }
 
+/* =========================
+   Cookie helpers
+========================= */
+function setCookie(name: string, value: string, days = 180) {
+  if (typeof document === "undefined") return;
+
+  const maxAge = days * 24 * 60 * 60;
+
+  document.cookie = `${name}=${encodeURIComponent(
+    value
+  )}; Max-Age=${maxAge}; Path=/; Domain=.kilomystery.com; SameSite=Lax`;
+}
+
+function getCookie(name: string) {
+  if (typeof document === "undefined") return undefined;
+
+  const row = document.cookie
+    .split("; ")
+    .find((r) => r.startsWith(name + "="));
+
+  if (!row) return undefined;
+
+  return decodeURIComponent(row.split("=")[1] || "");
+}
+
+/* =========================
+   Component
+========================= */
 export default function CookieBanner() {
   const [open, setOpen] = useState(false);
 
-  /**
-   * Applica consenso a Google Consent Mode
-   */
+  /* Applica consenso a GA */
   function applyConsent(choice: "accept" | "reject") {
     if (typeof window === "undefined") return;
 
@@ -47,27 +63,31 @@ export default function CookieBanner() {
     gtag("consent", "update", {
       analytics_storage: granted ? "granted" : "denied",
       ad_storage: granted ? "granted" : "denied",
-
-      // Pronti per Google Ads futuri
       ad_user_data: granted ? "granted" : "denied",
       ad_personalization: granted ? "granted" : "denied",
+      functionality_storage: granted ? "granted" : "denied",
+      personalization_storage: granted ? "granted" : "denied",
+      security_storage: "granted",
     });
   }
 
+  /* Init */
   useEffect(() => {
-    const saved = localStorage.getItem("km-cookie-consent");
+    const savedCookie = getCookie("km_cookie_consent");
+    const savedLocal = localStorage.getItem("km-cookie-consent");
+    const saved = savedCookie || savedLocal;
 
     if (!saved) {
-      // Nessuna scelta → mostra banner
       setOpen(true);
     } else {
-      // Applica scelta precedente
       applyConsent(saved === "accept" ? "accept" : "reject");
     }
   }, []);
 
+  /* Click handler */
   function handle(choice: "accept" | "reject") {
     localStorage.setItem("km-cookie-consent", choice);
+    setCookie("km_cookie_consent", choice);
     applyConsent(choice);
     setOpen(false);
   }
@@ -81,8 +101,6 @@ export default function CookieBanner() {
     <div className="fixed inset-x-0 bottom-0 z-[100] px-4 pb-4">
       <div className="container">
         <div className="card flex flex-col md:flex-row md:items-center md:justify-between gap-3 md:gap-6 bg-[#121622]/95 backdrop-blur-md border-white/15">
-
-          {/* Testo */}
           <p className="text-sm md:text-base text-white/85">
             Usiamo cookie tecnici e, con il tuo consenso, cookie analitici per
             migliorare l’esperienza di navigazione.
@@ -95,7 +113,6 @@ export default function CookieBanner() {
             </a>
           </p>
 
-          {/* Pulsanti */}
           <div className="flex items-center gap-2 shrink-0">
             <button
               className="btn btn-ghost btn-sm"

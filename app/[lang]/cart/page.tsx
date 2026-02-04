@@ -1,27 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { useCart } from "@/app/components/cart/CartProvider";
 import { normalizeLang, Lang } from "@/i18n/lang";
 import SpinWheel from "@/app/components/SpinWheel";
 
-// === UPSSELL: COSTANTI CON ID REALI ===
+import { gaViewCart, gaAddToCart, gaRemoveFromCart, gaBeginCheckout } from "@/app/lib/ga";
 
-// Variante Shopify per "Extra 1kg Standard (Upsell)"
+// === UPSSELL: COSTANTI CON ID REALI ===
 const UPSELL_STD_1KG_SHOPIFY_ID = "52089042567506";
-// Variante Shopify per "Extra 1kg Premium (Upsell)"
 const UPSELL_PRM_1KG_SHOPIFY_ID = "52089042993490";
 
-// Prezzi TOTALI (devono coincidere con Shopify)
-const UPSELL_STD_1KG_TOTAL = 14.9; // 14,90 €
-const UPSELL_PRM_1KG_TOTAL = 16.9; // 16,90 €
+const UPSELL_STD_1KG_TOTAL = 14.9;
+const UPSELL_PRM_1KG_TOTAL = 16.9;
 
 const UPSELL_STD_WEIGHT_KG = 1;
 const UPSELL_PRM_WEIGHT_KG = 1;
 
-// LOCK ruota – vale finché non passiamo dalla pagina di success
 const WHEEL_LOCK_KEY = "km_wheel_can_play";
 
 type CartCopyKey =
@@ -178,11 +175,7 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
   },
 };
 
-export default function CartPage({
-  params,
-}: {
-  params: { lang: string };
-}) {
+export default function CartPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
@@ -193,7 +186,6 @@ export default function CartPage({
     [items]
   );
 
-  // Compatibilità: tier può arrivare come "Standard"/"Premium" oppure "standard"/"premium"
   const hasStdMain = mainItems.some(
     (i: any) => i.tier === "Standard" || i.tier === "standard"
   );
@@ -215,7 +207,6 @@ export default function CartPage({
   const [showWheel, setShowWheel] = useState(false);
   const [wheelBonusKg, setWheelBonusKg] = useState(0);
 
-  // kg totali eleggibili per la ruota (solo main items)
   const totalEligibleKg = useMemo(() => {
     return mainItems.reduce((sum: number, item: any) => {
       const w = Number(item.weightKg || 0);
@@ -224,27 +215,20 @@ export default function CartPage({
     }, 0);
   }, [mainItems]);
 
-  // leggo il lock da localStorage
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(WHEEL_LOCK_KEY);
-      if (raw === "played") {
-        setHasPlayedWheel(true);
-      }
+      if (raw === "played") setHasPlayedWheel(true);
     } catch (e) {
       console.error("wheel lock read error", e);
     }
   }, []);
 
-  // apro automaticamente la ruota se:
-  // - non ha già giocato (per questo ordine)
-  // - ha almeno 10 kg nel carrello
   useEffect(() => {
     if (hasPlayedWheel) return;
     if (totalEligibleKg < 10) return;
     if (items.length === 0) return;
-
     setShowWheel(true);
   }, [hasPlayedWheel, totalEligibleKg, items.length]);
 
@@ -255,8 +239,6 @@ export default function CartPage({
 
     try {
       if (typeof window !== "undefined") {
-        // da questo momento la ruota è "consumata" per questo device
-        // fino a quando la pagina di success non resetta il flag
         window.localStorage.setItem(WHEEL_LOCK_KEY, "played");
       }
     } catch (e) {
@@ -264,19 +246,97 @@ export default function CartPage({
     }
   };
 
+  /* =========================
+     GA4: view_cart (una volta per contenuto carrello)
+  ========================= */
+  const lastCartSigRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!items?.length) return;
+
+    // Firma stabile: id + qty + pricePerKg + weightKg
+    const sig = items
+      .map((i: any) => `${i.id}:${i.qty}:${i.pricePerKg}:${i.weightKg}`)
+      .sort()
+      .join("|");
+
+    if (sig === lastCartSigRef.current) return;
+    lastCartSigRef.current = sig;
+
+    gaViewCart(items);
+  }, [items]);
+
+  /* =========================
+     Helpers: qty +/- e remove
+  ========================= */
+  function incQty(item: any) {
+    setQty(item.id, Number(item.qty || 0) + 1);
+    // GA: +1 pezzo
+    gaAddToCart(item, 1);
+  }
+
+  function decQty(item: any) {
+    const qty = Number(item.qty || 0);
+    if (qty <= 1) return;
+    setQty(item.id, qty - 1);
+    // GA: -1 pezzo
+    gaRemoveFromCart(item, 1);
+  }
+
+  function removeLine(item: any) {
+    const qty = Math.max(1, Number(item.qty || 1));
+    removeItem(item.id);
+    gaRemoveFromCart(item, qty);
+  }
+
+  function addUpsellStd() {
+    const item = {
+      id: "upsell-extra-std-1kg",
+      title: t.upsellStdTitle,
+      tier: "Standard",
+      weightKg: UPSELL_STD_WEIGHT_KG,
+      pricePerKg: UPSELL_STD_1KG_TOTAL / UPSELL_STD_WEIGHT_KG,
+      shopifyId: UPSELL_STD_1KG_SHOPIFY_ID,
+      qty: 1,
+    };
+    addItem(item as any);
+    gaAddToCart(item as any, 1);
+  }
+
+  function addUpsellPrm() {
+    const item = {
+      id: "upsell-extra-prm-1kg",
+      title: t.upsellPrmTitle,
+      tier: "Premium",
+      weightKg: UPSELL_PRM_WEIGHT_KG,
+      pricePerKg: UPSELL_PRM_1KG_TOTAL / UPSELL_PRM_WEIGHT_KG,
+      shopifyId: UPSELL_PRM_1KG_SHOPIFY_ID,
+      qty: 1,
+    };
+    addItem(item as any);
+    gaAddToCart(item as any, 1);
+  }
+
   function goToCheckout() {
     if (items.length === 0) return;
 
+    // GA: begin_checkout (prima del redirect)
+    gaBeginCheckout(items, {
+      // utile per debugging/segmentazioni
+      checkout_flow: "direct_cart_url",
+      locale: lang,
+      wheel_bonus_kg: wheelBonusKg > 0 ? Number(wheelBonusKg.toFixed(2)) : 0,
+    });
+
     const base = "https://shop.kilomystery.com/cart/";
     const cartPart = items
-      .filter((i: any) => i.shopifyId && i.qty) // evita rotture se manca un id
+      .filter((i: any) => i.shopifyId && i.qty)
       .map((i: any) => `${i.shopifyId}:${i.qty}`)
       .join(",");
 
     const url = new URL(base + cartPart);
     url.searchParams.set("locale", lang);
 
-    // se c'è un bonus dalla ruota, lo passo come nota
     if (wheelBonusKg > 0) {
       url.searchParams.set(
         "note",
@@ -298,7 +358,6 @@ export default function CartPage({
           <p className="text-white/70">{t.empty}</p>
         ) : (
           <>
-            {/* Banner ruota sopra il carrello */}
             {totalEligibleKg >= 10 && (
               <section className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
@@ -321,7 +380,6 @@ export default function CartPage({
               </section>
             )}
 
-            {/* Lista items */}
             <div className="space-y-4">
               {items.map((item: any) => {
                 const pricePerKg =
@@ -382,16 +440,14 @@ export default function CartPage({
                           </span>
                           <button
                             className="px-3 py-1"
-                            onClick={() =>
-                              setQty(item.id, Math.max(1, qty - 1))
-                            }
+                            onClick={() => decQty(item)}
                           >
                             −
                           </button>
                           <span className="px-3 font-semibold">{qty}</span>
                           <button
                             className="px-3 py-1"
-                            onClick={() => setQty(item.id, qty + 1)}
+                            onClick={() => incQty(item)}
                           >
                             +
                           </button>
@@ -399,7 +455,7 @@ export default function CartPage({
 
                         <button
                           className="text-xs text-rose-400"
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeLine(item)}
                         >
                           {t.remove}
                         </button>
@@ -410,7 +466,6 @@ export default function CartPage({
               })}
             </div>
 
-            {/* SEZIONE MINI UPSELL EXTRA KG STANDARD/PREMIUM */}
             {(showStdUpsell || showPrmUpsell) && (
               <section className="mt-4 space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
                 <h2 className="text-xs font-bold uppercase tracking-[.15em] text-emerald-300">
@@ -439,18 +494,7 @@ export default function CartPage({
                       <button
                         type="button"
                         className="btn btn-ghost btn-sm self-start"
-                        onClick={() =>
-                          addItem({
-                            id: "upsell-extra-std-1kg",
-                            title: t.upsellStdTitle,
-                            tier: "Standard",
-                            weightKg: UPSELL_STD_WEIGHT_KG,
-                            pricePerKg:
-                              UPSELL_STD_1KG_TOTAL / UPSELL_STD_WEIGHT_KG,
-                            shopifyId: UPSELL_STD_1KG_SHOPIFY_ID,
-                            qty: 1,
-                          })
-                        }
+                        onClick={addUpsellStd}
                       >
                         {t.upsellStdCta}
                       </button>
@@ -475,18 +519,7 @@ export default function CartPage({
                       <button
                         type="button"
                         className="btn btn-ghost btn-sm self-start"
-                        onClick={() =>
-                          addItem({
-                            id: "upsell-extra-prm-1kg",
-                            title: t.upsellPrmTitle,
-                            tier: "Premium",
-                            weightKg: UPSELL_PRM_WEIGHT_KG,
-                            pricePerKg:
-                              UPSELL_PRM_1KG_TOTAL / UPSELL_PRM_WEIGHT_KG,
-                            shopifyId: UPSELL_PRM_1KG_SHOPIFY_ID,
-                            qty: 1,
-                          })
-                        }
+                        onClick={addUpsellPrm}
                       >
                         {t.upsellPrmCta}
                       </button>
@@ -517,7 +550,6 @@ export default function CartPage({
         )}
       </main>
 
-      {/* MODALE RUOTA – solo se showWheel true */}
       {showWheel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-3 py-6">
           <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/15 bg-[#020617] shadow-[0_24px_80px_rgba(0,0,0,0.85)]">

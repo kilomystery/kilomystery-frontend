@@ -10,6 +10,9 @@ import { useCart } from "../../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
 import SectionInsideBox from "../../components/SectionInsideBox";
 
+// ✅ GA4 helpers
+import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
+
 type Kg = 1 | 2 | 3 | 5 | 10;
 
 const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
@@ -487,16 +490,19 @@ function PackCard({
   const variantId = VARIANT_IDS[kind][kg];
 
   function handleAddToCart() {
-    addItem({
+    const cartItem = {
       id: `${kind}-${kg}`,
       shopifyId: variantId,
       title: `${kind} · ${kg} kg`,
-      kg,
-      kind,
-      price: total,
-      image: `/videos/packs/${isStd ? "std" : "prm"}-${kg}.mp4`,
+      tier: kind, // ✅ Standard/Premium coerente
+      weightKg: kg,
+      pricePerKg: +(total / kg).toFixed(2),
       qty: 1,
-    });
+      image: `/videos/packs/${isStd ? "std" : "prm"}-${kg}.mp4`,
+    };
+
+    addItem(cartItem as any);
+    gaAddToCart(cartItem as any, 1);
   }
 
   const badgeTextTop = kind === "Standard" ? t.badgeStd : t.badgePrm;
@@ -584,16 +590,19 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   const { addItem } = useCart();
 
   function handleAdd() {
-    addItem({
+    const cartItem = {
       id: "Explorer-16",
       shopifyId: EXPLORER_SHOPIFY_ID,
       title: t.explorerTitle,
-      kind: "Premium",
-      kg: EXPLORER_TOTAL_KG,
-      price: EXPLORER_PRICE_TOTAL,
-      image: "/videos/packs/ExplorerBox.mp4",
+      tier: "Premium",
+      weightKg: EXPLORER_TOTAL_KG,
+      pricePerKg: EXPLORER_PRICE_PER_KG,
       qty: 1,
-    });
+      image: "/videos/packs/ExplorerBox.mp4",
+    };
+
+    addItem(cartItem as any);
+    gaAddToCart(cartItem as any, 1);
   }
 
   return (
@@ -742,6 +751,46 @@ export default function ProductsPage({
   const lang: Lang = normalizeLang(params?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
+
+  // ✅ GA4: view_item_list una volta (anti doppioni)
+  const listTrackedRef = useRef<string>("");
+
+  useEffect(() => {
+    const key = `products-page:${lang}`;
+    if (listTrackedRef.current === key) return;
+    listTrackedRef.current = key;
+
+    const items: any[] = [];
+
+    (["Standard", "Premium"] as const).forEach((kind) => {
+      ([1, 2, 3, 5, 10] as const).forEach((kg) => {
+        const variantId = VARIANT_IDS[kind][kg];
+        const { total } = prices(kind, kg);
+
+        items.push({
+          id: `${kind}-${kg}`,
+          shopifyId: variantId,
+          title: `${kind} · ${kg} kg`,
+          tier: kind,
+          weightKg: kg,
+          pricePerKg: +(total / kg).toFixed(2),
+          qty: 1,
+        });
+      });
+    });
+
+    items.push({
+      id: "Explorer-16",
+      shopifyId: EXPLORER_SHOPIFY_ID,
+      title: t.explorerTitle,
+      tier: "Premium",
+      weightKg: EXPLORER_TOTAL_KG,
+      pricePerKg: EXPLORER_PRICE_PER_KG,
+      qty: 1,
+    });
+
+    gaViewItemList("Products", items);
+  }, [lang, t]);
 
   useEffect(() => {
     let destroyed = false;
