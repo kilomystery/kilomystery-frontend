@@ -15,12 +15,14 @@ const LOCALE_MAP: Record<string, string> = {
   de: "de",
 };
 
-// ✅ whitelist parametri da propagare al checkout
+// ✅ whitelist parametri da propagare al checkout (marketing + cross-domain)
 const PASS_THROUGH_KEYS = [
   "_gl",
   "gclid",
   "gbraid",
   "wbraid",
+  "fbclid",
+  "ttclid",
   "utm_source",
   "utm_medium",
   "utm_campaign",
@@ -39,6 +41,10 @@ type IncomingItem = {
   tier?: string;
 };
 
+function safeStr(v: unknown) {
+  return typeof v === "string" ? v : "";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -52,13 +58,11 @@ export async function POST(req: NextRequest) {
     const shopifyLocale = LOCALE_MAP[bodyLang] ?? "it";
 
     // ✅ query string del browser passata dal client
-    const originQuery =
-      typeof body?.originQuery === "string" ? body.originQuery : "";
+    const originQuery = safeStr(body?.originQuery);
 
-    // ✅ nota ordine opzionale (se la vuoi passare)
+    // ✅ nota ordine (ruota) — finisce davvero nell'ordine via checkoutUrl note=
     // Esempio: "🎁 Bonus ruota: 1.25 kg"
-    const orderNote =
-      typeof body?.orderNote === "string" ? body.orderNote : "";
+    const orderNote = safeStr(body?.orderNote);
 
     // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
@@ -98,13 +102,15 @@ export async function POST(req: NextRequest) {
         } as IncomingItem;
       })
       .filter((i: IncomingItem) => {
-        // shopifyId deve esistere e qty >= 1
         return !!i.shopifyId && Number(i.qty || 0) >= 1;
       });
 
     if (items.length === 0) {
       return NextResponse.json(
-        { error: "All items invalid (missing shopifyId/qty)", code: "INVALID_ITEMS" },
+        {
+          error: "All items invalid (missing shopifyId/qty)",
+          code: "INVALID_ITEMS",
+        },
         { status: 400 }
       );
     }
@@ -126,12 +132,8 @@ export async function POST(req: NextRequest) {
 
       const attributes: { key: string; value: string }[] = [];
 
-      if (i.tier) {
-        attributes.push({ key: "tier", value: String(i.tier) });
-      }
-      if (weight > 0) {
-        attributes.push({ key: "weightKg", value: String(weight) });
-      }
+      if (i.tier) attributes.push({ key: "tier", value: String(i.tier) });
+      if (weight > 0) attributes.push({ key: "weightKg", value: String(weight) });
 
       const line: any = {
         quantity: qty,
@@ -142,27 +144,21 @@ export async function POST(req: NextRequest) {
       return line;
     });
 
-    // ✅ attributi sul carrello (visibili in Shopify come cart attributes)
+    // ✅ attributi sul carrello/show in Shopify (debug + segmentazioni)
     const cartAttributes: { key: string; value: string }[] = [
       { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
       { key: "orderedKg", value: String(totalKg) },
       { key: "locale", value: shopifyLocale },
     ];
 
-    if (returnUrl) {
-      cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
-    }
+    if (returnUrl) cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
 
-    // ✅ se vuoi tenere traccia “bonus ruota” lato Shopify
-    if (orderNote) {
-      cartAttributes.push({ key: "orderNote", value: orderNote });
-    }
+    // ✅ salva anche orderNote come attributo (debug/admin), MA la vera nota ordine la mettiamo via URL note=
+    if (orderNote) cartAttributes.push({ key: "orderNote", value: orderNote });
 
-    // (debug utile: salva anche i params marketing dentro Shopify)
+    // ✅ salva anche params marketing dentro Shopify (debug)
     if (originQuery) {
-      const qp = new URLSearchParams(
-        originQuery.startsWith("?") ? originQuery : `?${originQuery}`
-      );
+      const qp = new URLSearchParams(originQuery.startsWith("?") ? originQuery : `?${originQuery}`);
       for (const key of PASS_THROUGH_KEYS) {
         const v = qp.get(key as PassKey);
         if (v) cartAttributes.push({ key: String(key), value: v });
@@ -172,14 +168,8 @@ export async function POST(req: NextRequest) {
     const query = `
       mutation CartCreate($input: CartInput!) {
         cartCreate(input: $input) {
-          cart {
-            id
-            checkoutUrl
-          }
-          userErrors {
-            field
-            message
-          }
+          cart { id checkoutUrl }
+          userErrors { field message }
         }
       }
     `;
@@ -235,15 +225,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 🔗 checkoutUrl finale: locale + pass-through params (_gl/utm/gclid…)
+    // 🔗 checkoutUrl finale: locale + pass-through params + NOTA RUOTA (note=)
     const url = new URL(cart.checkoutUrl as string);
     url.searchParams.set("locale", shopifyLocale);
 
-    if (originQuery) {
-      const qp = new URLSearchParams(
-        originQuery.startsWith("?") ? originQuery : `?${originQuery}`
-      );
+    // ✅ nota ordine vera
+    if (orderNote) {
+      url.searchParams.set("note", orderNote);
+    }
 
+    // ✅ parametri marketing + cross domain
+    if (originQuery) {
+      const qp = new URLSearchParams(originQuery.startsWith("?") ? originQuery : `?${originQuery}`);
       for (const key of PASS_THROUGH_KEYS) {
         const v = qp.get(key as PassKey);
         if (v) url.searchParams.set(String(key), v);

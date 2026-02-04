@@ -90,7 +90,7 @@ export default async function RootLayout({
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body>
         {/* =========================
-            GA INIT + CONSENT
+            GA INIT + CONSENT (Consent Mode)
         ========================= */}
         <Script id="ga-init-consent" strategy="beforeInteractive">
           {`
@@ -142,13 +142,17 @@ export default async function RootLayout({
             gtag('js', new Date());
 
             gtag('config','${GA_ID}',{
+              send_page_view: true,
+
+              // Cross-domain tracking
               linker:{
                 domains:[
                   'www.kilomystery.com',
                   'kilomystery.com',
                   'shop.kilomystery.com',
                   'account.kilomystery.com'
-                ]
+                ],
+                accept_incoming: true
               }
             });
           `}
