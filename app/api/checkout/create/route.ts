@@ -3,8 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.myshopify.com
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN;
-
-// Se vuoi cambiare versione, mettila in env SHOPIFY_API_VERSION
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-01";
 
 const LOCALE_MAP: Record<string, string> = {
@@ -15,14 +13,12 @@ const LOCALE_MAP: Record<string, string> = {
   de: "de",
 };
 
-// ✅ whitelist parametri da propagare al checkout (marketing + cross-domain)
+// ✅ parametri marketing che vogliamo propagare AL CHECKOUT (NON ai cartAttributes)
 const PASS_THROUGH_KEYS = [
   "_gl",
   "gclid",
   "gbraid",
   "wbraid",
-  "fbclid",
-  "ttclid",
   "utm_source",
   "utm_medium",
   "utm_campaign",
@@ -41,8 +37,10 @@ type IncomingItem = {
   tier?: string;
 };
 
-function safeStr(v: unknown) {
-  return typeof v === "string" ? v : "";
+function clampStr(v: string, max = 220) {
+  // Shopify attributes/URL safe-ish: non vogliamo roba enorme
+  const s = String(v ?? "");
+  return s.length > max ? s.slice(0, max) : s;
 }
 
 export async function POST(req: NextRequest) {
@@ -53,16 +51,15 @@ export async function POST(req: NextRequest) {
     const clientTotalKg = body?.totalKg;
     const returnUrl = body?.returnUrl;
 
-    // ✅ lingua dal client
     const bodyLang = typeof body?.lang === "string" ? body.lang : "it";
     const shopifyLocale = LOCALE_MAP[bodyLang] ?? "it";
 
-    // ✅ query string del browser passata dal client
-    const originQuery = safeStr(body?.originQuery);
+    const originQuery =
+      typeof body?.originQuery === "string" ? body.originQuery : "";
 
-    // ✅ nota ordine (ruota) — finisce davvero nell'ordine via checkoutUrl note=
-    // Esempio: "🎁 Bonus ruota: 1.25 kg"
-    const orderNote = safeStr(body?.orderNote);
+    // ✅ Nota ruota (opzionale)
+    const orderNote =
+      typeof body?.orderNote === "string" ? body.orderNote : "";
 
     // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
@@ -94,16 +91,9 @@ export async function POST(req: NextRequest) {
         const weightKg = Number(i?.weightKg ?? i?.kg ?? 0) || 0;
         const tier = typeof i?.tier === "string" ? i.tier : undefined;
 
-        return {
-          shopifyId,
-          qty,
-          weightKg,
-          tier,
-        } as IncomingItem;
+        return { shopifyId, qty, weightKg, tier } as IncomingItem;
       })
-      .filter((i: IncomingItem) => {
-        return !!i.shopifyId && Number(i.qty || 0) >= 1;
-      });
+      .filter((i: IncomingItem) => !!i.shopifyId && Number(i.qty || 0) >= 1);
 
     if (items.length === 0) {
       return NextResponse.json(
@@ -115,7 +105,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 🧮 totale kg ricalcolato lato server (fallback se clientTotalKg non valido)
+    // 🧮 totale kg ricalcolato lato server
     const totalKg =
       typeof clientTotalKg === "number" && !Number.isNaN(clientTotalKg)
         ? clientTotalKg
@@ -131,8 +121,7 @@ export async function POST(req: NextRequest) {
       const weight = Number(i.weightKg ?? 0) || 0;
 
       const attributes: { key: string; value: string }[] = [];
-
-      if (i.tier) attributes.push({ key: "tier", value: String(i.tier) });
+      if (i.tier) attributes.push({ key: "tier", value: clampStr(i.tier, 40) });
       if (weight > 0) attributes.push({ key: "weightKg", value: String(weight) });
 
       const line: any = {
@@ -144,25 +133,20 @@ export async function POST(req: NextRequest) {
       return line;
     });
 
-    // ✅ attributi sul carrello/show in Shopify (debug + segmentazioni)
+    // ✅ cartAttributes: SOLO roba corta e utile (NO _gl/utm qui)
     const cartAttributes: { key: string; value: string }[] = [
       { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
       { key: "orderedKg", value: String(totalKg) },
       { key: "locale", value: shopifyLocale },
     ];
 
-    if (returnUrl) cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
+    if (returnUrl) {
+      cartAttributes.push({ key: "returnUrl", value: clampStr(String(returnUrl), 220) });
+    }
 
-    // ✅ salva anche orderNote come attributo (debug/admin), MA la vera nota ordine la mettiamo via URL note=
-    if (orderNote) cartAttributes.push({ key: "orderNote", value: orderNote });
-
-    // ✅ salva anche params marketing dentro Shopify (debug)
-    if (originQuery) {
-      const qp = new URLSearchParams(originQuery.startsWith("?") ? originQuery : `?${originQuery}`);
-      for (const key of PASS_THROUGH_KEYS) {
-        const v = qp.get(key as PassKey);
-        if (v) cartAttributes.push({ key: String(key), value: v });
-      }
+    // ✅ salva nota ruota in cart attributes (corta)
+    if (orderNote) {
+      cartAttributes.push({ key: "orderNote", value: clampStr(orderNote, 220) });
     }
 
     const query = `
@@ -174,12 +158,7 @@ export async function POST(req: NextRequest) {
       }
     `;
 
-    const variables = {
-      input: {
-        lines,
-        attributes: cartAttributes,
-      },
-    };
+    const variables = { input: { lines, attributes: cartAttributes } };
 
     const response = await fetch(
       `https://${STOREFRONT_DOMAIN}/api/${API_VERSION}/graphql.json`,
@@ -216,31 +195,29 @@ export async function POST(req: NextRequest) {
 
     if (!cart?.checkoutUrl) {
       return NextResponse.json(
-        {
-          error: "Checkout error",
-          code: "NO_CHECKOUT_URL",
-          message: "Shopify non ha restituito checkoutUrl",
-        },
+        { error: "Checkout error", code: "NO_CHECKOUT_URL", message: "Missing checkoutUrl" },
         { status: 500 }
       );
     }
 
-    // 🔗 checkoutUrl finale: locale + pass-through params + NOTA RUOTA (note=)
+    // 🔗 checkoutUrl finale: locale + pass-through params + (tentativo) note
     const url = new URL(cart.checkoutUrl as string);
     url.searchParams.set("locale", shopifyLocale);
 
-    // ✅ nota ordine vera
-    if (orderNote) {
-      url.searchParams.set("note", orderNote);
-    }
-
-    // ✅ parametri marketing + cross domain
+    // ✅ pass-through marketing SOLO nell'URL (non rompe cartCreate)
     if (originQuery) {
-      const qp = new URLSearchParams(originQuery.startsWith("?") ? originQuery : `?${originQuery}`);
+      const qp = new URLSearchParams(
+        originQuery.startsWith("?") ? originQuery : `?${originQuery}`
+      );
       for (const key of PASS_THROUGH_KEYS) {
         const v = qp.get(key as PassKey);
-        if (v) url.searchParams.set(String(key), v);
+        if (v) url.searchParams.set(String(key), clampStr(v, 500));
       }
+    }
+
+    // ✅ Nota ruota anche in URL come "note" (se Shopify la supporta sul checkoutUrl)
+    if (orderNote) {
+      url.searchParams.set("note", clampStr(orderNote, 220));
     }
 
     return NextResponse.json({ url: url.toString() });
