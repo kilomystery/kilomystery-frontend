@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HERO_IMAGE } from "@/lib/staticImages";
+import Image from "next/image";
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
 
@@ -136,22 +136,17 @@ export default function NewsletterModal({ lang = "it" as Lang }) {
           ✕
         </button>
 
-        {/* LOGO */}
+        {/* LOGO (usa /public/logo.svg) */}
         <div className="flex flex-col items-center gap-3 mb-4">
           <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-white/20 bg-black/70 overflow-hidden">
-            <picture className="flex h-full w-full items-center justify-center">
-              <source srcSet={HERO_IMAGE.webp} type="image/webp" />
-              <source srcSet={HERO_IMAGE.png} type="image/png" />
-              <img
-                src={HERO_IMAGE.png}
-                alt={HERO_IMAGE.alt}
-                width={80}
-                height={80}
-                className="object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
+            <Image
+              src="/logo.svg"
+              alt="KiloMystery"
+              width={80}
+              height={80}
+              className="object-contain"
+              priority={false}
+            />
           </div>
 
           <h2 className="text-xl md:text-2xl font-extrabold text-center">
@@ -187,7 +182,7 @@ export default function NewsletterModal({ lang = "it" as Lang }) {
           <p className="text-[11px] text-white/60 text-center">
             {L.privacyPrefix}
             <a
-              href="/it/legal/privacy"
+              href={`/${safeLang}/legal/privacy`}
               className="underline underline-offset-2"
             >
               {L.privacyLinkText}
