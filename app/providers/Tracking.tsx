@@ -2,137 +2,110 @@
 
 import { useEffect } from "react";
 
-type Props = {
-  gaId: string;
-  tiktokPixelId: string;
-};
-
 declare global {
   interface Window {
     ttq?: any;
-    __kmTrackingMounted?: boolean;
-    __tiktokConsentGranted?: boolean;
     kmApplyConsent?: (choice?: "accept" | "reject") => void;
-    gtag?: (...args: any[]) => void;
   }
 }
 
-function readCookie(name: string): string {
+function getCookie(name: string): string {
   if (typeof document === "undefined") return "";
-  const m = document.cookie.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
-  return m ? decodeURIComponent(m[1]) : "";
+  const row = document.cookie.split("; ").find((r) => r.startsWith(name + "="));
+  return row ? decodeURIComponent(row.split("=")[1] || "") : "";
 }
 
-function getConsent(): "accept" | "reject" | "" {
-  const c = readCookie("km_cookie_consent");
-  if (c === "accept" || c === "reject") return c;
-
-  try {
-    const ls = localStorage.getItem("km-cookie-consent");
-    if (ls === "accept" || ls === "reject") return ls;
-  } catch {}
-
-  return "";
-}
-
-function ensureTikTokBaseLoaded(pixelId: string) {
+function loadTikTok(pixelId: string) {
   if (typeof window === "undefined") return;
+  if ((window as any).__kmTikTokLoaded) return;
+  (window as any).__kmTikTokLoaded = true;
 
-  // Se già presente, stop
-  if (window.ttq) return;
-
-  (function (w: any, d: any, t: string) {
+  // TikTok base snippet (minimo)
+  // NB: lo carichiamo ma NON tracciamo finché non c'è consenso
+  (function (w, d, t) {
     w.TiktokAnalyticsObject = t;
-    const ttq = (w[t] = w[t] || []);
-    ttq.methods = [
-      "page",
-      "track",
-      "identify",
-      "instances",
-      "debug",
-      "on",
-      "off",
-      "once",
-      "ready",
-      "alias",
-      "group",
-      "enableCookie",
-      "disableCookie",
-      "holdConsent",
-      "revokeConsent",
-      "grantConsent",
-    ];
-    ttq.setAndDefer = function (obj: any, method: string) {
-      obj[method] = function () {
-        obj.push([method].concat(Array.prototype.slice.call(arguments, 0)));
+    const ttq = (w.ttq = w.ttq || []);
+    ttq.methods = ["page", "track", "identify", "instances", "debug", "on", "off", "once", "ready", "alias", "group", "enableCookie", "disableCookie"];
+    ttq.setAndDefer = function (t: any, e: any) {
+      t[e] = function () {
+        t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
       };
     };
     for (let i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-
-    ttq.load = function (id: string) {
-      const r = "https://analytics.tiktok.com/i18n/pixel/events.js";
-      const s = d.createElement("script");
-      s.type = "text/javascript";
-      s.async = true;
-      s.src = r + "?sdkid=" + id + "&lib=" + t;
-      s.setAttribute("data-km-tiktok", "1");
-      const f = d.getElementsByTagName("script")[0];
-      f.parentNode.insertBefore(s, f);
+    ttq.instance = function (t: any) {
+      const e = ttq._i[t] || [];
+      for (let n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
+      return e;
     };
-
+    ttq.load = function (e: any, n: any) {
+      const i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+      ttq._i = ttq._i || {};
+      ttq._i[e] = [];
+      ttq._i[e]._u = i;
+      ttq._t = ttq._t || {};
+      ttq._t[e] = +new Date();
+      ttq._o = ttq._o || {};
+      ttq._o[e] = n || {};
+      const a = d.createElement("script");
+      a.type = "text/javascript";
+      a.async = true;
+      a.src = i + "?sdkid=" + e + "&lib=" + t;
+      const s = d.getElementsByTagName("script")[0];
+      s.parentNode?.insertBefore(a, s);
+    };
     ttq.load(pixelId);
-    ttq.page();
-  })(window, document, "ttq");
+  })(window as any, document, "ttq");
 }
 
-function applyConsentEverywhere(choice: "accept" | "reject") {
-  const granted = choice === "accept";
-
-  if (typeof window.gtag === "function") {
-    window.gtag("consent", "update", {
-      analytics_storage: granted ? "granted" : "denied",
-      ad_storage: granted ? "granted" : "denied",
-      ad_user_data: granted ? "granted" : "denied",
-      ad_personalization: granted ? "granted" : "denied",
-      functionality_storage: granted ? "granted" : "denied",
-      personalization_storage: granted ? "granted" : "denied",
-      security_storage: "granted",
-    });
-  }
-
-  window.__tiktokConsentGranted = granted;
-
-  if (window.ttq?.grantConsent && window.ttq?.holdConsent) {
-    if (granted) window.ttq.grantConsent();
-    else window.ttq.holdConsent();
-  }
-}
-
-export default function Tracking({ tiktokPixelId }: Props) {
+export default function Tracking({
+  gaId,
+  tiktokPixelId,
+}: {
+  gaId: string;
+  tiktokPixelId: string;
+}) {
   useEffect(() => {
-    // ✅ PROVA CHE SI MONTA
-    window.__kmTrackingMounted = true;
-
-    // marker DOM (così lo vedi anche senza console)
-    const el = document.createElement("div");
-    el.id = "km-tracking-marker";
-    el.setAttribute("data-mounted", "1");
-    el.style.display = "none";
-    document.body.appendChild(el);
-
-    // 1) crea ttq
-    ensureTikTokBaseLoaded(tiktokPixelId);
-
-    // 2) funzione globale richiamabile dal banner
+    // Bridge globale: CookieBanner chiama questa
     window.kmApplyConsent = (choice?: "accept" | "reject") => {
-      const c = choice || (getConsent() as any) || "reject";
-      applyConsentEverywhere(c);
+      const granted = choice === "accept";
+
+      // GA update (se gtag esiste)
+      const gtag = (window as any).gtag;
+      if (gtag) {
+        gtag("consent", "update", {
+          analytics_storage: granted ? "granted" : "denied",
+          ad_storage: granted ? "granted" : "denied",
+          ad_user_data: granted ? "granted" : "denied",
+          ad_personalization: granted ? "granted" : "denied",
+          functionality_storage: granted ? "granted" : "denied",
+          personalization_storage: granted ? "granted" : "denied",
+          security_storage: "granted",
+        });
+      }
+
+      // TikTok: se accetta → abilita cookie + page()
+      if (granted) {
+        loadTikTok(tiktokPixelId);
+        const ttq = (window as any).ttq;
+        if (ttq?.enableCookie) ttq.enableCookie();
+        if (ttq?.page) ttq.page();
+      } else {
+        // se rifiuta → prova a disabilitare cookie
+        const ttq = (window as any).ttq;
+        if (ttq?.disableCookie) ttq.disableCookie();
+      }
     };
 
-    // 3) consenso iniziale
-    const initial = getConsent();
-    if (initial === "accept" || initial === "reject") window.kmApplyConsent(initial);
-    else window.kmApplyConsent("reject");
+    // All’avvio: riallinea a cookie esistente
+    const consent = getCookie("km_cookie_consent");
+    const granted = consent === "accept";
+
+    // Se già accettato, carichiamo TikTok e facciamo page()
+    if (granted) {
+      window.kmApplyConsent?.("accept");
+    } else {
+      window.kmApplyConsent?.("reject");
+    }
   }, [tiktokPixelId]);
 
   return null;

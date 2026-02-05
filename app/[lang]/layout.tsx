@@ -25,25 +25,16 @@ const SITE_URL = (
 ).replace(/\/$/, "");
 
 /* =========================
-   Metadata (per route lang)
+   Metadata
 ========================= */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: {
-    default: "KiloMystery | Mystery Box",
-    template: "%s | KiloMystery",
-  },
+  title: { default: "KiloMystery | Mystery Box", template: "%s | KiloMystery" },
   description:
     "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata.",
   alternates: {
     canonical: "/",
-    languages: {
-      it: "/it",
-      en: "/en",
-      es: "/es",
-      fr: "/fr",
-      de: "/de",
-    },
+    languages: { it: "/it", en: "/en", es: "/es", fr: "/fr", de: "/de" },
   },
   openGraph: {
     title: "KiloMystery | Mystery Box",
@@ -52,9 +43,7 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE_URL,
     siteName: "KiloMystery",
-    images: [
-      { url: `${SITE_URL}/og.jpg`, width: 1200, height: 630, alt: "KiloMystery" },
-    ],
+    images: [{ url: `${SITE_URL}/og.jpg`, width: 1200, height: 630, alt: "KiloMystery" }],
   },
   twitter: {
     card: "summary_large_image",
@@ -75,9 +64,6 @@ async function getHtmlLang(): Promise<Lang> {
   return detectLangFromHeader(al);
 }
 
-/* =========================
-   Layout
-========================= */
 export default async function LangLayout({
   children,
 }: {
@@ -87,21 +73,45 @@ export default async function LangLayout({
 
   return (
     <div className={`${inter.className} antialiased`} data-lang-layout="1">
-      {/* Marker (DEVE comparire nel DOM) */}
-      <div
-        id="km-build-marker"
-        data-build="tiktok-tracking-v2"
-        style={{ display: "none" }}
-      />
+      {/* 1) Consent Mode DEFAULT - PRIMA di tutto (legge cookie km_cookie_consent) */}
+      <Script id="km-consent-default" strategy="beforeInteractive">
+        {`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          window.gtag = window.gtag || gtag;
 
-      {/* Google tag loader */}
+          function getCookie(name){
+            var match = document.cookie
+              .split('; ')
+              .find(function(r){ return r.indexOf(name + '=') === 0; });
+            return match ? decodeURIComponent(match.split('=')[1] || '') : '';
+          }
+
+          var consent = getCookie('km_cookie_consent');
+          var granted = (consent === 'accept');
+
+          // Consent mode default
+          gtag('consent','default',{
+            analytics_storage: granted ? 'granted' : 'denied',
+            ad_storage: granted ? 'granted' : 'denied',
+            ad_user_data: granted ? 'granted' : 'denied',
+            ad_personalization: granted ? 'granted' : 'denied',
+            functionality_storage: granted ? 'granted' : 'denied',
+            personalization_storage: granted ? 'granted' : 'denied',
+            security_storage: 'granted',
+            wait_for_update: 500
+          });
+        `}
+      </Script>
+
+      {/* 2) Loader GA */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         strategy="afterInteractive"
       />
 
-      {/* GA init */}
-      <Script id="ga-config" strategy="afterInteractive">
+      {/* 3) Config GA - UNA SOLA VOLTA */}
+      <Script id="km-ga-config" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
@@ -123,7 +133,7 @@ export default async function LangLayout({
         `}
       </Script>
 
-      {/* Tracking client (TikTok injection + bridge) */}
+      {/* 4) Tracking provider: TikTok + bridge consenso */}
       <Tracking gaId={GA_ID} tiktokPixelId={TIKTOK_PIXEL_ID} />
 
       <CartProviderRoot>
