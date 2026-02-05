@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import "./globals.css";
+import "../globals.css";
 
 import CookieBanner from "../components/CookieBanner";
 import NewsletterModalDelayed from "../components/NewsletterModalDelayed";
