@@ -1,17 +1,16 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   src: string;
   poster?: string;
   className?: string;
-
-  /** default: "metadata" */
   preload?: "none" | "metadata" | "auto";
-
-  /** se vuoi farlo partire sempre anche fuori viewport (sconsigliato). default false */
-  alwaysPlay?: boolean;
+  /** se vuoi disattivare autoplay/loop su qualche uso specifico */
+  autoPlay?: boolean;
 };
 
 export default function LazyHoverVideo({
@@ -19,139 +18,94 @@ export default function LazyHoverVideo({
   poster,
   className = "",
   preload = "metadata",
-  alwaysPlay = false,
+  autoPlay = true,
 }: Props) {
-  const wrapRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const [isReady, setIsReady] = useState(false);
 
-  const [isInView, setIsInView] = useState(false);
-  const [isReady, setIsReady] = useState(false); // quando il video ha abbastanza dati
-  const [hasTriedPlay, setHasTriedPlay] = useState(false);
-
-  // key per ricaricare bene se cambia src
+  // chiave stabile per rimontare quando cambia src
   const key = useMemo(() => src, [src]);
 
-  useEffect(() => {
-    setIsReady(false);
-    setHasTriedPlay(false);
-  }, [key]);
-
-  // IntersectionObserver per autoplay quando entra in viewport (mobile + desktop)
-  useEffect(() => {
-    if (alwaysPlay) {
-      setIsInView(true);
-      return;
-    }
-    const el = wrapRef.current;
-    if (!el) return;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setIsInView(!!entry?.isIntersecting);
-      },
-      {
-        root: null,
-        // parte un pelo prima (effetto premium: già “pronto” quando arrivi)
-        rootMargin: "200px 0px",
-        threshold: 0.15,
-      }
-    );
-
-    io.observe(el);
-    return () => io.disconnect();
-  }, [alwaysPlay]);
-
-  // tenta play/pause in base a viewport
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
 
-    // set “hard” per mobile Safari
+    let cancelled = false;
+
+    // Impostazioni “safe” per iOS + autoplay
     v.muted = true;
     v.playsInline = true;
     v.loop = true;
     v.preload = preload;
 
-    async function safePlay() {
+    const markReady = () => {
+      if (cancelled) return;
+      setIsReady(true);
+    };
+
+    const tryPlay = async () => {
+      const vv = videoRef.current; // riprendi ref in modo sicuro
+      if (!vv) return;
+
       try {
-        // evita ripetizioni inutili
-        if (v.readyState >= 2) setIsReady(true);
-        await v.play();
+        // se già buffered abbastanza, segna ready
+        if (vv.readyState >= 2) markReady();
+        // prova a partire (su iOS può fallire senza gesture, ma con muted+playsInline spesso va)
+        await vv.play();
       } catch {
-        // iOS a volte blocca finché non ha abbastanza buffer o finché non c’è gesture
+        // fallback: appena può, riprova con eventi (non throw)
       }
-    }
+    };
 
-    function safePause() {
-      try {
-        v.pause();
-      } catch {}
-    }
+    const onCanPlay = () => {
+      markReady();
+      if (autoPlay) void tryPlay();
+    };
 
-    if (isInView) {
-      // tenta play solo una volta per ingresso viewport (riduce spam)
-      if (!hasTriedPlay) {
-        setHasTriedPlay(true);
-        // piccolo delay per evitare “jank” in scroll
-        requestAnimationFrame(() => {
-          safePlay();
-        });
-      } else {
-        safePlay();
-      }
-    } else {
-      safePause();
-    }
-  }, [isInView, preload, hasTriedPlay]);
-
-  // Quando il video è pronto, togliamo poster con fade (effetto premium)
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-
-    const onCanPlay = () => setIsReady(true);
-    const onLoadedData = () => setIsReady(true);
+    const onLoadedData = () => {
+      markReady();
+      if (autoPlay) void tryPlay();
+    };
 
     v.addEventListener("canplay", onCanPlay);
     v.addEventListener("loadeddata", onLoadedData);
 
+    // Avvio iniziale (loop continuo)
+    if (autoPlay) {
+      void tryPlay();
+    }
+
     return () => {
+      cancelled = true;
       v.removeEventListener("canplay", onCanPlay);
       v.removeEventListener("loadeddata", onLoadedData);
     };
-  }, [key]);
+  }, [src, preload, autoPlay]);
 
   return (
-    <div
-      ref={wrapRef}
-      className={`km-video ${isReady ? "km-video--ready" : ""}`}
-      style={{ position: "relative", width: "100%", height: "100%" }}
-    >
-      {/* Poster (sempre) — fade out quando video ready */}
-      {poster ? (
+    <div className={className}>
+      {/* poster overlay finché il video non è “ready” */}
+      {poster && !isReady ? (
         <img
           src={poster}
           alt=""
           aria-hidden="true"
-          className="km-video__poster"
+          className="absolute inset-0 h-full w-full object-cover"
           loading="lazy"
           decoding="async"
         />
       ) : null}
 
-      {/* Video */}
       <video
         key={key}
         ref={videoRef}
-        className={`km-video__el ${className}`}
+        className="absolute inset-0 h-full w-full object-cover"
         src={src}
+        poster={poster}
         muted
         playsInline
         loop
         preload={preload}
-        // niente controls
-        controls={false}
       />
     </div>
   );
