@@ -1,17 +1,100 @@
-// app/[lang]/layout.tsx
-import type { ReactNode } from "react";
-import { SUPPORTED_LANGS } from "@/i18n/lang";
+import type { Metadata } from "next";
+import Script from "next/script";
+import "../globals.css";
 
-export const dynamicParams = false;
+import CookieBanner from "../components/CookieBanner";
+import NewsletterModalDelayed from "../components/NewsletterModalDelayed";
+import CartProviderRoot from "../CartProviderRoot";
+import Tracking from "../providers/Tracking";
 
-export function generateStaticParams() {
-  return SUPPORTED_LANGS.map((lang) => ({ lang }));
-}
+import { Inter } from "next/font/google";
 
-export default function LangSegmentLayout({
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const GA_ID = "G-YEY91KKVR2";
+const TIKTOK_PIXEL_ID = "D625ESBC77U70QB7D710";
+
+const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+).replace(/\/$/, "");
+
+export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "KiloMystery | Mystery Box",
+    template: "%s | KiloMystery",
+  },
+  description:
+    "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata.",
+};
+
+export default function LangLayout({
   children,
+  params,
 }: {
-  children: ReactNode;
+  children: React.ReactNode;
+  params: { lang: string };
 }) {
-  return <>{children}</>;
+  const lang = params?.lang || "it";
+
+  return (
+    <html lang={lang} className="bg-[#0b0f14] text-white">
+      <body className={`${inter.className} antialiased`}>
+        {/* ✅ MARKER: se dopo deploy è ancora null => NON stai usando questo layout */}
+        <div
+          id="km-build-marker"
+          data-build="LANG-LAYOUT-WITH-TRACKING-v1"
+          style={{ display: "none" }}
+        />
+
+        {/* =========================
+            GOOGLE ANALYTICS
+        ========================= */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-config" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = window.gtag || gtag;
+
+            gtag('js', new Date());
+            gtag('config','${GA_ID}',{
+              send_page_view: true,
+              linker:{
+                domains:[
+                  'www.kilomystery.com',
+                  'kilomystery.com',
+                  'shop.kilomystery.com',
+                  'account.kilomystery.com'
+                ],
+                accept_incoming: true
+              }
+            });
+          `}
+        </Script>
+
+        {/* =========================
+            TRACKING (Client)
+            - TikTok Pixel injection + consent bridge
+        ========================= */}
+        <Tracking gaId={GA_ID} tiktokPixelId={TIKTOK_PIXEL_ID} />
+
+        {/* =========================
+            APP
+        ========================= */}
+        <CartProviderRoot>
+          {children}
+          <CookieBanner />
+          <NewsletterModalDelayed />
+        </CartProviderRoot>
+      </body>
+    </html>
+  );
 }
