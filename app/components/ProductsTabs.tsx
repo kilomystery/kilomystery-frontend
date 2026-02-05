@@ -9,6 +9,13 @@ import { SHOPIFY_VARIANTS, Kg, Tier } from "@/app/config/shopifyProducts";
 // ✅ GA4 helpers
 import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
 
+declare global {
+  interface Window {
+    ttq?: any;
+    __tiktokConsentGranted?: boolean;
+  }
+}
+
 type Lang = "it" | "en" | "es" | "fr" | "de";
 type TabTier = "std" | "prm";
 
@@ -259,6 +266,25 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
     addItem(cartItem as any);
     gaAddToCart(cartItem as any, 1);
+
+    // ✅ TikTok AddToCart (solo se consenso)
+    if (window.__tiktokConsentGranted && window.ttq) {
+      const total = PRICE_TABLE[kind === "Standard" ? "std" : "prm"][kg].total;
+
+      window.ttq.track("AddToCart", {
+        contents: [
+          {
+            content_id: shopifyId,
+            content_type: "product",
+            content_name: cartItem.title,
+            price: Number(total),
+            num_items: 1,
+          },
+        ],
+        value: Number(total),
+        currency: "EUR",
+      });
+    }
   }
 
   return (

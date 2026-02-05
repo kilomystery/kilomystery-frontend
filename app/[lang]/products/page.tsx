@@ -14,6 +14,13 @@ import LazyHoverVideo from "../../components/LazyHoverVideo";
 // ✅ GA4 helpers
 import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
 
+declare global {
+  interface Window {
+    ttq?: any;
+    __tiktokConsentGranted?: boolean;
+  }
+}
+
 type Kg = 1 | 2 | 3 | 5 | 10;
 
 const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
@@ -494,6 +501,45 @@ function PackCard({
   const anchorId = kg === 10 ? `buy-${kind.toLowerCase()}-10` : undefined;
   const variantId = VARIANT_IDS[kind][kg];
 
+  // ✅ TikTok ViewContent (solo quando la card entra in viewport, anti-spam)
+  const viewTrackedRef = useRef(false);
+  useEffect(() => {
+    if (viewTrackedRef.current) return;
+    if (typeof window === "undefined") return;
+
+    const el = document.getElementById(`${kind}-${kg}-card`);
+    if (!el) return;
+
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry?.isIntersecting) return;
+
+        viewTrackedRef.current = true;
+
+        if (window.__tiktokConsentGranted && window.ttq) {
+          window.ttq.track("ViewContent", {
+            contents: [
+              {
+                content_id: variantId,
+                content_type: "product",
+                content_name: `${kind} · ${kg} kg`,
+              },
+            ],
+            value: Number(total),
+            currency: "EUR",
+          });
+        }
+
+        obs.disconnect();
+      },
+      { threshold: 0.6 }
+    );
+
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [kind, kg, variantId, total]);
+
   function handleAddToCart() {
     const cartItem = {
       id: `${kind}-${kg}`,
@@ -508,6 +554,23 @@ function PackCard({
 
     addItem(cartItem as any);
     gaAddToCart(cartItem as any, 1);
+
+    // ✅ TikTok AddToCart (solo se consenso)
+    if (window.__tiktokConsentGranted && window.ttq) {
+      window.ttq.track("AddToCart", {
+        contents: [
+          {
+            content_id: variantId,
+            content_type: "product",
+            content_name: cartItem.title,
+            price: Number(total),
+            num_items: 1,
+          },
+        ],
+        value: Number(total),
+        currency: "EUR",
+      });
+    }
   }
 
   const badgeTextTop = kind === "Standard" ? t.badgeStd : t.badgePrm;
@@ -515,9 +578,13 @@ function PackCard({
 
   return (
     <article
+      id={`${kind}-${kg}-card`}
       className={`card ${isStd ? "card--standard" : "card--premium"}`}
-      id={anchorId}
+      data-anchor={anchorId}
     >
+      {/* mantengo l'anchor originale per scroll-to */}
+      {anchorId ? <div id={anchorId} /> : null}
+
       <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
         <span>{badgeTextTop}</span>
         <span className={`pill ${isStd ? "pill--std" : "pill--prm"}`}>
@@ -603,6 +670,23 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
 
     addItem(cartItem as any);
     gaAddToCart(cartItem as any, 1);
+
+    // ✅ TikTok AddToCart (solo se consenso)
+    if (window.__tiktokConsentGranted && window.ttq) {
+      window.ttq.track("AddToCart", {
+        contents: [
+          {
+            content_id: EXPLORER_SHOPIFY_ID,
+            content_type: "product",
+            content_name: t.explorerTitle,
+            price: Number(EXPLORER_PRICE_TOTAL),
+            num_items: 1,
+          },
+        ],
+        value: Number(EXPLORER_PRICE_TOTAL),
+        currency: "EUR",
+      });
+    }
   }
 
   return (

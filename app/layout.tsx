@@ -5,6 +5,7 @@ import "./globals.css";
 import CookieBanner from "./components/CookieBanner";
 import NewsletterModalDelayed from "./components/NewsletterModalDelayed";
 import CartProviderRoot from "./CartProviderRoot";
+import TikTokPageView from "./TikTokPageView";
 
 import { cookies, headers } from "next/headers";
 import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
@@ -97,7 +98,6 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body className={`${inter.className} antialiased`}>
-
         {/* =========================
             GA + TIKTOK CONSENT DEFAULT
         ========================= */}
@@ -223,13 +223,14 @@ export default async function RootLayout({
             APP
         ========================= */}
         <CartProviderRoot>
+          {/* ✅ PageView su route change */}
+          <TikTokPageView />
+
           {children}
 
           <CookieBanner />
-
           <NewsletterModalDelayed />
         </CartProviderRoot>
-
       </body>
     </html>
   );
