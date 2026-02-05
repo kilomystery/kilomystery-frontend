@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import "../globals.css";
+import "./globals.css";
 
 import CookieBanner from "../components/CookieBanner";
 import NewsletterModalDelayed from "../components/NewsletterModalDelayed";
@@ -32,22 +32,18 @@ export const metadata: Metadata = {
     "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata.",
 };
 
-export default function LangLayout({
+export default function RootLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: { lang: string };
 }) {
-  const lang = params?.lang || "it";
-
   return (
-    <html lang={lang} className="bg-[#0b0f14] text-white">
+    <html lang="it" className="bg-[#0b0f14] text-white">
       <body className={`${inter.className} antialiased`}>
-        {/* ✅ MARKER: se dopo deploy è ancora null => NON stai usando questo layout */}
+        {/* ✅ marker ROOT: se questo è null, NON stai usando app router/layout */}
         <div
-          id="km-build-marker"
-          data-build="LANG-LAYOUT-WITH-TRACKING-v1"
+          id="km-root-marker"
+          data-build="ROOT-LAYOUT-v1"
           style={{ display: "none" }}
         />
 
@@ -82,7 +78,6 @@ export default function LangLayout({
 
         {/* =========================
             TRACKING (Client)
-            - TikTok Pixel injection + consent bridge
         ========================= */}
         <Tracking gaId={GA_ID} tiktokPixelId={TIKTOK_PIXEL_ID} />
 
