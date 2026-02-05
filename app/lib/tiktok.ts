@@ -1,41 +1,37 @@
-// lib/tiktok.ts
-"use client";
-
-declare global {
-  interface Window {
-    ttq?: any;
-    __tiktokConsentGranted?: boolean;
-  }
-}
-
-export type TikTokContent = {
-  content_id: string;
-  content_type: "product" | "product_group";
-  content_name?: string;
-  price?: number;
-  num_items?: number;
+// app/lib/tiktok.ts
+type TTQ = {
+  track?: (event: string, payload?: any) => void;
+  page?: () => void;
 };
 
-function canFire() {
-  return typeof window !== "undefined" && window.__tiktokConsentGranted && window.ttq;
+function getConsent(): boolean {
+  // stesso cookie che già usi
+  if (typeof document === "undefined") return false;
+  const m = document.cookie.match(/(?:^|;\s*)km_cookie_consent=([^;]+)/);
+  const consent = m ? decodeURIComponent(m[1]) : "";
+  return consent === "accept";
 }
 
-export function ttqTrack(event: string, payload: any) {
-  if (!canFire()) return;
-  window.ttq.track(event, payload);
+async function waitForTTQ(timeoutMs = 4000): Promise<TTQ | null> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const ttq = (window as any).ttq as TTQ | undefined;
+    if (ttq?.track) return ttq;
+    await new Promise((r) => setTimeout(r, 50));
+  }
+  return null;
 }
 
-export function ttqPage() {
-  if (!canFire()) return;
-  window.ttq.page();
-}
+export async function ttqTrack(event: string, payload?: any) {
+  if (typeof window === "undefined") return;
+  if (!getConsent()) return; // blocca TUTTO se non accettano
 
-/**
- * Advanced Matching / Identify:
- * - usalo SOLO se hai email/phone e SOLO dopo consenso ad_storage/ad_personalization (marketing)
- * - valori DEVONO essere SHA-256 (lowercase + trim prima di hashare)
- */
-export function ttqIdentify(hashed: { email?: string; phone_number?: string; external_id?: string }) {
-  if (!canFire()) return;
-  window.ttq.identify(hashed);
+  const ttq = (window as any).ttq as TTQ | undefined;
+  if (ttq?.track) {
+    ttq.track(event, payload);
+    return;
+  }
+
+  const late = await waitForTTQ();
+  late?.track?.(event, payload);
 }
