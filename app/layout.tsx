@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 
 import CookieBanner from "./components/CookieBanner";
@@ -10,15 +9,13 @@ import { cookies, headers } from "next/headers";
 import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
 
 import { Inter } from "next/font/google";
+import Tracking from "./providers/Tracking";
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   weight: ["400", "500", "600", "700", "800"],
 });
-
-const GA_ID = "G-YEY91KKVR2";
-const TIKTOK_PIXEL_ID = "D625ESBC77U70QB7D710";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
@@ -29,12 +26,15 @@ const SITE_URL = (
 ========================= */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+
   title: {
     default: "KiloMystery | Mystery Box",
     template: "%s | KiloMystery",
   },
+
   description:
     "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata.",
+
   alternates: {
     canonical: "/",
     languages: {
@@ -45,6 +45,7 @@ export const metadata: Metadata = {
       de: "/de",
     },
   },
+
   openGraph: {
     title: "KiloMystery | Mystery Box",
     description:
@@ -61,6 +62,7 @@ export const metadata: Metadata = {
       },
     ],
   },
+
   twitter: {
     card: "summary_large_image",
     title: "KiloMystery | Mystery Box",
@@ -93,139 +95,15 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body className={`${inter.className} antialiased`}>
-        {/* DEBUG MARKER (per capire se questo layout è davvero in produzione) */}
+        {/* DEBUG MARKER (per verificare build in prod) */}
         <div
           id="km-build-marker"
-          data-build="tiktok-layout-v1"
+          data-build="layout-v2-tracking-client"
           style={{ display: "none" }}
         />
 
-        {/* =========================================
-            CONSENT DEFAULT (GA + TikTok)
-            - legge km_cookie_consent=accept|reject
-            - espone funzione window.kmApplyConsent()
-        ========================================= */}
-        <Script id="consent-default" strategy="beforeInteractive">
-          {`
-            // Cookie: km_cookie_consent=accept|reject
-            function kmReadConsent(){
-              var m = document.cookie.match(/(?:^|;\\s*)km_cookie_consent=([^;]+)/);
-              var consent = m ? decodeURIComponent(m[1]) : "";
-              return consent; // "accept" | "reject" | ""
-            }
-
-            // Google Consent Mode baseline
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            window.gtag = window.gtag || gtag;
-
-            // TikTok helper
-            window.__tiktokConsentGranted = false;
-
-            // apply consent to GA + TikTok
-            window.kmApplyConsent = function(){
-              var consent = kmReadConsent();
-              var granted = consent === "accept";
-
-              // Google
-              gtag('consent','default',{
-                analytics_storage: granted ? 'granted' : 'denied',
-                ad_storage: granted ? 'granted' : 'denied',
-                ad_user_data: granted ? 'granted' : 'denied',
-                ad_personalization: granted ? 'granted' : 'denied',
-                functionality_storage: granted ? 'granted' : 'denied',
-                personalization_storage: granted ? 'granted' : 'denied',
-                security_storage: 'granted',
-                wait_for_update: 500
-              });
-
-              // TikTok
-              window.__tiktokConsentGranted = granted;
-
-              if (window.ttq && typeof window.ttq.holdConsent === "function" && typeof window.ttq.grantConsent === "function") {
-                if (granted) {
-                  window.ttq.grantConsent();
-                } else {
-                  window.ttq.holdConsent();
-                }
-              }
-            };
-
-            // run once at start
-            window.kmApplyConsent();
-          `}
-        </Script>
-
-        {/* =========================================
-            GOOGLE ANALYTICS
-        ========================================= */}
-        <Script
-          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-          strategy="afterInteractive"
-        />
-        <Script id="ga-config" strategy="afterInteractive">
-          {`
-            gtag('js', new Date());
-            gtag('config','${GA_ID}',{
-              send_page_view: true,
-              linker:{
-                domains:[
-                  'www.kilomystery.com',
-                  'kilomystery.com',
-                  'shop.kilomystery.com',
-                  'account.kilomystery.com'
-                ],
-                accept_incoming: true
-              }
-            });
-          `}
-        </Script>
-
-        {/* =========================================
-            TIKTOK PIXEL (sempre inizializzato)
-            - parte in holdConsent se non c'è consenso
-            - quando il banner accetta: window.kmApplyConsent() -> grantConsent
-        ========================================= */}
-        <Script id="tiktok-pixel-base" strategy="afterInteractive">
-          {`
-            !function (w, d, t) {
-              w.TiktokAnalyticsObject=t;
-              var ttq=w[t]=w[t]||[];
-              ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];
-              ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};
-              for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);
-              ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};
-              ttq.load=function(e,n){
-                var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;
-                ttq._i=ttq._i||{};
-                ttq._i[e]=[];
-                ttq._i[e]._u=r;
-                ttq._t=ttq._t||{};
-                ttq._t[e]=+new Date;
-                ttq._o=ttq._o||{};
-                ttq._o[e]=n||{};
-                n=document.createElement("script");
-                n.type="text/javascript";
-                n.async=!0;
-                n.src=r+"?sdkid="+e+"&lib="+t;
-                e=document.getElementsByTagName("script")[0];
-                e.parentNode.insertBefore(n,e)
-              };
-
-              // carica sempre il pixel
-              ttq.load('${TIKTOK_PIXEL_ID}');
-              ttq.page();
-
-              // applica consenso corrente
-              try { 
-                if (window.kmApplyConsent) window.kmApplyConsent();
-                else ttq.holdConsent();
-              } catch(e) {
-                ttq.holdConsent();
-              }
-            }(window, document, 'ttq');
-          `}
-        </Script>
+        {/* ✅ Tracking CLIENT: GA + TikTok Pixel */}
+        <Tracking />
 
         {/* =========================
             APP
