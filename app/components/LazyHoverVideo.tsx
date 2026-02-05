@@ -1,7 +1,5 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
@@ -9,83 +7,108 @@ type Props = {
   poster?: string;
   className?: string;
   preload?: "none" | "metadata" | "auto";
-  /** se vuoi disattivare autoplay/loop su qualche uso specifico */
-  autoPlay?: boolean;
 };
 
+/**
+ * Autoplay + loop (muted) su desktop e mobile.
+ * Avvia solo quando è visibile (viewport), pausa quando esce.
+ * iOS-safe: muted + playsInline + play() in try/catch.
+ */
 export default function LazyHoverVideo({
   src,
   poster,
   className = "",
   preload = "metadata",
-  autoPlay = true,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const wrapRef = useRef<HTMLDivElement | null>(null);
   const [isReady, setIsReady] = useState(false);
 
-  // chiave stabile per rimontare quando cambia src
   const key = useMemo(() => src, [src]);
 
   useEffect(() => {
     const v = videoRef.current;
-    if (!v) return;
+    const wrap = wrapRef.current;
+    if (!v || !wrap) return;
 
     let cancelled = false;
 
-    // Impostazioni “safe” per iOS + autoplay
+    // iOS / mobile autoplay-safe settings
     v.muted = true;
     v.playsInline = true;
     v.loop = true;
     v.preload = preload;
+    v.autoplay = true;
 
     const markReady = () => {
       if (cancelled) return;
       setIsReady(true);
     };
 
-    const tryPlay = async () => {
-      const vv = videoRef.current; // riprendi ref in modo sicuro
+    const playSafe = async () => {
+      const vv = videoRef.current;
       if (!vv) return;
-
       try {
-        // se già buffered abbastanza, segna ready
         if (vv.readyState >= 2) markReady();
-        // prova a partire (su iOS può fallire senza gesture, ma con muted+playsInline spesso va)
         await vv.play();
       } catch {
-        // fallback: appena può, riprova con eventi (non throw)
+        // iOS può bloccare in alcuni casi: ci riproverà al prossimo intersect/canplay
       }
+    };
+
+    const pauseSafe = () => {
+      const vv = videoRef.current;
+      if (!vv) return;
+      try {
+        vv.pause();
+      } catch {}
     };
 
     const onCanPlay = () => {
       markReady();
-      if (autoPlay) void tryPlay();
-    };
-
-    const onLoadedData = () => {
-      markReady();
-      if (autoPlay) void tryPlay();
+      void playSafe();
     };
 
     v.addEventListener("canplay", onCanPlay);
-    v.addEventListener("loadeddata", onLoadedData);
+    v.addEventListener("loadeddata", onCanPlay);
 
-    // Avvio iniziale (loop continuo)
-    if (autoPlay) {
-      void tryPlay();
-    }
+    // Avvia/pausa in base alla visibilità
+    const io = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+
+        if (entry.isIntersecting) {
+          void playSafe();
+        } else {
+          pauseSafe();
+        }
+      },
+      {
+        root: null,
+        threshold: 0.25, // parte quando almeno 25% è visibile
+      }
+    );
+
+    io.observe(wrap);
+
+    // fallback: se già visibile subito
+    void playSafe();
 
     return () => {
       cancelled = true;
       v.removeEventListener("canplay", onCanPlay);
-      v.removeEventListener("loadeddata", onLoadedData);
+      v.removeEventListener("loadeddata", onCanPlay);
+      io.disconnect();
     };
-  }, [src, preload, autoPlay]);
+  }, [src, preload]);
 
   return (
-    <div className={className}>
-      {/* poster overlay finché il video non è “ready” */}
+    <div ref={wrapRef} className={`relative ${className}`}>
+      {/* Poster solo finché non è pronto */}
       {poster && !isReady ? (
+        // poster semplice: è ok (non è LCP in quella sezione)
+        // se vuoi, posso convertirlo in next/image
         <img
           src={poster}
           alt=""
@@ -105,6 +128,7 @@ export default function LazyHoverVideo({
         muted
         playsInline
         loop
+        autoPlay
         preload={preload}
       />
     </div>
