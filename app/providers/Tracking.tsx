@@ -1,76 +1,14 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect } from "react";
-
-/* =========================
-   IDS
-========================= */
 
 const GA_ID = "G-YEY91KKVR2";
 const TIKTOK_PIXEL_ID = "D625ESBC77U70QB7D710";
 
-/* =========================
-   Helpers
-========================= */
-
-function readConsent(): "accept" | "reject" | "" {
-  if (typeof document === "undefined") return "";
-
-  const m = document.cookie.match(/(?:^|;\s*)km_cookie_consent=([^;]+)/);
-  return m ? (decodeURIComponent(m[1]) as any) : "";
-}
-
-/* =========================
-   Component
-========================= */
-
 export default function Tracking() {
-  /* =========================
-     Apply consent
-  ========================= */
-  function applyConsent() {
-    const consent = readConsent();
-    const granted = consent === "accept";
-
-    /* Google */
-    if ((window as any).gtag) {
-      (window as any).gtag("consent", "update", {
-        analytics_storage: granted ? "granted" : "denied",
-        ad_storage: granted ? "granted" : "denied",
-        ad_user_data: granted ? "granted" : "denied",
-        ad_personalization: granted ? "granted" : "denied",
-      });
-    }
-
-    /* TikTok */
-    if ((window as any).ttq) {
-      if (granted) {
-        (window as any).ttq.grantConsent();
-      } else {
-        (window as any).ttq.holdConsent();
-      }
-    }
-  }
-
-  /* =========================
-     Init on mount
-  ========================= */
-  useEffect(() => {
-    applyConsent();
-
-    // Riesegui se il cookie cambia
-    const i = setInterval(applyConsent, 2000);
-
-    return () => clearInterval(i);
-  }, []);
-
   return (
     <>
-      {/* =========================
-          GOOGLE ANALYTICS
-      ========================= */}
-
+      {/* ================= GA ================= */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
         strategy="afterInteractive"
@@ -79,34 +17,24 @@ export default function Tracking() {
       <Script id="ga-init" strategy="afterInteractive">
         {`
           window.dataLayer = window.dataLayer || [];
-
           function gtag(){dataLayer.push(arguments);}
-
-          window.gtag = window.gtag || gtag;
+          window.gtag = gtag;
 
           gtag('js', new Date());
-
-          gtag('config','${GA_ID}',{
-            send_page_view: true
-          });
+          gtag('config','${GA_ID}');
         `}
       </Script>
 
-      {/* =========================
-          TIKTOK PIXEL
-      ========================= */}
-
+      {/* ================= TIKTOK ================= */}
       <Script id="tiktok-pixel" strategy="afterInteractive">
         {`
           !function (w, d, t) {
             w.TiktokAnalyticsObject=t;
-
             var ttq=w[t]=w[t]||[];
 
             ttq.methods=[
-              "page","track","identify","instances","debug","on","off","once",
-              "ready","alias","group","enableCookie","disableCookie",
-              "holdConsent","revokeConsent","grantConsent"
+              "page","track","identify","instances","debug","on","off",
+              "once","ready","alias","group","enableCookie","disableCookie"
             ];
 
             ttq.setAndDefer=function(t,e){
@@ -120,12 +48,12 @@ export default function Tracking() {
             }
 
             ttq.load=function(e){
-              var n=document.createElement("script");
-              n.async=true;
-              n.src="https://analytics.tiktok.com/i18n/pixel/events.js?sdkid="+e+"&lib="+t;
-
-              var s=document.getElementsByTagName("script")[0];
-              s.parentNode.insertBefore(n,s);
+              var s=d.createElement("script");
+              s.type="text/javascript";
+              s.async=true;
+              s.src="https://analytics.tiktok.com/i18n/pixel/events.js?sdkid="+e+"&lib="+t;
+              var x=d.getElementsByTagName("script")[0];
+              x.parentNode.insertBefore(s,x);
             };
 
             ttq.load('${TIKTOK_PIXEL_ID}');

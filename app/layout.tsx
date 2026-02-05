@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "KiloMystery | Mystery Box",
     description:
-      "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata.",
+      "Mystery Box e Mystery Box al kg (Standard e Premium).",
     type: "website",
     url: SITE_URL,
     siteName: "KiloMystery",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "KiloMystery | Mystery Box",
-    description: "Mystery Box e Mystery Box al kg (Standard e Premium).",
+    description: "Mystery Box e Mystery Box al kg.",
     images: [`${SITE_URL}/og.jpg`],
   },
 };
@@ -95,24 +95,17 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body className={`${inter.className} antialiased`}>
-        {/* DEBUG MARKER (per verificare build in prod) */}
-        <div
-          id="km-build-marker"
-          data-build="layout-v2-tracking-client"
-          style={{ display: "none" }}
-        />
 
-        {/* ✅ Tracking CLIENT: GA + TikTok Pixel */}
+        {/* TRACKING (GA + TIKTOK) */}
         <Tracking />
 
-        {/* =========================
-            APP
-        ========================= */}
+        {/* APP */}
         <CartProviderRoot>
           {children}
           <CookieBanner />
           <NewsletterModalDelayed />
         </CartProviderRoot>
+
       </body>
     </html>
   );
