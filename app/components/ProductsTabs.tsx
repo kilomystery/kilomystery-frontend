@@ -338,7 +338,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                     src={src}
                     poster={poster}
                     className="media rounded-[12px] object-cover"
-                    preload="none"
+                    preload="metadata"
                   />
                 </div>
               </div>
