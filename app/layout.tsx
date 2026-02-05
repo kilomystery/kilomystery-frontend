@@ -97,21 +97,22 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body className={`${inter.className} antialiased`}>
+
         {/* =========================
-            GA INIT + CONSENT (Consent Mode) — MINIMAL
-            (deve stare beforeInteractive per non settare cookie prima del consenso)
+            GA + TIKTOK CONSENT DEFAULT
         ========================= */}
-        <Script id="ga-consent-default" strategy="beforeInteractive">
+        <Script id="consent-default" strategy="beforeInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             window.gtag = gtag;
 
-            // Legge km_cookie_consent=accept|reject
+            // Cookie: km_cookie_consent=accept|reject
             var m = document.cookie.match(/(?:^|;\\s*)km_cookie_consent=([^;]+)/);
             var consent = m ? decodeURIComponent(m[1]) : "";
             var granted = consent === "accept";
 
+            // Google Consent
             gtag('consent','default',{
               analytics_storage: granted ? 'granted' : 'denied',
               ad_storage: granted ? 'granted' : 'denied',
@@ -122,20 +123,20 @@ export default async function RootLayout({
               security_storage: 'granted',
               wait_for_update: 500
             });
+
+            // TikTok Consent
+            window.__tiktokConsentGranted = granted;
           `}
         </Script>
 
         {/* =========================
-            Load gtag.js (non blocca LCP)
+            GOOGLE ANALYTICS
         ========================= */}
         <Script
           src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
           strategy="afterInteractive"
         />
 
-        {/* =========================
-            GA CONFIG + CROSS DOMAIN
-        ========================= */}
         <Script id="ga-config" strategy="afterInteractive">
           {`
             gtag('js', new Date());
@@ -155,15 +156,80 @@ export default async function RootLayout({
         </Script>
 
         {/* =========================
+            TIKTOK PIXEL (CONSENT AWARE)
+        ========================= */}
+        <Script id="tiktok-pixel" strategy="afterInteractive">
+          {`
+            if (window.__tiktokConsentGranted) {
+
+              !function (w, d, t) {
+                w.TiktokAnalyticsObject=t;
+                var ttq=w[t]=w[t]||[];
+
+                ttq.methods=[
+                  "page","track","identify","instances","debug","on","off",
+                  "once","ready","alias","group","enableCookie","disableCookie",
+                  "holdConsent","revokeConsent","grantConsent"
+                ];
+
+                ttq.setAndDefer=function(t,e){
+                  t[e]=function(){
+                    t.push([e].concat(Array.prototype.slice.call(arguments,0)))
+                  }
+                };
+
+                for(var i=0;i<ttq.methods.length;i++){
+                  ttq.setAndDefer(ttq,ttq.methods[i]);
+                }
+
+                ttq.instance=function(t){
+                  for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++){
+                    ttq.setAndDefer(e,ttq.methods[n]);
+                  }
+                  return e;
+                };
+
+                ttq.load=function(e,n){
+                  var r="https://analytics.tiktok.com/i18n/pixel/events.js",
+                      o=n&&n.partner;
+
+                  ttq._i=ttq._i||{};
+                  ttq._i[e]=[];
+                  ttq._i[e]._u=r;
+                  ttq._t=ttq._t||{};
+                  ttq._t[e]=+new Date;
+                  ttq._o=ttq._o||{};
+                  ttq._o[e]=n||{};
+
+                  n=document.createElement("script");
+                  n.type="text/javascript";
+                  n.async=!0;
+                  n.src=r+"?sdkid="+e+"&lib="+t;
+
+                  e=document.getElementsByTagName("script")[0];
+                  e.parentNode.insertBefore(n,e);
+                };
+
+                ttq.load('D625ESBC77U70QB7D710');
+                ttq.page();
+
+              }(window, document, 'ttq');
+
+            }
+          `}
+        </Script>
+
+        {/* =========================
             APP
         ========================= */}
         <CartProviderRoot>
           {children}
+
           <CookieBanner />
 
-          {/* ✅ Modal ritardato: non deve influenzare LCP */}
           <NewsletterModalDelayed />
         </CartProviderRoot>
+
       </body>
     </html>
   );
