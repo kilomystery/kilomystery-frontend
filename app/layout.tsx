@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import "./globals.css";
 
 import CookieBanner from "./components/CookieBanner";
@@ -17,6 +18,9 @@ const inter = Inter({
   weight: ["400", "500", "600", "700", "800"],
 });
 
+const GA_ID = "G-YEY91KKVR2";
+const TIKTOK_PIXEL_ID = "D625ESBC77U70QB7D710";
+
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
 ).replace(/\/$/, "");
@@ -26,15 +30,12 @@ const SITE_URL = (
 ========================= */
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-
   title: {
     default: "KiloMystery | Mystery Box",
     template: "%s | KiloMystery",
   },
-
   description:
     "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata.",
-
   alternates: {
     canonical: "/",
     languages: {
@@ -45,11 +46,10 @@ export const metadata: Metadata = {
       de: "/de",
     },
   },
-
   openGraph: {
     title: "KiloMystery | Mystery Box",
     description:
-      "Mystery Box e Mystery Box al kg (Standard e Premium).",
+      "Mystery Box e Mystery Box al kg (Standard e Premium). Spedizione rapida e tracciata.",
     type: "website",
     url: SITE_URL,
     siteName: "KiloMystery",
@@ -62,11 +62,10 @@ export const metadata: Metadata = {
       },
     ],
   },
-
   twitter: {
     card: "summary_large_image",
     title: "KiloMystery | Mystery Box",
-    description: "Mystery Box e Mystery Box al kg.",
+    description: "Mystery Box e Mystery Box al kg (Standard e Premium).",
     images: [`${SITE_URL}/og.jpg`],
   },
 };
@@ -95,17 +94,56 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body className={`${inter.className} antialiased`}>
+        {/* Debug marker */}
+        <div
+          id="km-build-marker"
+          data-build="tiktok-tracking-v2"
+          style={{ display: "none" }}
+        />
 
-        {/* TRACKING (GA + TIKTOK) */}
-        <Tracking />
+        {/* =========================
+            GOOGLE ANALYTICS
+        ========================= */}
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
+          strategy="afterInteractive"
+        />
+        <Script id="ga-config" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = window.gtag || gtag;
 
-        {/* APP */}
+            gtag('js', new Date());
+            gtag('config','${GA_ID}',{
+              send_page_view: true,
+              linker:{
+                domains:[
+                  'www.kilomystery.com',
+                  'kilomystery.com',
+                  'shop.kilomystery.com',
+                  'account.kilomystery.com'
+                ],
+                accept_incoming: true
+              }
+            });
+          `}
+        </Script>
+
+        {/* =========================
+            TRACKING (Client)
+            - TikTok Pixel injection + consent bridge
+        ========================= */}
+        <Tracking gaId={GA_ID} tiktokPixelId={TIKTOK_PIXEL_ID} />
+
+        {/* =========================
+            APP
+        ========================= */}
         <CartProviderRoot>
           {children}
           <CookieBanner />
           <NewsletterModalDelayed />
         </CartProviderRoot>
-
       </body>
     </html>
   );

@@ -71,10 +71,10 @@ export default function CookieBanner() {
     });
   }
 
-  /* Applica consenso anche a TikTok (via funzione globale definita nel layout) */
-  function applyTikTokConsent() {
+  /* Applica consenso anche a TikTok (via funzione globale definita dal Tracking provider) */
+  function applyTikTokConsent(choice?: "accept" | "reject") {
     if (typeof window === "undefined") return;
-    (window as any).kmApplyConsent?.();
+    (window as any).kmApplyConsent?.(choice);
   }
 
   /* Init */
@@ -88,11 +88,12 @@ export default function CookieBanner() {
       return;
     }
 
-    const choice: "accept" | "reject" = saved === "accept" ? "accept" : "reject";
+    const choice: "accept" | "reject" =
+      saved === "accept" ? "accept" : "reject";
 
     // riallinea GA + TikTok all'avvio
     applyGAConsent(choice);
-    applyTikTokConsent();
+    applyTikTokConsent(choice);
   }, []);
 
   /* Click handler */
@@ -105,7 +106,7 @@ export default function CookieBanner() {
     applyGAConsent(choice);
 
     // aggiorna TikTok (holdConsent / grantConsent)
-    applyTikTokConsent();
+    applyTikTokConsent(choice);
 
     setOpen(false);
   }
