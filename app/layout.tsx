@@ -93,6 +93,13 @@ export default async function RootLayout({
   return (
     <html lang={lang} className="bg-[#0b0f14] text-white">
       <body className={`${inter.className} antialiased`}>
+        {/* DEBUG MARKER (per capire se questo layout è davvero in produzione) */}
+        <div
+          id="km-build-marker"
+          data-build="tiktok-layout-v1"
+          style={{ display: "none" }}
+        />
+
         {/* =========================================
             CONSENT DEFAULT (GA + TikTok)
             - legge km_cookie_consent=accept|reject
@@ -205,13 +212,11 @@ export default async function RootLayout({
                 e.parentNode.insertBefore(n,e)
               };
 
-              // IMPORTANT: carica sempre
+              // carica sempre il pixel
               ttq.load('${TIKTOK_PIXEL_ID}');
-              // prima pagina (SPA ok)
               ttq.page();
 
-              // Applica consenso corrente:
-              // se non accettato -> holdConsent (niente cookie)
+              // applica consenso corrente
               try { 
                 if (window.kmApplyConsent) window.kmApplyConsent();
                 else ttq.holdConsent();
