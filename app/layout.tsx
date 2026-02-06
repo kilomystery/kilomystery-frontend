@@ -24,7 +24,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" className="bg-[#0b0f14] text-white">
-      <body>
+      <head>
         <Script id="km-consent-bridge" strategy="beforeInteractive">
           {`
             window.kmApplyConsent = window.kmApplyConsent || function(choice){
@@ -32,6 +32,8 @@ export default function RootLayout({
             };
           `}
         </Script>
+      </head>
+      <body>
         <ClientTracking />
         {children}
       </body>
