@@ -286,6 +286,18 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
       });
     }
   }
+    // ✅ Meta AddToCart (solo se consenso)
+    if (window.__metaConsentGranted && window.fbq) {
+      const total = PRICE_TABLE[kind === "Standard" ? "std" : "prm"][kg].total;
+
+      window.fbq("track", "AddToCart", {
+        content_ids: [String(shopifyId)],
+        content_type: "product",
+        content_name: cartItem.title,
+        value: Number(total),
+        currency: "EUR",
+      });
+    }
 
   return (
     <section className="container py-10 space-y-6">

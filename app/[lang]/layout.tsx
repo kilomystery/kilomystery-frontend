@@ -19,6 +19,7 @@ const inter = Inter({
 
 const GA_ID = "G-YEY91KKVR2";
 const TIKTOK_PIXEL_ID = "D625ESBC77U70QB7D710";
+const META_PIXEL_ID = "210193010627336";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com"
@@ -43,7 +44,9 @@ export const metadata: Metadata = {
     type: "website",
     url: SITE_URL,
     siteName: "KiloMystery",
-    images: [{ url: `${SITE_URL}/og.jpg`, width: 1200, height: 630, alt: "KiloMystery" }],
+    images: [
+      { url: `${SITE_URL}/og.jpg`, width: 1200, height: 630, alt: "KiloMystery" },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -133,8 +136,8 @@ export default async function LangLayout({
         `}
       </Script>
 
-      {/* 4) Tracking provider: TikTok + bridge consenso */}
-      <Tracking gaId={GA_ID} tiktokPixelId={TIKTOK_PIXEL_ID} />
+      {/* 4) Tracking provider: TikTok + Meta Pixel + bridge consenso */}
+      <Tracking gaId={GA_ID} tiktokPixelId={TIKTOK_PIXEL_ID} metaPixelId={META_PIXEL_ID} />
 
       <CartProviderRoot>
         {children}

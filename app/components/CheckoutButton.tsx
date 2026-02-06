@@ -155,6 +155,10 @@ export default function CheckoutButton({ lang = "it", wheelBonusKg = 0 }: Props)
         setLoading(false);
         return;
       }
+      // ✅ Meta InitiateCheckout
+      if (window.__metaConsentGranted && window.fbq) {
+        window.fbq("track", "InitiateCheckout");
+      }
 
       window.location.href = data.url;
     } catch (e: any) {
