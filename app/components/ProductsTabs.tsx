@@ -13,6 +13,10 @@ declare global {
   interface Window {
     ttq?: any;
     __tiktokConsentGranted?: boolean;
+
+    // ✅ Meta
+    fbq?: (...args: any[]) => void;
+    __metaConsentGranted?: boolean;
   }
 }
 
@@ -87,7 +91,7 @@ const LABELS: Record<Lang, any> = {
 
     wheelTitle: "Ruleta de la suerte",
     wheelText:
-      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos a tu pedido.",
+      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos al tu pedido.",
     wheelCta: "Ir a los 10 kg",
   },
   fr: {
@@ -142,10 +146,7 @@ const LABELS: Record<Lang, any> = {
 
 const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
-const PRICE_TABLE: Record<
-  TabTier,
-  Record<Kg, { total: number; compareAt: number }>
-> = {
+const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
     1: { total: 22.99, compareAt: 25.9 },
     2: { total: 44.88, compareAt: 51.8 },
@@ -213,9 +214,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
   const supported = ["it", "en", "es", "fr", "de"] as const;
   const normalized = String(lang).toLowerCase();
-  const safeLang: Lang = (supported as readonly string[]).includes(
-    normalized as any
-  )
+  const safeLang: Lang = (supported as readonly string[]).includes(normalized as any)
     ? (normalized as Lang)
     : "it";
 
@@ -267,10 +266,11 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
     addItem(cartItem as any);
     gaAddToCart(cartItem as any, 1);
 
+    const tabKey: "std" | "prm" = kind === "Standard" ? "std" : "prm";
+    const total = PRICE_TABLE[tabKey][kg].total;
+
     // ✅ TikTok AddToCart (solo se consenso)
     if (window.__tiktokConsentGranted && window.ttq) {
-      const total = PRICE_TABLE[kind === "Standard" ? "std" : "prm"][kg].total;
-
       window.ttq.track("AddToCart", {
         contents: [
           {
@@ -285,11 +285,9 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
         currency: "EUR",
       });
     }
-  }
+
     // ✅ Meta AddToCart (solo se consenso)
     if (window.__metaConsentGranted && window.fbq) {
-      const total = PRICE_TABLE[kind === "Standard" ? "std" : "prm"][kg].total;
-
       window.fbq("track", "AddToCart", {
         content_ids: [String(shopifyId)],
         content_type: "product",
@@ -298,6 +296,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
         currency: "EUR",
       });
     }
+  }
 
   return (
     <section className="container py-10 space-y-6">

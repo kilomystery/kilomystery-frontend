@@ -18,6 +18,10 @@ declare global {
   interface Window {
     ttq?: any;
     __tiktokConsentGranted?: boolean;
+
+    // ✅ Meta
+    fbq?: (...args: any[]) => void;
+    __metaConsentGranted?: boolean;
   }
 }
 
@@ -68,9 +72,9 @@ const EXPLORER_TOTAL_KG = 16; // 15kg + 1kg omaggio
 const EXPLORER_PRICE_TOTAL = 314.0; // prezzo reale
 const EXPLORER_COMPARE_TOTAL = 418.5; // prezzo di confronto
 
-const EXPLORER_PRICE_PER_KG = +(
-  EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG
-).toFixed(2);
+const EXPLORER_PRICE_PER_KG = +(EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG).toFixed(
+  2
+);
 
 const EXPLORER_COMPARE_PER_KG = +(
   EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG
@@ -571,6 +575,17 @@ function PackCard({
         currency: "EUR",
       });
     }
+
+    // ✅ Meta AddToCart (solo se consenso)
+    if (window.__metaConsentGranted && window.fbq) {
+      window.fbq("track", "AddToCart", {
+        content_ids: [String(variantId)],
+        content_type: "product",
+        content_name: cartItem.title,
+        value: Number(total),
+        currency: "EUR",
+      });
+    }
   }
 
   const badgeTextTop = kind === "Standard" ? t.badgeStd : t.badgePrm;
@@ -592,9 +607,7 @@ function PackCard({
         </span>
       </div>
 
-      <div
-        className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}
-      >
+      <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
         <div className="ratio-16-9">
           <LazyHoverVideo
             className="media rounded-[12px] object-cover"
@@ -611,14 +624,10 @@ function PackCard({
         </h4>
 
         <div className="text-right space-y-1">
-          <div className="text-sm line-through text-white/45">
-            {euro(compareTotal)}
-          </div>
+          <div className="text-sm line-through text-white/45">{euro(compareTotal)}</div>
 
           <div
-            className={`price-figure ${
-              isStd ? "price-figure--std" : "price-figure--prm"
-            } text-3xl`}
+            className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}
           >
             {euro(total)}
           </div>
@@ -626,9 +635,7 @@ function PackCard({
           <div className="price-perkg">({ppk.toFixed(2)} €/kg)</div>
 
           {co2Text && (
-            <div className="text-[0.7rem] text-emerald-200/90">
-              ♻ {co2Text}
-            </div>
+            <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>
           )}
         </div>
       </div>
@@ -687,6 +694,17 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
         currency: "EUR",
       });
     }
+
+    // ✅ Meta AddToCart (solo se consenso)
+    if (window.__metaConsentGranted && window.fbq) {
+      window.fbq("track", "AddToCart", {
+        content_ids: [String(EXPLORER_SHOPIFY_ID)],
+        content_type: "product",
+        content_name: t.explorerTitle,
+        value: Number(EXPLORER_PRICE_TOTAL),
+        currency: "EUR",
+      });
+    }
   }
 
   return (
@@ -701,9 +719,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
         </span>
       </div>
 
-      <p className="text-sm md:text-base text-white/75 max-w-2xl">
-        {t.explorerSubtitle}
-      </p>
+      <p className="text-sm md:text-base text-white/75 max-w-2xl">{t.explorerSubtitle}</p>
 
       <div className="grid md:grid-cols-[1.4fr,1fr] gap-4 items-stretch">
         <div className="card relative overflow-hidden bg-gradient-to-br from-[#7A20FF]/40 via-[#111827] to-[#20D27A]/30">
@@ -781,9 +797,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
                     {euro(EXPLORER_COMPARE_TOTAL)}
                   </div>
 
-                  <div className="text-3xl font-extrabold">
-                    {euro(EXPLORER_PRICE_TOTAL)}
-                  </div>
+                  <div className="text-3xl font-extrabold">{euro(EXPLORER_PRICE_TOTAL)}</div>
 
                   <div className="text-xs text-white/60">
                     ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg{" "}
@@ -793,11 +807,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={handleAdd}
-                  className="btn btn-brand px-6 py-3"
-                >
+                <button type="button" onClick={handleAdd} className="btn btn-brand px-6 py-3">
                   {t.explorerCta}
                 </button>
               </div>
@@ -824,11 +834,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   );
 }
 
-export default function ProductsPage({
-  params,
-}: {
-  params: { lang: string };
-}) {
+export default function ProductsPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
@@ -917,17 +923,14 @@ export default function ProductsPage({
 
     return () => {
       destroyed = true;
-      if (timer) {
-        clearTimeout(timer);
-      }
+      if (timer) clearTimeout(timer);
       try {
         anim?.destroy();
       } catch {}
     };
   }, []);
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
   const productJsonLd = useMemo(
     () => ({
@@ -992,19 +995,10 @@ export default function ProductsPage({
       <main className="container py-10 mb-16 space-y-10">
         <section className="space-y-6 text-center max-w-3xl mx-auto">
           <div className="mx-auto w-[160px] md:w-[220px] relative aspect-[3/1]">
-            <Image
-              src="/logo.svg"
-              alt="KiloMystery"
-              fill
-              className="object-contain"
-              priority
-            />
+            <Image src="/logo.svg" alt="KiloMystery" fill className="object-contain" priority />
           </div>
 
-          <div
-            ref={animRef}
-            className="mx-auto w-[280px] md:w-[360px] h-[220px] md:h-[260px]"
-          />
+          <div ref={animRef} className="mx-auto w-[280px] md:w-[360px] h-[220px] md:h-[260px]" />
 
           <header className="space-y-3">
             <h1 className="text-3xl md:text-4xl font-extrabold">
@@ -1017,16 +1011,10 @@ export default function ProductsPage({
             <p className="text-white/70">{t.heroSubtitle2}</p>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <a
-                href={`/${lang}/mystery-box`}
-                className="btn btn-brand px-5 py-2"
-              >
+              <a href={`/${lang}/mystery-box`} className="btn btn-brand px-5 py-2">
                 {t.seoCtaPrimary}
               </a>
-              <a
-                href={`/${lang}/how-it-works`}
-                className="btn btn-ghost px-5 py-2"
-              >
+              <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
                 {t.seoCtaSecondary}
               </a>
               <a href={`/${lang}/faq`} className="btn btn-ghost px-5 py-2">
@@ -1060,24 +1048,14 @@ export default function ProductsPage({
         <section className="card p-5 md:p-6 bg-gradient-to-br from-white/[0.04] via-[#111827]/60 to-white/[0.06]">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="space-y-2">
-              <h2 className="text-xl md:text-2xl font-extrabold">
-                {t.seoCtaTitle}
-              </h2>
-              <p className="text-white/70 text-sm md:text-base max-w-2xl">
-                {t.seoCtaText}
-              </p>
+              <h2 className="text-xl md:text-2xl font-extrabold">{t.seoCtaTitle}</h2>
+              <p className="text-white/70 text-sm md:text-base max-w-2xl">{t.seoCtaText}</p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <a
-                href={`/${lang}/mystery-box`}
-                className="btn btn-brand px-5 py-2"
-              >
+              <a href={`/${lang}/mystery-box`} className="btn btn-brand px-5 py-2">
                 {t.seoCtaPrimary}
               </a>
-              <a
-                href={`/${lang}/how-it-works`}
-                className="btn btn-ghost px-5 py-2"
-              >
+              <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
                 {t.seoCtaSecondary}
               </a>
             </div>
@@ -1112,12 +1090,8 @@ export default function ProductsPage({
 
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-silver-soft">
-              Standard
-            </h2>
-            <p className="text-xs text-white/60 max-w-md">
-              {t.standardDescription}
-            </p>
+            <h2 className="text-2xl font-extrabold text-silver-soft">Standard</h2>
+            <p className="text-xs text-white/60 max-w-md">{t.standardDescription}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -1138,9 +1112,7 @@ export default function ProductsPage({
         <section className="space-y-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-2xl font-extrabold text-gold-soft">Premium</h2>
-            <p className="text-xs text-white/60 max-w-md">
-              {t.premiumDescription}
-            </p>
+            <p className="text-xs text-white/60 max-w-md">{t.premiumDescription}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-5">
@@ -1165,10 +1137,7 @@ export default function ProductsPage({
         <section id="policy" className="card">
           <h3 className="text-xl font-extrabold mb-2">{t.returnTitle}</h3>
           <p className="text-white/70 text-sm md:text-base">{t.returnText}</p>
-          <a
-            href={`/${lang}/policy/returns`}
-            className="btn btn-ghost mt-3 inline-flex"
-          >
+          <a href={`/${lang}/policy/returns`} className="btn btn-ghost mt-3 inline-flex">
             {t.returnCta}
           </a>
         </section>
