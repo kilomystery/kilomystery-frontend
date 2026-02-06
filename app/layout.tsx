@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Suspense } from "react";
 import "./globals.css";
 import ClientTracking from "./providers/ClientTracking";
 
@@ -33,9 +32,7 @@ export default function RootLayout({
         </Script>
       </head>
       <body>
-        <Suspense fallback={null}>
-          <ClientTracking />
-        </Suspense>
+        <ClientTracking />
         {children}
       </body>
     </html>

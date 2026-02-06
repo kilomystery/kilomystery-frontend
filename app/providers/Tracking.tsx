@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
   initAttributionStorage,
   trackPageView,
@@ -43,8 +43,8 @@ export default function Tracking({
   metaPixelId: string;
 }) {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [consent, setConsent] = useState<ConsentChoice>(getStoredConsent());
+  const [search, setSearch] = useState<string>("");
   const lastTrackedRef = useRef<string>("");
 
   useEffect(() => {
@@ -135,8 +135,10 @@ export default function Tracking({
     };
   }, [applyConsent]);
 
-  const search = searchParams?.toString() ?? "";
-
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setSearch(window.location.search || "");
+  }, [pathname]);
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (consent !== "accept") return;
