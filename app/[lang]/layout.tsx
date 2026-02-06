@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 
 import CookieBanner from "../components/CookieBanner";
 import NewsletterModalDelayed from "../components/NewsletterModalDelayed";
@@ -69,12 +70,34 @@ export default async function LangLayout({
   const lang = await getHtmlLang();
 
   return (
-    <div className={`${inter.className} antialiased`} data-lang-layout="1">
-      <CartProviderRoot>
-        {children}
-        <CookieBanner />
-        <NewsletterModalDelayed />
-      </CartProviderRoot>
-    </div>
+    <>
+      {/* CONSENT STUB: deve esistere PRIMA di hydration su /it /en /... */}
+      <Script
+        id="km-consent-stub"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+(function(){
+  window.__kmPendingConsentChoice = window.__kmPendingConsentChoice || null;
+  window.kmApplyConsent =
+    window.kmApplyConsent ||
+    function(choice){
+      window.__kmPendingConsentChoice =
+        typeof choice === "string" ? choice : null;
+    };
+  window.__kmStubLoaded = true;
+})();
+          `.trim(),
+        }}
+      />
+
+      <div className={`${inter.className} antialiased`} data-lang-layout="1" data-lang={lang}>
+        <CartProviderRoot>
+          {children}
+          <CookieBanner />
+          <NewsletterModalDelayed />
+        </CartProviderRoot>
+      </div>
+    </>
   );
 }
