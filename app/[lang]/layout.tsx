@@ -4,10 +4,10 @@ import Script from "next/script";
 import CookieBanner from "../components/CookieBanner";
 import NewsletterModalDelayed from "../components/NewsletterModalDelayed";
 import CartProviderRoot from "../CartProviderRoot";
-import Tracking from "../providers/Tracking";
 
 import { cookies, headers } from "next/headers";
 import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
+import { TRACKING_IDS } from "@/app/config/tracking";
 
 import { Inter } from "next/font/google";
 
@@ -16,10 +16,6 @@ const inter = Inter({
   display: "swap",
   weight: ["400", "500", "600", "700", "800"],
 });
-
-const GA_ID = "G-YEY91KKVR2";
-const TIKTOK_PIXEL_ID = "D625ESBC77U70QB7D710";
-const META_PIXEL_ID = "210193010627336";
 
 const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com"
@@ -108,20 +104,23 @@ export default async function LangLayout({
       </Script>
 
       {/* 2) Loader GA */}
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}
-        strategy="afterInteractive"
-      />
+      {TRACKING_IDS.GA ? (
+        <Script
+          src={`https://www.googletagmanager.com/gtag/js?id=${TRACKING_IDS.GA}`}
+          strategy="afterInteractive"
+        />
+      ) : null}
 
       {/* 3) Config GA - UNA SOLA VOLTA */}
-      <Script id="km-ga-config" strategy="afterInteractive">
-        {`
+      {TRACKING_IDS.GA ? (
+        <Script id="km-ga-config" strategy="afterInteractive">
+          {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           window.gtag = window.gtag || gtag;
 
           gtag('js', new Date());
-          gtag('config','${GA_ID}',{
+          gtag('config','${TRACKING_IDS.GA}',{
             send_page_view: false,
             linker:{
               domains:[
@@ -134,10 +133,8 @@ export default async function LangLayout({
             }
           });
         `}
-      </Script>
-
-      {/* 4) Tracking provider: TikTok + Meta Pixel + bridge consenso */}
-      <Tracking gaId={GA_ID} tiktokPixelId={TIKTOK_PIXEL_ID} metaPixelId={META_PIXEL_ID} />
+        </Script>
+      ) : null}
 
       <CartProviderRoot>
         {children}

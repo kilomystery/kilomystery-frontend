@@ -9,6 +9,8 @@ import {
   trackPageView,
 } from "@/app/lib/tracking";
 
+const IS_DEV = process.env.NODE_ENV !== "production";
+
 function getCookie(name: string) {
   if (typeof document === "undefined") return "";
   const match = document.cookie.split("; ").find((r) => r.startsWith(name + "="));
@@ -34,6 +36,9 @@ function loadTikTok(pixelId: string) {
     return;
   }
   window.__kmTikTokLoaded = true;
+  if (IS_DEV) {
+    console.info("[KM Tracking] loading TikTok pixel", pixelId);
+  }
 
   (function (w: any, d: any, t: any) {
     w.TiktokAnalyticsObject = t;
@@ -92,6 +97,9 @@ function loadMetaPixel(pixelId: string) {
     return;
   }
   window.__kmMetaLoaded = true;
+  if (IS_DEV) {
+    console.info("[KM Tracking] loading Meta pixel", pixelId);
+  }
 
   if (typeof window.fbq === "function") {
     flushPendingMetaEvents();
@@ -134,6 +142,9 @@ export default function Tracking({
 
   useEffect(() => {
     initAttributionStorage();
+    if (IS_DEV) {
+      console.info("[KM Tracking] provider mounted");
+    }
   }, []);
 
   const applyConsent = useCallback(
@@ -146,6 +157,9 @@ export default function Tracking({
         window.__gaConsentGranted = granted;
         window.__metaConsentGranted = granted;
         window.__tiktokConsentGranted = granted;
+      }
+      if (IS_DEV) {
+        console.info("[KM Tracking] consent applied:", normalized);
       }
 
       const gtag = typeof window !== "undefined" ? window.gtag : undefined;
@@ -191,6 +205,9 @@ export default function Tracking({
   useEffect(() => {
     window.kmApplyConsent = applyConsent;
     applyConsent(getStoredConsent());
+    if (IS_DEV) {
+      console.info("[KM Tracking] kmApplyConsent ready");
+    }
     return () => {
       if (window.kmApplyConsent === applyConsent) {
         delete window.kmApplyConsent;

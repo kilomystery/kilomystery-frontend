@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ClientTracking from "./providers/ClientTracking";
 
 export const metadata: Metadata = {
   title: {
@@ -17,7 +18,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it" className="bg-[#0b0f14] text-white">
-      <body>{children}</body>
+      <body>
+        <ClientTracking />
+        {children}
+      </body>
     </html>
   );
 }
