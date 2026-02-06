@@ -122,7 +122,7 @@ export default async function LangLayout({
 
           gtag('js', new Date());
           gtag('config','${GA_ID}',{
-            send_page_view: true,
+            send_page_view: false,
             linker:{
               domains:[
                 'www.kilomystery.com',

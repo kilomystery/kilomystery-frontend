@@ -8,11 +8,11 @@ import { normalizeLang, Lang } from "@/i18n/lang";
 import SpinWheel from "@/app/components/SpinWheel";
 
 import {
-  gaViewCart,
-  gaAddToCart,
-  gaRemoveFromCart,
-  gaBeginCheckout,
-} from "@/app/lib/ga";
+  trackAddToCart,
+  trackInitiateCheckout,
+  trackRemoveFromCart,
+  trackViewCart,
+} from "@/app/lib/tracking";
 
 // === UPSSELL: COSTANTI CON ID REALI ===
 const UPSELL_STD_1KG_SHOPIFY_ID = "52089042567506";
@@ -277,7 +277,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     if (sig === lastCartSigRef.current) return;
     lastCartSigRef.current = sig;
 
-    gaViewCart(items);
+    trackViewCart(items as any);
   }, [items]);
 
   /* =========================
@@ -286,20 +286,20 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   function incQty(item: any) {
     const next = safeNumber(item.qty, 0) + 1;
     setQty(item.id, next);
-    gaAddToCart(item, 1);
+    trackAddToCart(item, 1);
   }
 
   function decQty(item: any) {
     const qty = safeNumber(item.qty, 0);
     if (qty <= 1) return;
     setQty(item.id, qty - 1);
-    gaRemoveFromCart(item, 1);
+    trackRemoveFromCart(item, 1);
   }
 
   function removeLine(item: any) {
     const qty = Math.max(1, safeNumber(item.qty, 1));
     removeItem(item.id);
-    gaRemoveFromCart(item, qty);
+    trackRemoveFromCart(item, qty);
   }
 
   function addUpsellStd() {
@@ -313,7 +313,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       qty: 1,
     };
     addItem(item as any);
-    gaAddToCart(item as any, 1);
+    trackAddToCart(item as any, 1);
   }
 
   function addUpsellPrm() {
@@ -327,7 +327,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       qty: 1,
     };
     addItem(item as any);
-    gaAddToCart(item as any, 1);
+    trackAddToCart(item as any, 1);
   }
 
   /* =========================
@@ -343,8 +343,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
     setCheckoutLoading(true);
 
-    // GA begin_checkout
-    gaBeginCheckout(items, {
+    trackInitiateCheckout(items as any, {
       checkout_flow: "storefront_cartcreate",
       locale: lang,
       wheel_bonus_kg: wheelBonusKg > 0 ? Number(wheelBonusKg.toFixed(2)) : 0,

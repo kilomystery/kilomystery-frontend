@@ -1,35 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import {
+  flushPendingMetaEvents,
+  flushPendingTikTokEvents,
+  initAttributionStorage,
+  trackPageView,
+} from "@/app/lib/tracking";
 
-declare global {
-  interface Window {
-    ttq?: any;
-    fbq?: any;
-
-    kmApplyConsent?: (choice?: "accept" | "reject") => void;
-
-    __tiktokConsentGranted?: boolean;
-    __metaConsentGranted?: boolean;
-  }
-}
-
-function getCookie(name: string): string {
+function getCookie(name: string) {
   if (typeof document === "undefined") return "";
-  const row = document.cookie.split("; ").find((r) => r.startsWith(name + "="));
-  return row ? decodeURIComponent(row.split("=")[1] || "") : "";
+  const match = document.cookie.split("; ").find((r) => r.startsWith(name + "="));
+  return match ? decodeURIComponent(match.split("=")[1] || "") : "";
 }
 
-/* =========================
-   TikTok Loader (già presente)
-========================= */
+type ConsentChoice = "accept" | "reject";
+
+function getStoredConsent(): ConsentChoice {
+  const cookieValue = getCookie("km_cookie_consent");
+  if (cookieValue === "accept" || cookieValue === "reject") return cookieValue;
+  if (typeof window !== "undefined") {
+    const local = window.localStorage.getItem("km-cookie-consent");
+    if (local === "accept" || local === "reject") return local;
+  }
+  return "reject";
+}
+
 function loadTikTok(pixelId: string) {
   if (typeof window === "undefined") return;
-  if ((window as any).__kmTikTokLoaded) return;
-  (window as any).__kmTikTokLoaded = true;
+  if (window.__kmTikTokLoaded) {
+    flushPendingTikTokEvents();
+    return;
+  }
+  window.__kmTikTokLoaded = true;
 
-  (function (w, d, t) {
+  (function (w: any, d: any, t: any) {
     w.TiktokAnalyticsObject = t;
     const ttq = (w.ttq = w.ttq || []);
     ttq.methods = [
@@ -47,68 +53,73 @@ function loadTikTok(pixelId: string) {
       "enableCookie",
       "disableCookie",
     ];
-    ttq.setAndDefer = function (t: any, e: any) {
-      t[e] = function () {
-        t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+    ttq.setAndDefer = function (_t: any, e: any) {
+      _t[e] = function () {
+        _t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
       };
     };
     for (let i = 0; i < ttq.methods.length; i++) ttq.setAndDefer(ttq, ttq.methods[i]);
-    ttq.instance = function (t: any) {
-      const e = ttq._i[t] || [];
+    ttq.instance = function (id: any) {
+      const e = ttq._i[id] || [];
       for (let n = 0; n < ttq.methods.length; n++) ttq.setAndDefer(e, ttq.methods[n]);
       return e;
     };
-    ttq.load = function (e: any, n: any) {
-      const i = "https://analytics.tiktok.com/i18n/pixel/events.js";
+    ttq.load = function (id: any, opts: any) {
+      const u = "https://analytics.tiktok.com/i18n/pixel/events.js";
       ttq._i = ttq._i || {};
-      ttq._i[e] = [];
-      ttq._i[e]._u = i;
+      ttq._i[id] = [];
+      ttq._i[id]._u = u;
       ttq._t = ttq._t || {};
-      ttq._t[e] = +new Date();
+      ttq._t[id] = +new Date();
       ttq._o = ttq._o || {};
-      ttq._o[e] = n || {};
+      ttq._o[id] = opts || {};
       const a = d.createElement("script");
       a.type = "text/javascript";
       a.async = true;
-      a.src = i + "?sdkid=" + e + "&lib=" + t;
+      a.src = u + "?sdkid=" + id + "&lib=" + t;
+      a.addEventListener("load", () => flushPendingTikTokEvents());
       const s = d.getElementsByTagName("script")[0];
-      s.parentNode?.insertBefore(a, s);
+      s?.parentNode?.insertBefore(a, s);
     };
     ttq.load(pixelId);
   })(window as any, document, "ttq");
 }
 
-/* =========================
-   Meta Pixel Loader
-========================= */
 function loadMetaPixel(pixelId: string) {
   if (typeof window === "undefined") return;
-  if ((window as any).__kmMetaLoaded) return;
-  (window as any).__kmMetaLoaded = true;
+  if (window.__kmMetaLoaded) {
+    flushPendingMetaEvents();
+    return;
+  }
+  window.__kmMetaLoaded = true;
 
-  // Base snippet
-  !(function (f: any, b: any, e: any, v: any, n?: any, t?: any, s?: any) {
-    if (f.fbq) return;
-    n = f.fbq = function () {
-      n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments);
-    };
-    if (!f._fbq) f._fbq = n;
-    n.push = n;
-    n.loaded = true;
-    n.version = "2.0";
-    n.queue = [];
-    t = b.createElement(e);
-    t.async = true;
-    t.src = v;
-    s = b.getElementsByTagName(e)[0];
-    s.parentNode.insertBefore(t, s);
-  })(window, document, "script", "https://connect.facebook.net/en_US/fbevents.js");
+  if (typeof window.fbq === "function") {
+    flushPendingMetaEvents();
+    return;
+  }
 
-  window.fbq("init", pixelId);
+  const fbq: any = function (...args: any[]) {
+    fbq.callMethod ? fbq.callMethod.apply(fbq, args) : fbq.queue.push(args);
+  };
+  fbq.push = fbq;
+  fbq.loaded = true;
+  fbq.version = "2.0";
+  fbq.queue = [];
+
+  window.fbq = fbq;
+  window._fbq = fbq;
+
+  const s = document.createElement("script");
+  s.async = true;
+  s.src = "https://connect.facebook.net/en_US/fbevents.js";
+  s.addEventListener("load", () => flushPendingMetaEvents());
+  document.head.appendChild(s);
+
+  (window.fbq as typeof fbq)?.("init", pixelId);
 }
 
 export default function Tracking({
-  gaId,
+  gaId: _gaId,
   tiktokPixelId,
   metaPixelId,
 }: {
@@ -118,19 +129,26 @@ export default function Tracking({
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [consent, setConsent] = useState<ConsentChoice>(getStoredConsent());
+  const lastTrackedRef = useRef<string>("");
 
-  // 1) Bridge consenso + load pixel
   useEffect(() => {
-    // Bridge globale: CookieBanner chiama questa
-    window.kmApplyConsent = (choice?: "accept" | "reject") => {
-      const granted = choice === "accept";
+    initAttributionStorage();
+  }, []);
 
-      // Espone flag runtime (utile per bottoni)
-      window.__tiktokConsentGranted = granted;
-      window.__metaConsentGranted = granted;
+  const applyConsent = useCallback(
+    (choice?: ConsentChoice) => {
+      const normalized: ConsentChoice = choice === "accept" ? "accept" : "reject";
+      const granted = normalized === "accept";
 
-      // GA update (se gtag esiste)
-      const gtag = (window as any).gtag;
+      if (typeof window !== "undefined") {
+        window.__kmConsentChoice = normalized;
+        window.__gaConsentGranted = granted;
+        window.__metaConsentGranted = granted;
+        window.__tiktokConsentGranted = granted;
+      }
+
+      const gtag = typeof window !== "undefined" ? window.gtag : undefined;
       if (gtag) {
         gtag("consent", "update", {
           analytics_storage: granted ? "granted" : "denied",
@@ -143,43 +161,57 @@ export default function Tracking({
         });
       }
 
-      // TikTok: se accetta → abilita cookie + page()
       if (granted) {
-        loadTikTok(tiktokPixelId);
-        const ttq = (window as any).ttq;
-        if (ttq?.enableCookie) ttq.enableCookie();
-        if (ttq?.page) ttq.page();
-      } else {
-        const ttq = (window as any).ttq;
-        if (ttq?.disableCookie) ttq.disableCookie();
-      }
-
-      // Meta: se accetta → load + PageView (una volta)
-      if (granted) {
-        loadMetaPixel(metaPixelId);
+        if (metaPixelId) loadMetaPixel(metaPixelId);
+        if (tiktokPixelId) loadTikTok(tiktokPixelId);
+        window.ttq?.enableCookie?.();
         if (window.fbq) {
-          window.fbq("track", "PageView");
+          try {
+            window.fbq("consent", "grant");
+          } catch {
+            /* ignore */
+          }
+        }
+      } else {
+        window.ttq?.disableCookie?.();
+        if (window.fbq) {
+          try {
+            window.fbq("consent", "revoke");
+          } catch {
+            /* ignore */
+          }
         }
       }
-    };
 
-    // All’avvio: riallinea a cookie esistente
-    const consent = getCookie("km_cookie_consent");
-    const granted = consent === "accept";
+      setConsent(normalized);
+    },
+    [metaPixelId, tiktokPixelId]
+  );
 
-    if (granted) {
-      window.kmApplyConsent?.("accept");
-    } else {
-      window.kmApplyConsent?.("reject");
-    }
-  }, [tiktokPixelId, metaPixelId, gaId]);
-
-  // 2) PageView su route-change (solo se consenso Meta)
   useEffect(() => {
-    if (!window.__metaConsentGranted) return;
-    if (!window.fbq) return;
-    window.fbq("track", "PageView");
-  }, [pathname, searchParams]);
+    window.kmApplyConsent = applyConsent;
+    applyConsent(getStoredConsent());
+    return () => {
+      if (window.kmApplyConsent === applyConsent) {
+        delete window.kmApplyConsent;
+      }
+    };
+  }, [applyConsent]);
+
+  const search = searchParams?.toString() ?? "";
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (consent !== "accept") return;
+    if (!pathname) return;
+
+    const key = search ? `${pathname}?${search}` : pathname;
+    if (window.__kmLastTrackedPath === key || lastTrackedRef.current === key) return;
+    window.__kmLastTrackedPath = key;
+    lastTrackedRef.current = key;
+
+    trackPageView(pathname, search);
+  }, [pathname, search, consent]);
 
   return null;
 }

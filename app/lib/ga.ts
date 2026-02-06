@@ -2,11 +2,7 @@
    GA4 Ecommerce helpers (adattati al tuo cart schema)
 */
 
-declare global {
-  interface Window {
-    gtag?: (...args: any[]) => void;
-  }
-}
+import { getAttributionParams } from "@/app/lib/attribution";
 
 export type KMCartItem = {
   id: string;
@@ -14,6 +10,7 @@ export type KMCartItem = {
   tier?: "Standard" | "Premium" | string;
   weightKg?: number;
   pricePerKg?: number;
+  price?: number;
   qty?: number;
   image?: string;
   shopifyId?: string; // variant id (meglio per GA)
@@ -46,10 +43,22 @@ export function gaEvent(name: string, params: Record<string, any> = {}) {
     typeof window !== "undefined" &&
     new URLSearchParams(window.location.search).get("ga_debug") === "1";
 
-  gtag("event", name, cleanParams({ ...params, debug_mode: debugMode || undefined }));
+  gtag(
+    "event",
+    name,
+    cleanParams({
+      ...params,
+      ...getAttributionParams(),
+      debug_mode: debugMode || undefined,
+    })
+  );
 }
 
-function itemUnitPriceEUR(i: KMCartItem) {
+export function getItemUnitPriceEUR(i: KMCartItem) {
+  const directPrice = Number(i.price ?? 0);
+  if (Number.isFinite(directPrice) && directPrice > 0) {
+    return Number(directPrice.toFixed(2));
+  }
   const pricePerKg = Number(i.pricePerKg || 0);
   const weightKg = Number(i.weightKg || 0);
   const unit = pricePerKg * weightKg;
@@ -63,7 +72,7 @@ function mapGAItem(
   listName?: string
 ) {
   const quantity = Math.max(1, Number(qtyOverride ?? i.qty ?? 1));
-  const price = itemUnitPriceEUR(i);
+  const price = getItemUnitPriceEUR(i);
 
   const weightKg = Number(i.weightKg || 0);
   const variant = weightKg > 0 ? `${weightKg}kg` : undefined;
@@ -86,10 +95,10 @@ function mapGAItem(
   });
 }
 
-function cartValueEUR(items: KMCartItem[]) {
+export function getCartValueEUR(items: KMCartItem[]) {
   return items.reduce((sum, i) => {
     const q = Math.max(0, Number(i.qty || 0));
-    return sum + itemUnitPriceEUR(i) * q;
+    return sum + getItemUnitPriceEUR(i) * q;
   }, 0);
 }
 
@@ -111,7 +120,7 @@ export function gaViewCart(items: KMCartItem[]) {
 
   gaEvent("view_cart", {
     currency: "EUR",
-    value: cartValueEUR(items),
+    value: getCartValueEUR(items),
     items: items.map((i, idx) => mapGAItem(i, i.qty, idx)),
   });
 }
@@ -121,7 +130,7 @@ export function gaAddToCart(item: KMCartItem, qtyAdded = 1) {
 
   gaEvent("add_to_cart", {
     currency: "EUR",
-    value: itemUnitPriceEUR(item) * q,
+    value: getItemUnitPriceEUR(item) * q,
     items: [mapGAItem(item, q)],
   });
 }
@@ -131,7 +140,7 @@ export function gaRemoveFromCart(item: KMCartItem, qtyRemoved = 1) {
 
   gaEvent("remove_from_cart", {
     currency: "EUR",
-    value: itemUnitPriceEUR(item) * q,
+    value: getItemUnitPriceEUR(item) * q,
     items: [mapGAItem(item, q)],
   });
 }
@@ -141,7 +150,7 @@ export function gaBeginCheckout(items: KMCartItem[], extra?: Record<string, any>
 
   gaEvent("begin_checkout", {
     currency: "EUR",
-    value: cartValueEUR(items),
+    value: getCartValueEUR(items),
     items: items.map((i, idx) => mapGAItem(i, i.qty, idx)),
     ...(extra || {}),
   });

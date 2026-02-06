@@ -5,20 +5,8 @@ import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/app/components/cart/CartProvider";
 import LazyHoverVideo from "@/app/components/LazyHoverVideo";
 import { SHOPIFY_VARIANTS, Kg, Tier } from "@/app/config/shopifyProducts";
-
-// ✅ GA4 helpers
-import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
-
-declare global {
-  interface Window {
-    ttq?: any;
-    __tiktokConsentGranted?: boolean;
-
-    // ✅ Meta
-    fbq?: (...args: any[]) => void;
-    __metaConsentGranted?: boolean;
-  }
-}
+import { trackAddToCart, trackViewItemList } from "@/app/lib/tracking";
+import type { KMCartItem } from "@/app/lib/ga";
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
 type TabTier = "std" | "prm";
@@ -91,7 +79,7 @@ const LABELS: Record<Lang, any> = {
 
     wheelTitle: "Ruleta de la suerte",
     wheelText:
-      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos al tu pedido.",
+      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos a tu pedido.",
     wheelCta: "Ir a los 10 kg",
   },
   fr: {
@@ -201,8 +189,7 @@ const co2ByKg: Record<Lang, Record<Kg, string>> = {
   },
 };
 
-const euro = (n: number) =>
-  n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+const euro = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
 /* =========================
    COMPONENT
@@ -221,7 +208,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
   const L = LABELS[safeLang];
   const currentKind: "Standard" | "Premium" = tab === "std" ? "Standard" : "Premium";
 
-  // ✅ GA4: view_item_list una volta per tab+lingua (anti doppioni)
+  // ✅ GA4: view_item_list una volta per tab+lingua
   const listRef = useRef<string>("");
   useEffect(() => {
     const key = `products-tabs:${safeLang}:${tab}`;
@@ -246,14 +233,14 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
       };
     });
 
-    gaViewItemList(`ProductsTabs-${currentKind}`, items as any);
+    trackViewItemList(`ProductsTabs-${currentKind}`, items as any);
   }, [safeLang, tab, currentKind]);
 
   function handleAddToCart(kind: "Standard" | "Premium", kg: Kg, perKg: number) {
     const tierLookup = kind === "Standard" ? "standard" : "premium";
     const shopifyId = SHOPIFY_VARIANTS[tierLookup as Tier][kg];
 
-    const cartItem = {
+    const cartItem: KMCartItem = {
       id: `${kind}-${kg}`,
       title: `${kind} · ${kg} kg`,
       tier: kind,
@@ -264,38 +251,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
     };
 
     addItem(cartItem as any);
-    gaAddToCart(cartItem as any, 1);
-
-    const tabKey: "std" | "prm" = kind === "Standard" ? "std" : "prm";
-    const total = PRICE_TABLE[tabKey][kg].total;
-
-    // ✅ TikTok AddToCart (solo se consenso)
-    if (window.__tiktokConsentGranted && window.ttq) {
-      window.ttq.track("AddToCart", {
-        contents: [
-          {
-            content_id: shopifyId,
-            content_type: "product",
-            content_name: cartItem.title,
-            price: Number(total),
-            num_items: 1,
-          },
-        ],
-        value: Number(total),
-        currency: "EUR",
-      });
-    }
-
-    // ✅ Meta AddToCart (solo se consenso)
-    if (window.__metaConsentGranted && window.fbq) {
-      window.fbq("track", "AddToCart", {
-        content_ids: [String(shopifyId)],
-        content_type: "product",
-        content_name: cartItem.title,
-        value: Number(total),
-        currency: "EUR",
-      });
-    }
+    trackAddToCart(cartItem, 1);
   }
 
   return (
@@ -388,17 +344,13 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 <div className="text-right space-y-1">
                   <div className="text-sm text-white/60 line-through">{euro(compareAt)}</div>
 
-                  <div
-                    className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}
-                  >
+                  <div className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}>
                     {euro(total)}
                   </div>
 
                   <div className="price-perkg">({perKg.toFixed(2)} {L.perkg})</div>
 
-                  {co2Text && (
-                    <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>
-                  )}
+                  {co2Text && <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>}
                 </div>
               </div>
 
@@ -421,11 +373,9 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           );
         })}
 
-        {/* BONUS CARD (wheel png) */}
+        {/* BONUS CARD */}
         <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4">
-          <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">
-            🎡 Bonus extra
-          </p>
+          <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">🎡 Bonus extra</p>
 
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
             <Image

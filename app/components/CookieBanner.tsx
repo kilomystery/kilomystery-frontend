@@ -36,10 +36,7 @@ function setCookie(name: string, value: string, days = 180) {
 function getCookie(name: string) {
   if (typeof document === "undefined") return undefined;
 
-  const row = document.cookie
-    .split("; ")
-    .find((r) => r.startsWith(name + "="));
-
+  const row = document.cookie.split("; ").find((r) => r.startsWith(name + "="));
   if (!row) return undefined;
 
   return decodeURIComponent(row.split("=")[1] || "");
@@ -51,49 +48,11 @@ function getCookie(name: string) {
 export default function CookieBanner() {
   const [open, setOpen] = useState(false);
 
-  /* Applica consenso a GA (update) */
-  function applyGAConsent(choice: "accept" | "reject") {
-    if (typeof window === "undefined") return;
-
-    const gtag = (window as any).gtag;
-    if (!gtag) return;
-
-    const granted = choice === "accept";
-
-    gtag("consent", "update", {
-      analytics_storage: granted ? "granted" : "denied",
-      ad_storage: granted ? "granted" : "denied",
-      ad_user_data: granted ? "granted" : "denied",
-      ad_personalization: granted ? "granted" : "denied",
-      functionality_storage: granted ? "granted" : "denied",
-      personalization_storage: granted ? "granted" : "denied",
-      security_storage: "granted",
-    });
-  }
-
-  /* Applica consenso anche a TikTok (via funzione globale definita dal Tracking provider) */
-  function applyTikTokConsent(choice?: "accept" | "reject") {
-    if (typeof window === "undefined") return;
-    (window as any).kmApplyConsent?.(choice);
-  }
-
-  /* Init */
   useEffect(() => {
     const savedCookie = getCookie("km_cookie_consent");
     const savedLocal = localStorage.getItem("km-cookie-consent");
-    const saved = savedCookie || savedLocal;
-
-    if (!saved) {
-      setOpen(true);
-      return;
-    }
-
-    const choice: "accept" | "reject" =
-      saved === "accept" ? "accept" : "reject";
-
-    // riallinea GA + TikTok all'avvio
-    applyGAConsent(choice);
-    applyTikTokConsent(choice);
+    const saved = savedCookie || savedLocal || "";
+    if (!saved) setOpen(true);
   }, []);
 
   /* Click handler */
@@ -102,11 +61,9 @@ export default function CookieBanner() {
     localStorage.setItem("km-cookie-consent", choice);
     setCookie("km_cookie_consent", choice);
 
-    // aggiorna GA
-    applyGAConsent(choice);
-
-    // aggiorna TikTok (holdConsent / grantConsent)
-    applyTikTokConsent(choice);
+    if (typeof window !== "undefined") {
+      window.kmApplyConsent?.(choice);
+    }
 
     setOpen(false);
   }

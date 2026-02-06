@@ -10,20 +10,13 @@ import { useCart } from "../../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
 import SectionInsideBox from "../../components/SectionInsideBox";
 import LazyHoverVideo from "../../components/LazyHoverVideo";
+import {
+  trackAddToCart,
+  trackViewContent,
+  trackViewItemList,
+} from "@/app/lib/tracking";
+import type { KMCartItem } from "@/app/lib/ga";
 
-// ✅ GA4 helpers
-import { gaAddToCart, gaViewItemList } from "@/app/lib/ga";
-
-declare global {
-  interface Window {
-    ttq?: any;
-    __tiktokConsentGranted?: boolean;
-
-    // ✅ Meta
-    fbq?: (...args: any[]) => void;
-    __metaConsentGranted?: boolean;
-  }
-}
 
 type Kg = 1 | 2 | 3 | 5 | 10;
 
@@ -504,6 +497,18 @@ function PackCard({
   const isStd = kind === "Standard";
   const anchorId = kg === 10 ? `buy-${kind.toLowerCase()}-10` : undefined;
   const variantId = VARIANT_IDS[kind][kg];
+  const pricePerKgValue = +(total / kg).toFixed(2);
+
+  const buildCartItem = (): KMCartItem => ({
+    id: `${kind}-${kg}`,
+    shopifyId: variantId,
+    title: `${kind} · ${kg} kg`,
+    tier: kind,
+    weightKg: kg,
+    pricePerKg: pricePerKgValue,
+    qty: 1,
+    image: video,
+  });
 
   // ✅ TikTok ViewContent (solo quando la card entra in viewport, anti-spam)
   const viewTrackedRef = useRef(false);
@@ -521,19 +526,7 @@ function PackCard({
 
         viewTrackedRef.current = true;
 
-        if (window.__tiktokConsentGranted && window.ttq) {
-          window.ttq.track("ViewContent", {
-            contents: [
-              {
-                content_id: variantId,
-                content_type: "product",
-                content_name: `${kind} · ${kg} kg`,
-              },
-            ],
-            value: Number(total),
-            currency: "EUR",
-          });
-        }
+        trackViewContent(buildCartItem());
 
         obs.disconnect();
       },
@@ -545,47 +538,9 @@ function PackCard({
   }, [kind, kg, variantId, total]);
 
   function handleAddToCart() {
-    const cartItem = {
-      id: `${kind}-${kg}`,
-      shopifyId: variantId,
-      title: `${kind} · ${kg} kg`,
-      tier: kind, // ✅ Standard/Premium coerente
-      weightKg: kg,
-      pricePerKg: +(total / kg).toFixed(2),
-      qty: 1,
-      image: video,
-    };
-
+    const cartItem = buildCartItem();
     addItem(cartItem as any);
-    gaAddToCart(cartItem as any, 1);
-
-    // ✅ TikTok AddToCart (solo se consenso)
-    if (window.__tiktokConsentGranted && window.ttq) {
-      window.ttq.track("AddToCart", {
-        contents: [
-          {
-            content_id: variantId,
-            content_type: "product",
-            content_name: cartItem.title,
-            price: Number(total),
-            num_items: 1,
-          },
-        ],
-        value: Number(total),
-        currency: "EUR",
-      });
-    }
-
-    // ✅ Meta AddToCart (solo se consenso)
-    if (window.__metaConsentGranted && window.fbq) {
-      window.fbq("track", "AddToCart", {
-        content_ids: [String(variantId)],
-        content_type: "product",
-        content_name: cartItem.title,
-        value: Number(total),
-        currency: "EUR",
-      });
-    }
+    trackAddToCart(cartItem, 1);
   }
 
   const badgeTextTop = kind === "Standard" ? t.badgeStd : t.badgePrm;
@@ -664,7 +619,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   const { addItem } = useCart();
 
   function handleAdd() {
-    const cartItem = {
+    const cartItem: KMCartItem = {
       id: "Explorer-16",
       shopifyId: EXPLORER_SHOPIFY_ID,
       title: t.explorerTitle,
@@ -676,35 +631,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
     };
 
     addItem(cartItem as any);
-    gaAddToCart(cartItem as any, 1);
-
-    // ✅ TikTok AddToCart (solo se consenso)
-    if (window.__tiktokConsentGranted && window.ttq) {
-      window.ttq.track("AddToCart", {
-        contents: [
-          {
-            content_id: EXPLORER_SHOPIFY_ID,
-            content_type: "product",
-            content_name: t.explorerTitle,
-            price: Number(EXPLORER_PRICE_TOTAL),
-            num_items: 1,
-          },
-        ],
-        value: Number(EXPLORER_PRICE_TOTAL),
-        currency: "EUR",
-      });
-    }
-
-    // ✅ Meta AddToCart (solo se consenso)
-    if (window.__metaConsentGranted && window.fbq) {
-      window.fbq("track", "AddToCart", {
-        content_ids: [String(EXPLORER_SHOPIFY_ID)],
-        content_type: "product",
-        content_name: t.explorerTitle,
-        value: Number(EXPLORER_PRICE_TOTAL),
-        currency: "EUR",
-      });
-    }
+    trackAddToCart(cartItem, 1);
   }
 
   return (
@@ -876,7 +803,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       qty: 1,
     });
 
-    gaViewItemList("Products", items);
+    trackViewItemList("Products", items as any);
   }, [lang, t]);
 
   useEffect(() => {
