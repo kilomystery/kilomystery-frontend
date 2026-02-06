@@ -52,8 +52,8 @@ export default function Tracking({
     if (_gaId) {
       initGa(_gaId);
     }
-    if (IS_DEV) {
-      console.info("[KM Tracking] provider mounted");
+    if (IS_DEV && typeof window !== "undefined") {
+      console.log("[KM_TRACK] Tracking mounted", window.location?.pathname);
     }
   }, [_gaId]);
 
@@ -102,7 +102,19 @@ export default function Tracking({
   );
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.__metaConsentGranted = false;
+      window.__tiktokConsentGranted = false;
+      window.__gaConsentGranted = false;
+    }
+
     window.kmApplyConsent = applyConsent;
+    if (IS_DEV) {
+      console.log(
+        "[KM_TRACK] kmApplyConsent set",
+        typeof window !== "undefined" ? typeof window.kmApplyConsent : "server"
+      );
+    }
     const pending = window.__kmPendingConsentChoice;
     if (pending) {
       applyConsent(pending);
@@ -110,10 +122,13 @@ export default function Tracking({
     } else {
       applyConsent(getStoredConsent());
     }
-    if (IS_DEV) {
-      console.info("[KM Tracking] kmApplyConsent ready");
-    }
+    const timer = window.setTimeout(() => {
+      if (IS_DEV && typeof window !== "undefined" && typeof window.kmApplyConsent !== "function") {
+        console.error("[KM_TRACK] kmApplyConsent NOT defined - provider not mounted");
+      }
+    }, 600);
     return () => {
+      window.clearTimeout(timer);
       if (window.kmApplyConsent === applyConsent) {
         delete window.kmApplyConsent;
       }

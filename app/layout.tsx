@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import dynamic from "next/dynamic";
 import Script from "next/script";
-import { Suspense } from "react";
 import "./globals.css";
-
-const ClientTracking = dynamic(() => import("./providers/ClientTracking"), {
-  ssr: false,
-  loading: () => null,
-});
+import ClientTracking from "./providers/ClientTracking";
 
 export const metadata: Metadata = {
   title: {
@@ -28,16 +22,17 @@ export default function RootLayout({
       <head>
         <Script id="km-consent-bridge" strategy="beforeInteractive">
           {`
-            window.kmApplyConsent = window.kmApplyConsent || function(choice){
-              window.__kmPendingConsentChoice = choice;
-            };
+            (function(){
+              window.__kmPendingConsentChoice = window.__kmPendingConsentChoice || null;
+              window.kmApplyConsent = window.kmApplyConsent || function(choice){
+                window.__kmPendingConsentChoice = choice || "reject";
+              };
+            })();
           `}
         </Script>
       </head>
       <body>
-        <Suspense fallback={null}>
-          <ClientTracking />
-        </Suspense>
+        <ClientTracking />
         {children}
       </body>
     </html>
