@@ -129,9 +129,6 @@ export default function Tracking({
     }, 600);
     return () => {
       window.clearTimeout(timer);
-      if (window.kmApplyConsent === applyConsent) {
-        delete window.kmApplyConsent;
-      }
     };
   }, [applyConsent]);
 

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
 import ClientTracking from "./providers/ClientTracking";
 
@@ -20,16 +19,21 @@ export default function RootLayout({
   return (
     <html lang="it" className="bg-[#0b0f14] text-white">
       <head>
-        <Script id="km-consent-bridge" strategy="beforeInteractive">
-          {`
-            (function(){
-              window.__kmPendingConsentChoice = window.__kmPendingConsentChoice || null;
-              window.kmApplyConsent = window.kmApplyConsent || function(choice){
-                window.__kmPendingConsentChoice = choice || "reject";
-              };
-            })();
-          `}
-        </Script>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(){
+                if (typeof window === "undefined") return;
+                window.__kmPendingConsentChoice = window.__kmPendingConsentChoice || null;
+                window.kmApplyConsent =
+                  window.kmApplyConsent ||
+                  function(choice){
+                    window.__kmPendingConsentChoice = typeof choice === "string" ? choice : null;
+                  };
+              })();
+            `,
+          }}
+        />
       </head>
       <body>
         <ClientTracking />
