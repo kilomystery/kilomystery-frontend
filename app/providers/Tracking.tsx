@@ -204,7 +204,13 @@ export default function Tracking({
 
   useEffect(() => {
     window.kmApplyConsent = applyConsent;
-    applyConsent(getStoredConsent());
+    const pending = window.__kmPendingConsentChoice;
+    if (pending) {
+      applyConsent(pending);
+      delete window.__kmPendingConsentChoice;
+    } else {
+      applyConsent(getStoredConsent());
+    }
     if (IS_DEV) {
       console.info("[KM Tracking] kmApplyConsent ready");
     }

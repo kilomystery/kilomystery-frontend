@@ -15,6 +15,7 @@ declare global {
       disableCookie?: () => void;
     };
     kmApplyConsent?: (choice: KMConsentChoice) => void;
+    __kmPendingConsentChoice?: KMConsentChoice;
     __kmConsentChoice?: KMConsentChoice;
     __kmTikTokLoaded?: boolean;
     __kmMetaLoaded?: boolean;
