@@ -27,10 +27,14 @@ function setCookie(name: string, value: string, days = 180) {
   if (typeof document === "undefined") return;
 
   const maxAge = days * 24 * 60 * 60;
+  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const shouldSetDomain =
+    hostname && hostname !== "localhost" && hostname.endsWith("kilomystery.com");
+  const domainAttr = shouldSetDomain ? "; Domain=.kilomystery.com" : "";
 
   document.cookie = `${name}=${encodeURIComponent(
     value
-  )}; Max-Age=${maxAge}; Path=/; Domain=.kilomystery.com; SameSite=Lax`;
+  )}; Max-Age=${maxAge}; Path=/; SameSite=Lax${domainAttr}`;
 }
 
 function getCookie(name: string) {

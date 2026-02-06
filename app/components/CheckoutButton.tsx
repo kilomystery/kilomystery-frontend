@@ -35,6 +35,7 @@ export default function CheckoutButton({ lang = "it", wheelBonusKg = 0 }: Props)
         locale: lang,
         wheel_bonus_kg: bonus > 0 ? Number(bonus.toFixed(2)) : 0,
       });
+      // Nota: il tracking sul dominio Shopify (shop.kilomystery.com) va gestito tramite Shopify Customer Events / app pixels.
 
       // ✅ crea checkout
       const res = await fetch("/api/checkout/create", {

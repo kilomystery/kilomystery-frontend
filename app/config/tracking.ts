@@ -1,11 +1,7 @@
-const FALLBACK_GA = "G-YEY91KKVR2";
-const FALLBACK_META = "210193010627336";
-const FALLBACK_TIKTOK = "D625ESBC77U70QB7D710";
-
 export const TRACKING_IDS = {
-  GA: process.env.NEXT_PUBLIC_GA_ID || FALLBACK_GA,
-  META: process.env.NEXT_PUBLIC_META_PIXEL_ID || FALLBACK_META,
-  TIKTOK: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || FALLBACK_TIKTOK,
+  GA: process.env.NEXT_PUBLIC_GA_ID || "",
+  META: process.env.NEXT_PUBLIC_META_PIXEL_ID || "",
+  TIKTOK: process.env.NEXT_PUBLIC_TIKTOK_PIXEL_ID || "",
 };
 
 export function hasTrackingIds() {
