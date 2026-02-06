@@ -113,7 +113,10 @@ export function initMetaPixel(pixelId: string) {
   script.onload = flushMetaQueue;
   document.head.appendChild(script);
 
-  window.fbq("init", pixelId);
+  const fbqInstance = window.fbq;
+  if (fbqInstance) {
+    fbqInstance("init", pixelId);
+  }
 }
 
 export function queueMetaEvent(event: string, payload: Record<string, any>, standard = true) {
