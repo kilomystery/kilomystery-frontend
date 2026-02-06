@@ -2,7 +2,7 @@
 
 /* eslint-disable react/no-unescaped-entities */
 
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
@@ -499,16 +499,19 @@ function PackCard({
   const variantId = VARIANT_IDS[kind][kg];
   const pricePerKgValue = +(total / kg).toFixed(2);
 
-  const buildCartItem = (): KMCartItem => ({
-    id: `${kind}-${kg}`,
-    shopifyId: variantId,
-    title: `${kind} · ${kg} kg`,
-    tier: kind,
-    weightKg: kg,
-    pricePerKg: pricePerKgValue,
-    qty: 1,
-    image: video,
-  });
+  const buildCartItem = useCallback(
+    (): KMCartItem => ({
+      id: `${kind}-${kg}`,
+      shopifyId: variantId,
+      title: `${kind} · ${kg} kg`,
+      tier: kind,
+      weightKg: kg,
+      pricePerKg: pricePerKgValue,
+      qty: 1,
+      image: video,
+    }),
+    [kind, kg, pricePerKgValue, variantId, video]
+  );
 
   // ✅ TikTok ViewContent (solo quando la card entra in viewport, anti-spam)
   const viewTrackedRef = useRef(false);
@@ -535,7 +538,7 @@ function PackCard({
 
     obs.observe(el);
     return () => obs.disconnect();
-  }, [kind, kg, variantId, total]);
+  }, [buildCartItem, kind, kg]);
 
   function handleAddToCart() {
     const cartItem = buildCartItem();

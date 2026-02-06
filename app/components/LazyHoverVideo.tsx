@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 
 type Props = {
   src: string;
@@ -107,15 +108,15 @@ export default function LazyHoverVideo({
     <div ref={wrapRef} className={`relative ${className}`}>
       {/* Poster solo finché non è pronto */}
       {poster && !isReady ? (
-        // poster semplice: è ok (non è LCP in quella sezione)
-        // se vuoi, posso convertirlo in next/image
-        <img
+        <Image
           src={poster}
           alt=""
           aria-hidden="true"
-          className="absolute inset-0 h-full w-full object-cover"
+          fill
+          className="object-cover"
           loading="lazy"
           decoding="async"
+          sizes="100vw"
         />
       ) : null}
 

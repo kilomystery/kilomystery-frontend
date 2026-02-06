@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import ClientTracking from "./providers/ClientTracking";
 
@@ -19,7 +20,9 @@ export default function RootLayout({
   return (
     <html lang="it" className="bg-[#0b0f14] text-white">
       <body>
-        <ClientTracking />
+        <Suspense fallback={null}>
+          <ClientTracking />
+        </Suspense>
         {children}
       </body>
     </html>
