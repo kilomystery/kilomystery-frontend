@@ -110,7 +110,12 @@ export function initMetaPixel(pixelId: string) {
   const script = document.createElement("script");
   script.async = true;
   script.src = "https://connect.facebook.net/en_US/fbevents.js";
-  script.onload = flushMetaQueue;
+  script.onload = () => {
+    if (process.env.NODE_ENV !== "production") {
+      console.log("[KM_TRACK] meta loaded=", true);
+    }
+    flushMetaQueue();
+  };
   document.head.appendChild(script);
 
   const fbqInstance = window.fbq;
@@ -192,7 +197,12 @@ export function initTikTokPixel(pixelId: string) {
       s.type = "text/javascript";
       s.async = true;
       s.src = `https://analytics.tiktok.com/i18n/pixel/events.js?sdkid=${pixel}&lib=${t}`;
-      s.onload = flushTikTokQueue;
+      s.onload = () => {
+        if (process.env.NODE_ENV !== "production") {
+          console.log("[KM_TRACK] tiktok loaded=", true);
+        }
+        flushTikTokQueue();
+      };
       const n = document.getElementsByTagName("script")[0];
       n?.parentNode?.insertBefore(s, n);
     };

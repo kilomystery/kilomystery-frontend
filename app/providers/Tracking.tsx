@@ -114,6 +114,9 @@ export default function Tracking({
         "[KM_TRACK] kmApplyConsent set",
         typeof window !== "undefined" ? typeof window.kmApplyConsent : "server"
       );
+      if (typeof document !== "undefined") {
+        console.log("[KM_TRACK] consent cookie=", document.cookie || "(empty)");
+      }
     }
     const pending = window.__kmPendingConsentChoice;
     if (pending) {
