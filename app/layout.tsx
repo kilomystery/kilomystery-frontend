@@ -2,7 +2,11 @@ import "./globals.css";
 import Script from "next/script";
 import ClientTracking from "./providers/ClientTracking";
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="it">
       <head>
@@ -11,6 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           strategy="beforeInteractive"
         />
       </head>
+
       <body>
         <ClientTracking />
         {children}
