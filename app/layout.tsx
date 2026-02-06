@@ -1,24 +1,24 @@
 // app/layout.tsx
 import "./globals.css";
-import Script from "next/script";
 import ClientTracking from "./providers/ClientTracking";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it">
       <head>
-        <Script
+        <script
           id="km-consent-stub"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: `
 (function(){
-  try {
-    window.__kmPendingConsentChoice = window.__kmPendingConsentChoice || null;
-    window.kmApplyConsent = window.kmApplyConsent || function(choice){
-      try { window.__kmPendingConsentChoice = choice || "accept"; } catch(e){}
+  window.__kmPendingConsentChoice = window.__kmPendingConsentChoice || null;
+  window.kmApplyConsent =
+    window.kmApplyConsent ||
+    function(choice){
+      window.__kmPendingConsentChoice =
+        typeof choice === "string" ? choice : null;
     };
-  } catch(e) {}
+  window.__kmStubLoaded = true;
 })();
             `.trim(),
           }}
