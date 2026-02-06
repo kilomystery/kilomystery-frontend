@@ -1,4 +1,4 @@
-import "./globals.css";
+ import "./globals.css";
 import Script from "next/script";
 import ClientTracking from "./providers/ClientTracking";
 
