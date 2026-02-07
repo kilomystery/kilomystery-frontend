@@ -1,21 +1,12 @@
- import "./globals.css";
-import Script from "next/script";
+import "./globals.css";
 import ClientTracking from "./providers/ClientTracking";
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="it">
       <head>
-        <Script
-          src="/km-consent-stub.js"
-          strategy="beforeInteractive"
-        />
+        <script src="/km-consent-stub.js" />
       </head>
-
       <body>
         <ClientTracking />
         {children}

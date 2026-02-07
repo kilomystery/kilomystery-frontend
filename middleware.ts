@@ -6,14 +6,21 @@ import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
 const PUBLIC_FILE = /\.(.*)$/;
 const LANG_COOKIE = "km_lang";
 
+// ✅ Lista esplicita di asset che NON devono mai essere toccati dal middleware
+const ALWAYS_PUBLIC = new Set([
+  "/km-consent-stub.js",
+  "/robots.txt",
+  "/sitemap.xml",
+  "/favicon.ico",
+]);
+
 function isPublicPath(pathname: string) {
   return (
+    ALWAYS_PUBLIC.has(pathname) ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
     pathname.startsWith("/static") ||
     pathname.startsWith("/favicon") ||
-    pathname === "/robots.txt" ||
-    pathname === "/sitemap.xml" ||
     PUBLIC_FILE.test(pathname)
   );
 }
@@ -22,7 +29,7 @@ export function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const { pathname } = url;
 
-  // 1) Asset e file pubblici
+  // 1) Asset e file pubblici (incluso km-consent-stub.js)
   if (isPublicPath(pathname)) {
     return NextResponse.next();
   }
@@ -32,10 +39,6 @@ export function middleware(req: NextRequest) {
   const hasLang = SUPPORTED_LANGS.includes(first as Lang);
 
   // 2) Determina lingua
-  // - se URL ha /:lang -> usa quella
-  // - altrimenti prova cookie km_lang
-  // - altrimenti accept-language
-  // - fallback: en
   let lang: Lang;
 
   if (hasLang) {
@@ -70,6 +73,7 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)",
+    // ✅ Non eseguire middleware su asset / file / km-consent-stub.js
+    "/((?!api/|_next/|static/|favicon.ico|robots.txt|sitemap.xml|km-consent-stub\\.js|.*\\.(?:js|css|map|png|jpg|jpeg|svg|webp|ico|txt|xml)).*)",
   ],
 };
