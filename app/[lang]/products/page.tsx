@@ -1,3 +1,4 @@
+// app/[lang]/products/page.tsx
 "use client";
 
 /* eslint-disable react/no-unescaped-entities */
@@ -10,13 +11,8 @@ import { useCart } from "../../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
 import SectionInsideBox from "../../components/SectionInsideBox";
 import LazyHoverVideo from "../../components/LazyHoverVideo";
-import {
-  trackAddToCart,
-  trackViewContent,
-  trackViewItemList,
-} from "@/app/lib/tracking";
+import { trackAddToCart, trackViewContent, trackViewItemList } from "@/app/lib/tracking";
 import type { KMCartItem } from "@/app/lib/ga";
-
 
 type Kg = 1 | 2 | 3 | 5 | 10;
 
@@ -29,10 +25,7 @@ const prmJ = (kg: Kg) => `/videos/packs/prm-${kg}.jpg`;
    ✅ PREZZI FRONTEND (REAL + COMPARE) — ALLINEATI A SHOPIFY
 ========================================================= */
 
-const PRICE_TABLE: Record<
-  "Standard" | "Premium",
-  Record<Kg, { total: number; compareTotal: number }>
-> = {
+const PRICE_TABLE: Record<"Standard" | "Premium", Record<Kg, { total: number; compareTotal: number }>> = {
   Standard: {
     1: { total: 22.9, compareTotal: 25.9 },
     2: { total: 44.88, compareTotal: 51.8 },
@@ -56,8 +49,7 @@ function prices(kind: "Standard" | "Premium", kg: Kg) {
   return { total, compareTotal, ppk, comparePpk };
 }
 
-const euro = (n: number) =>
-  n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+const euro = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
 // === EXPLORER BOX (BUNDLE) — ALLINEATA A SHOPIFY ===
 const EXPLORER_SHOPIFY_ID = "52089141363026";
@@ -65,13 +57,8 @@ const EXPLORER_TOTAL_KG = 16; // 15kg + 1kg omaggio
 const EXPLORER_PRICE_TOTAL = 314.0; // prezzo reale
 const EXPLORER_COMPARE_TOTAL = 418.5; // prezzo di confronto
 
-const EXPLORER_PRICE_PER_KG = +(EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG).toFixed(
-  2
-);
-
-const EXPLORER_COMPARE_PER_KG = +(
-  EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG
-).toFixed(2);
+const EXPLORER_PRICE_PER_KG = +(EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
+const EXPLORER_COMPARE_PER_KG = +(EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
 
 type CopyKey =
   | "heroTitleHighlight"
@@ -108,12 +95,19 @@ type CopyKey =
   | "seoCtaText"
   | "seoCtaPrimary"
   | "seoCtaSecondary"
-  | "seoCtaTertiary";
+  | "seoCtaTertiary"
+  // ✅ internal linking “vendita pacchi smarriti”
+  | "lostParcelsTitle"
+  | "lostParcelsText"
+  | "lostParcelsPrimary"
+  | "lostParcelsSecondary"
+  | "lostParcelsTertiary"
+  | "lostParcelsQuaternary";
 
 type CopyPerLang = Record<CopyKey, string>;
 
 /* =========================
-   COPY (identico al tuo)
+   COPY (tuo + aggiunte)
 ========================= */
 const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
   it: {
@@ -128,11 +122,17 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     trustShippingText:
       "Spediamo in tutta Europa con tracking attivo. Tempi medi 48–72h. Spedizione gratuita per ordini superiori a 100€.",
     trustPaymentsTitle: "Pagamenti sicuri",
-    trustPaymentsText:
-      "Paghi tramite provider affidabili, con riepilogo completo via email.",
+    trustPaymentsText: "Paghi tramite provider affidabili, con riepilogo completo via email.",
     trustSupportTitle: "Assistenza",
-    trustSupportText:
-      "Supporto diretto via email: nessun call center impersonale.",
+    trustSupportText: "Supporto diretto via email: nessun call center impersonale.",
+
+    lostParcelsTitle: "Vendita pacchi smarriti online",
+    lostParcelsText:
+      "Stai cercando “vendita pacchi smarriti”? Abbiamo una guida completa e la pagina di acquisto dedicata: formati 1–10 kg, Standard o Premium, contenuto variabile (sorpresa) e processi trasparenti.",
+    lostParcelsPrimary: "Vai a Vendita Pacchi Smarriti",
+    lostParcelsSecondary: "Come funziona",
+    lostParcelsTertiary: "Spedizioni",
+    lostParcelsQuaternary: "Resi",
 
     standardDescription:
       "Ideale per chi vuole provare l'esperienza KiloMystery con un mix bilanciato di prodotti e prezzo.",
@@ -189,8 +189,15 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     trustPaymentsText:
       "Payments are processed via trusted providers, with a full order summary sent by email.",
     trustSupportTitle: "Support",
-    trustSupportText:
-      "Direct support via email: no anonymous call centers.",
+    trustSupportText: "Direct support via email: no anonymous call centers.",
+
+    lostParcelsTitle: "Buy lost parcels online",
+    lostParcelsText:
+      "Looking for “lost parcels for sale”? Visit our dedicated page: Standard/Premium tiers, 1–10 kg formats, variable surprise contents, and transparent processes.",
+    lostParcelsPrimary: "Open Lost Parcels page",
+    lostParcelsSecondary: "How it works",
+    lostParcelsTertiary: "Shipping",
+    lostParcelsQuaternary: "Returns",
 
     standardDescription:
       "Ideal if you want to experience KiloMystery for the first time, with a balanced mix of products and price.",
@@ -247,8 +254,15 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     trustPaymentsText:
       "Pagas a través de proveedores fiables, con un resumen completo del pedido por email.",
     trustSupportTitle: "Soporte",
-    trustSupportText:
-      "Soporte directo por email: sin call centers anónimos.",
+    trustSupportText: "Soporte directo por email: sin call centers anónimos.",
+
+    lostParcelsTitle: "Comprar paquetes perdidos online",
+    lostParcelsText:
+      "¿Buscas “venta de paquetes perdidos”? Visita la página dedicada: Standard/Premium, formatos 1–10 kg, contenido sorpresa variable y procesos transparentes.",
+    lostParcelsPrimary: "Abrir Paquetes Perdidos",
+    lostParcelsSecondary: "Cómo funciona",
+    lostParcelsTertiary: "Envíos",
+    lostParcelsQuaternary: "Devoluciones",
 
     standardDescription:
       "Ideal para quien quiere probar KiloMystery con una mezcla equilibrada de productos y precio.",
@@ -305,11 +319,17 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     trustPaymentsText:
       "Paiements gérés via des prestataires de confiance, avec récapitulatif complet envoyé par email.",
     trustSupportTitle: "Support",
-    trustSupportText:
-      "Support direct par email : aucun call center anonyme.",
+    trustSupportText: "Support direct par email : aucun call center anonyme.",
 
-    standardDescription:
-      "Idéal pour découvrir KiloMystery avec un mix équilibré.",
+    lostParcelsTitle: "Acheter des colis perdus en ligne",
+    lostParcelsText:
+      "Tu cherches “vente de colis perdus” ? Consulte la page dédiée : Standard/Premium, formats 1–10 kg, contenu surprise variable et processus transparents.",
+    lostParcelsPrimary: "Ouvrir Colis Perdus",
+    lostParcelsSecondary: "Comment ça marche",
+    lostParcelsTertiary: "Livraison",
+    lostParcelsQuaternary: "Retours",
+
+    standardDescription: "Idéal pour découvrir KiloMystery avec un mix équilibré.",
     premiumDescription:
       "Pour ceux qui veulent un mix plus recherché : lots sélectionnés et plus grande chance d’articles de gamme moyenne–haute.",
 
@@ -363,8 +383,15 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
     trustPaymentsText:
       "Zahlungen über vertrauenswürdige Anbieter, mit vollständiger Bestellübersicht per E-Mail.",
     trustSupportTitle: "Support",
-    trustSupportText:
-      "Direkter Support per E-Mail – kein anonymes Callcenter.",
+    trustSupportText: "Direkter Support per E-Mail – kein anonymes Callcenter.",
+
+    lostParcelsTitle: "Verlorene Pakete online kaufen",
+    lostParcelsText:
+      "Suchst du nach „verlorene Pakete kaufen“? Öffne die Seite: Standard/Premium, 1–10 kg Formate, variabler Überraschungsinhalt und transparente Prozesse.",
+    lostParcelsPrimary: "Verlorene Pakete öffnen",
+    lostParcelsSecondary: "So funktioniert’s",
+    lostParcelsTertiary: "Versand",
+    lostParcelsQuaternary: "Rückgabe",
 
     standardDescription: "Ideal, um KiloMystery zum ersten Mal zu testen.",
     premiumDescription:
@@ -408,41 +435,11 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
 
 // CO₂ text per kg e per lingua
 const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
-  1: {
-    it: "≈0,25 kg di CO₂ evitati",
-    en: "≈0.25 kg of CO₂ saved",
-    es: "≈0,25 kg de CO₂ evitados",
-    fr: "≈0,25 kg de CO₂ évités",
-    de: "≈0,25 kg CO₂ eingespart",
-  },
-  2: {
-    it: "≈0,5 kg di CO₂ evitati",
-    en: "≈0.5 kg of CO₂ saved",
-    es: "≈0,5 kg de CO₂ evitados",
-    fr: "≈0,5 kg de CO₂ évités",
-    de: "≈0,5 kg CO₂ eingespart",
-  },
-  3: {
-    it: "≈0,75 kg di CO₂ evitati",
-    en: "≈0.75 kg of CO₂ saved",
-    es: "≈0,75 kg de CO₂ evitados",
-    fr: "≈0,75 kg de CO₂ évités",
-    de: "≈0,75 kg CO₂ eingespart",
-  },
-  5: {
-    it: "≈1,25 kg di CO₂ evitati",
-    en: "≈1.25 kg of CO₂ saved",
-    es: "≈1,25 kg de CO₂ evitados",
-    fr: "≈1,25 kg de CO₂ évités",
-    de: "≈1,25 kg CO₂ eingespart",
-  },
-  10: {
-    it: "≈2,5 kg di CO₂ evitati",
-    en: "≈2.5 kg of CO₂ saved",
-    es: "≈2,5 kg de CO₂ evitados",
-    fr: "≈2,5 kg de CO₂ évités",
-    de: "≈2,5 kg CO₂ eingespart",
-  },
+  1: { it: "≈0,25 kg di CO₂ evitati", en: "≈0.25 kg of CO₂ saved", es: "≈0,25 kg de CO₂ evitados", fr: "≈0,25 kg de CO₂ évités", de: "≈0,25 kg CO₂ eingespart" },
+  2: { it: "≈0,5 kg di CO₂ evitati", en: "≈0.5 kg of CO₂ saved", es: "≈0,5 kg de CO₂ evitados", fr: "≈0,5 kg de CO₂ évités", de: "≈0,5 kg CO₂ eingespart" },
+  3: { it: "≈0,75 kg di CO₂ evitati", en: "≈0.75 kg of CO₂ saved", es: "≈0,75 kg de CO₂ evitados", fr: "≈0,75 kg de CO₂ évités", de: "≈0,75 kg CO₂ eingespart" },
+  5: { it: "≈1,25 kg di CO₂ evitati", en: "≈1.25 kg of CO₂ saved", es: "≈1,25 kg de CO₂ evitados", fr: "≈1,25 kg de CO₂ évités", de: "≈1,25 kg CO₂ eingespart" },
+  10:{ it: "≈2,5 kg di CO₂ evitati", en: "≈2.5 kg of CO₂ saved", es: "≈2,5 kg de CO₂ evitados", fr: "≈2,5 kg de CO₂ évités", de: "≈2,5 kg CO₂ eingespart" },
 };
 
 function safeError(label: string, err: unknown) {
@@ -460,20 +457,8 @@ function safeError(label: string, err: unknown) {
 }
 
 const VARIANT_IDS: Record<"Standard" | "Premium", Record<Kg, string>> = {
-  Standard: {
-    1: "52045370360146",
-    2: "52045370392914",
-    3: "52045370425682",
-    5: "52045370458450",
-    10: "52045370491218",
-  },
-  Premium: {
-    1: "52045402571090",
-    2: "52045402603858",
-    3: "52045402636626",
-    5: "52045402669394",
-    10: "52045402702162",
-  },
+  Standard: { 1: "52045370360146", 2: "52045370392914", 3: "52045370425682", 5: "52045370458450", 10: "52045370491218" },
+  Premium: { 1: "52045402571090", 2: "52045402603858", 3: "52045402636626", 5: "52045402669394", 10: "52045402702162" },
 };
 
 function PackCard({
@@ -513,7 +498,6 @@ function PackCard({
     [kind, kg, pricePerKgValue, variantId, video]
   );
 
-  // ✅ TikTok ViewContent (solo quando la card entra in viewport, anti-spam)
   const viewTrackedRef = useRef(false);
   useEffect(() => {
     if (viewTrackedRef.current) return;
@@ -528,9 +512,7 @@ function PackCard({
         if (!entry?.isIntersecting) return;
 
         viewTrackedRef.current = true;
-
         trackViewContent(buildCartItem());
-
         obs.disconnect();
       },
       { threshold: 0.6 }
@@ -550,12 +532,7 @@ function PackCard({
   const co2Text = co2ByKg[kg][lang] ?? co2ByKg[kg].it ?? "";
 
   return (
-    <article
-      id={`${kind}-${kg}-card`}
-      className={`card ${isStd ? "card--standard" : "card--premium"}`}
-      data-anchor={anchorId}
-    >
-      {/* mantengo l'anchor originale per scroll-to */}
+    <article id={`${kind}-${kg}-card`} className={`card ${isStd ? "card--standard" : "card--premium"}`} data-anchor={anchorId}>
       {anchorId ? <div id={anchorId} /> : null}
 
       <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
@@ -567,12 +544,7 @@ function PackCard({
 
       <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
         <div className="ratio-16-9">
-          <LazyHoverVideo
-            className="media rounded-[12px] object-cover"
-            src={video}
-            poster={poster}
-            preload="none"
-          />
+          <LazyHoverVideo className="media rounded-[12px] object-cover" src={video} poster={poster} preload="none" />
         </div>
       </div>
 
@@ -584,17 +556,13 @@ function PackCard({
         <div className="text-right space-y-1">
           <div className="text-sm line-through text-white/45">{euro(compareTotal)}</div>
 
-          <div
-            className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}
-          >
+          <div className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}>
             {euro(total)}
           </div>
 
           <div className="price-perkg">({ppk.toFixed(2)} €/kg)</div>
 
-          {co2Text && (
-            <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>
-          )}
+          {co2Text && <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>}
         </div>
       </div>
 
@@ -606,11 +574,7 @@ function PackCard({
       </ul>
 
       <div className="mt-4">
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}
-        >
+        <button type="button" onClick={handleAddToCart} className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}>
           {t.addToCart}
         </button>
       </div>
@@ -664,9 +628,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
                   preload="none"
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-xs text-white/80 flex items-center justify-between">
-                  <span className="tracking-[.18em] uppercase text-emerald-200/90">
-                    Explorer
-                  </span>
+                  <span className="tracking-[.18em] uppercase text-emerald-200/90">Explorer</span>
                   <span className="text-[0.7rem]">15 kg + 1 kg 🎁</span>
                 </div>
               </div>
@@ -723,17 +685,13 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
                       : "Bundle-Gesamtpreis"}
                   </div>
 
-                  <div className="text-sm line-through text-white/45">
-                    {euro(EXPLORER_COMPARE_TOTAL)}
-                  </div>
+                  <div className="text-sm line-through text-white/45">{euro(EXPLORER_COMPARE_TOTAL)}</div>
 
                   <div className="text-3xl font-extrabold">{euro(EXPLORER_PRICE_TOTAL)}</div>
 
                   <div className="text-xs text-white/60">
                     ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg{" "}
-                    <span className="line-through ml-1 text-white/45">
-                      {EXPLORER_COMPARE_PER_KG.toFixed(2)} €/kg
-                    </span>
+                    <span className="line-through ml-1 text-white/45">{EXPLORER_COMPARE_PER_KG.toFixed(2)} €/kg</span>
                   </div>
                 </div>
 
@@ -861,6 +819,11 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
   }, []);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+  const pageUrl = `${siteUrl}/${lang}/products`;
+
+  // ✅ Consiglio: le Offer URL puntano a anchor che portano dritto ai blocchi 10kg (alta conversione)
+  const offerUrlStd10 = `${pageUrl}#buy-standard-10`;
+  const offerUrlPrm10 = `${pageUrl}#buy-premium-10`;
 
   const productJsonLd = useMemo(
     () => ({
@@ -877,16 +840,17 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           ? "Mystery box au kilo KiloMystery"
           : "Mystery Box zum Kilo-Preis KiloMystery",
       brand: { "@type": "Brand", name: "KiloMystery" },
-      url: `${siteUrl}/${lang}/products`,
+      url: pageUrl,
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "EUR",
         lowPrice: "20.15",
         highPrice: "26.90",
         availability: "https://schema.org/InStock",
+        url: offerUrlStd10, // ✅ conversion-friendly
       },
     }),
-    [lang, siteUrl]
+    [lang, pageUrl, offerUrlStd10]
   );
 
   const webPageJsonLd = useMemo(
@@ -903,22 +867,118 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           : lang === "fr"
           ? "Mystery Boxes et Mystery Box au Kilo | KiloMystery"
           : "Mystery Boxen & Mystery Box pro Kilo | KiloMystery",
-      url: `${siteUrl}/${lang}/products`,
+      url: pageUrl,
       isPartOf: { "@type": "WebSite", name: "KiloMystery", url: siteUrl },
     }),
-    [lang, siteUrl]
+    [lang, pageUrl, siteUrl]
   );
+
+  // ✅ NEW: BreadcrumbList (aiuta Google a capire gerarchia)
+  const breadcrumbJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "KiloMystery",
+          item: `${siteUrl}/${lang}`,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name:
+            lang === "it"
+              ? "Prodotti"
+              : lang === "en"
+              ? "Products"
+              : lang === "es"
+              ? "Productos"
+              : lang === "fr"
+              ? "Produits"
+              : "Produkte",
+          item: pageUrl,
+        },
+      ],
+    }),
+    [lang, pageUrl, siteUrl]
+  );
+
+  // ✅ NEW: ItemList (lista prodotti principali)
+  const itemListJsonLd = useMemo(() => {
+    const baseName =
+      lang === "it"
+        ? "Mystery box al kg"
+        : lang === "en"
+        ? "Mystery boxes by the kilo"
+        : lang === "es"
+        ? "Mystery box al kilo"
+        : lang === "fr"
+        ? "Mystery box au kilo"
+        : "Mystery Box pro Kilo";
+
+    const items: any[] = [];
+
+    (["Standard", "Premium"] as const).forEach((kind, idxK) => {
+      ([1, 2, 3, 5, 10] as const).forEach((kg, idxW) => {
+        const { total } = prices(kind, kg);
+        const url = `${pageUrl}#buy-${kind.toLowerCase()}-10`; // ✅ punta al blocco forte
+        const position = idxK * 10 + idxW + 1;
+
+        items.push({
+          "@type": "ListItem",
+          position,
+          url,
+          item: {
+            "@type": "Product",
+            name: `${baseName} ${kind} ${kg} kg`,
+            brand: { "@type": "Brand", name: "KiloMystery" },
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "EUR",
+              price: total.toFixed(2),
+              availability: "https://schema.org/InStock",
+              url,
+            },
+          },
+        });
+      });
+    });
+
+    // Explorer
+    items.push({
+      "@type": "ListItem",
+      position: 99,
+      url: pageUrl,
+      item: {
+        "@type": "Product",
+        name: t.explorerTitle,
+        brand: { "@type": "Brand", name: "KiloMystery" },
+        offers: {
+          "@type": "Offer",
+          priceCurrency: "EUR",
+          price: EXPLORER_PRICE_TOTAL.toFixed(2),
+          availability: "https://schema.org/InStock",
+          url: pageUrl,
+        },
+      },
+    });
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: `${baseName} — KiloMystery`,
+      itemListElement: items,
+    };
+  }, [lang, pageUrl, t.explorerTitle]);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }}
-      />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListJsonLd) }} />
 
       <Header lang={lang} />
 
@@ -937,6 +997,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
               </span>{" "}
               <span className="brand-text">{t.heroTitleRest}</span>
             </h1>
+
             <p className="text-white/70">{t.heroSubtitle1}</p>
             <p className="text-white/70">{t.heroSubtitle2}</p>
 
@@ -956,22 +1017,40 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
 
         <section className="grid gap-3 md:grid-cols-3 text-sm">
           <div className="card p-3 space-y-1">
-            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
-              🚚 {t.trustShippingTitle}
-            </p>
+            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">🚚 {t.trustShippingTitle}</p>
             <p className="text-white/80">{t.trustShippingText}</p>
           </div>
           <div className="card p-3 space-y-1">
-            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
-              💳 {t.trustPaymentsTitle}
-            </p>
+            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">💳 {t.trustPaymentsTitle}</p>
             <p className="text-white/80">{t.trustPaymentsText}</p>
           </div>
           <div className="card p-3 space-y-1">
-            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">
-              🤝 {t.trustSupportTitle}
-            </p>
+            <p className="text-xs uppercase tracking-[.16em] text-emerald-300/80">🤝 {t.trustSupportTitle}</p>
             <p className="text-white/80">{t.trustSupportText}</p>
+          </div>
+        </section>
+
+        {/* ✅ INTERNAL LINKS BOOST (pacchi smarriti) */}
+        <section className="card p-5 md:p-6 bg-gradient-to-br from-white/[0.04] via-[#111827]/60 to-white/[0.06]">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="space-y-2">
+              <h2 className="text-xl md:text-2xl font-extrabold">{t.lostParcelsTitle}</h2>
+              <p className="text-white/70 text-sm md:text-base max-w-2xl">{t.lostParcelsText}</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <a href={`/${lang}/pacchi-smarriti`} className="btn btn-brand px-5 py-2">
+                {t.lostParcelsPrimary}
+              </a>
+              <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
+                {t.lostParcelsSecondary}
+              </a>
+              <a href={`/${lang}/policy/shipping`} className="btn btn-ghost px-5 py-2">
+                {t.lostParcelsTertiary}
+              </a>
+              <a href={`/${lang}/policy/returns`} className="btn btn-ghost px-5 py-2">
+                {t.lostParcelsQuaternary}
+              </a>
+            </div>
           </div>
         </section>
 
@@ -992,7 +1071,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        {/* ✅ WHEEL: usa PNG fisso in public/wheel/wheel.png */}
+        {/* ✅ WHEEL */}
         <section className="card flex flex-col md:flex-row items-center gap-5">
           <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
             <Image

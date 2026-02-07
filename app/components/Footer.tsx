@@ -9,6 +9,7 @@ type Lang = "it" | "en" | "es" | "fr" | "de";
 
 type Labels = {
   menu: string;
+  seoHub: string;
   legal: string;
 
   products: string;
@@ -16,14 +17,17 @@ type Labels = {
   about: string;
   contact: string;
 
-  // ✅ NEW
   faq: string;
   blog: string;
   press: string;
+  events: string;
 
-  // ✅ NEW: Pacchi Smarriti page
+  // SEO pages
+  mysteryBox: string;
   lostParcels: string;
+  lostParcelsSale?: string; // IT-only extra label
 
+  // Legal
   privacy: string;
   terms: string;
   returns: string;
@@ -36,13 +40,13 @@ type Labels = {
 const COMPANY_INFO = {
   name: "Kilo Mystery SRLS",
   vat: "P.IVA / C.F. 027945505745",
-  address:
-    "Sede legale: Piazza Alessandro Romano 11, 72023 Mesagne (BR) – Italia",
+  address: "Sede legale: Piazza Alessandro Romano 11, 72023 Mesagne (BR) – Italia",
 };
 
 const FOOTER_LABELS: Record<Lang, Labels> = {
   it: {
     menu: "Menu",
+    seoHub: "Risorse & Guide",
     legal: "Legale",
 
     products: "Prodotti",
@@ -50,11 +54,15 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     about: "Chi siamo",
     contact: "Contatti",
 
-    // ✅ NEW
-    faq: "Mystery Box – FAQ",
-    lostParcels: "Pacchi Smarriti",
+    faq: "FAQ",
     blog: "Blog",
     press: "Press",
+    events: "Eventi",
+
+    // SEO pages
+    mysteryBox: "Mystery Box (guida)",
+    lostParcels: "Pacchi Smarriti",
+    lostParcelsSale: "Vendita Pacchi Smarriti",
 
     privacy: "Privacy",
     terms: "Termini",
@@ -62,11 +70,12 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     shipping: "Spedizioni",
 
     newsletterTitle: "Iscriviti alla nostra newsletter",
-    rights: (y) => `© ${y} KiloMistery — Tutti i diritti riservati`,
+    rights: (y) => `© ${y} KiloMystery — Tutti i diritti riservati`,
   },
 
   en: {
     menu: "Menu",
+    seoHub: "Guides",
     legal: "Legal",
 
     products: "Products",
@@ -74,11 +83,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     about: "About us",
     contact: "Contact",
 
-    // ✅ NEW
-    faq: "Mystery Box – FAQ",
-    lostParcels: "Lost Parcels",
+    faq: "FAQ",
     blog: "Blog",
     press: "Press",
+    events: "Events",
+
+    mysteryBox: "Mystery Box (guide)",
+    lostParcels: "Lost Parcels",
 
     privacy: "Privacy",
     terms: "Terms",
@@ -86,11 +97,12 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     shipping: "Shipping",
 
     newsletterTitle: "Sign up to our newsletter",
-    rights: (y) => `© ${y} KiloMistery — All rights reserved`,
+    rights: (y) => `© ${y} KiloMystery — All rights reserved`,
   },
 
   es: {
     menu: "Menú",
+    seoHub: "Guías",
     legal: "Legal",
 
     products: "Productos",
@@ -98,11 +110,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     about: "Quiénes somos",
     contact: "Contacto",
 
-    // ✅ NEW
-    faq: "Mystery Box – Preguntas frecuentes",
-    lostParcels: "Paquetes perdidos",
+    faq: "FAQ",
     blog: "Blog",
     press: "Prensa",
+    events: "Eventos",
+
+    mysteryBox: "Mystery Box (guía)",
+    lostParcels: "Paquetes perdidos",
 
     privacy: "Privacidad",
     terms: "Términos",
@@ -110,11 +124,12 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     shipping: "Envíos",
 
     newsletterTitle: "Suscríbete a nuestra newsletter",
-    rights: (y) => `© ${y} KiloMistery — Todos los derechos reservados`,
+    rights: (y) => `© ${y} KiloMystery — Todos los derechos reservados`,
   },
 
   fr: {
     menu: "Menu",
+    seoHub: "Guides",
     legal: "Mentions légales",
 
     products: "Produits",
@@ -122,11 +137,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     about: "À propos",
     contact: "Contact",
 
-    // ✅ NEW
-    faq: "Mystery Box – FAQ",
-    lostParcels: "Colis perdus",
+    faq: "FAQ",
     blog: "Blog",
     press: "Presse",
+    events: "Événements",
+
+    mysteryBox: "Mystery Box (guide)",
+    lostParcels: "Colis perdus",
 
     privacy: "Confidentialité",
     terms: "Conditions",
@@ -134,11 +151,12 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     shipping: "Livraisons",
 
     newsletterTitle: "Inscris-toi à notre newsletter",
-    rights: (y) => `© ${y} KiloMistery — Tous droits réservés`,
+    rights: (y) => `© ${y} KiloMystery — Tous droits réservés`,
   },
 
   de: {
     menu: "Menü",
+    seoHub: "Guides",
     legal: "Rechtliches",
 
     products: "Produkte",
@@ -146,11 +164,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     about: "Über uns",
     contact: "Kontakt",
 
-    // ✅ NEW
-    faq: "Mystery Box – FAQ",
-    lostParcels: "Verlorene Pakete",
+    faq: "FAQ",
     blog: "Blog",
     press: "Presse",
+    events: "Events",
+
+    mysteryBox: "Mystery Box (Guide)",
+    lostParcels: "Verlorene Pakete",
 
     privacy: "Datenschutz",
     terms: "AGB",
@@ -158,7 +178,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     shipping: "Versand",
 
     newsletterTitle: "Melde dich zu unserem Newsletter an",
-    rights: (y) => `© ${y} KiloMistery — Alle Rechte vorbehalten`,
+    rights: (y) => `© ${y} KiloMystery — Alle Rechte vorbehalten`,
   },
 };
 
@@ -181,22 +201,17 @@ export default function Footer({
 
   return (
     <footer className="relative mt-16 border-t border-white/10 bg-gradient-to-b from-[#05070b] via-[#05070b] to-[#020308]">
-      {/* linea glow in alto */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#7A20FF] via-emerald-300/80 to-[#20D27A]" />
 
       <div className="container py-10 relative z-10">
         {/* LOGO */}
         <div className="flex items-center gap-3 mb-6">
-          <Link
-            href={base}
-            prefetch={false}
-            className="inline-flex items-center group"
-          >
+          <Link href={base} prefetch={false} className="inline-flex items-center group">
             <div className="relative h-9 w-9 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_25px_rgba(122,32,255,0.45)]">
               <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
                 <Image
                   src="/logo.svg"
-                  alt="KiloMistery"
+                  alt="KiloMystery"
                   width={140}
                   height={40}
                   className="h-6 w-auto"
@@ -224,7 +239,7 @@ export default function Footer({
         </section>
 
         {/* COLONNE LINK */}
-        <div className="grid gap-8 md:grid-cols-2">
+        <div className="grid gap-8 md:grid-cols-3">
           {/* Menu */}
           <nav aria-label="Menu">
             <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
@@ -233,86 +248,113 @@ export default function Footer({
 
             <ul className="space-y-2">
               <li>
-                <Link
-                  href={safePath(lang, "/products")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/products")} prefetch={false} className="footer-link">
                   {L.products}
                 </Link>
               </li>
-
               <li>
-                <Link
-                  href={safePath(lang, "/how-it-works")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/how-it-works")} prefetch={false} className="footer-link">
                   {L.how}
                 </Link>
               </li>
-
-              {/* ✅ Mystery Box SEO page */}
               <li>
-                <Link
-                  href={safePath(lang, "/mystery-box")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/faq")} prefetch={false} className="footer-link">
                   {L.faq}
                 </Link>
               </li>
-
-              {/* ✅ NEW: Pacchi Smarriti SEO page */}
               <li>
-                <Link
-                  href={safePath(lang, "/pacchi-smarriti")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/blog")} prefetch={false} className="footer-link">
+                  {L.blog}
+                </Link>
+              </li>
+              <li>
+                <Link href={safePath(lang, "/press")} prefetch={false} className="footer-link">
+                  {L.press}
+                </Link>
+              </li>
+              <li>
+                <Link href={safePath(lang, "/events")} prefetch={false} className="footer-link">
+                  {L.events}
+                </Link>
+              </li>
+              <li>
+                <Link href={safePath(lang, "/about")} prefetch={false} className="footer-link">
+                  {L.about}
+                </Link>
+              </li>
+              <li>
+                <Link href={safePath(lang, "/contact")} prefetch={false} className="footer-link">
+                  {L.contact}
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
+          {/* SEO HUB: link contestuali (sitewide) */}
+          <nav aria-label="SEO hub">
+            <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
+              {L.seoHub}
+            </h4>
+
+            <ul className="space-y-2">
+              <li>
+                <Link href={safePath(lang, "/mystery-box")} prefetch={false} className="footer-link">
+                  {L.mysteryBox}
+                </Link>
+              </li>
+
+              {/* ✅ Pacchi smarriti: doppio anchor-text in IT per spingere “vendita” senza cambiare URL */}
+              <li>
+                <Link href={safePath(lang, "/pacchi-smarriti")} prefetch={false} className="footer-link">
                   {L.lostParcels}
                 </Link>
               </li>
 
-              {/* ✅ Blog */}
-              <li>
-                <Link
-                  href={safePath(lang, "/blog")}
-                  prefetch={false}
-                  className="footer-link"
-                >
-                  {L.blog}
-                </Link>
-              </li>
+              {lang === "it" ? (
+                <li>
+                  <Link href={safePath(lang, "/pacchi-smarriti")} prefetch={false} className="footer-link">
+                    {L.lostParcelsSale || "Vendita Pacchi Smarriti"}
+                  </Link>
+                </li>
+              ) : null}
 
-              {/* ✅ Press */}
+              {/* ✅ Deep links conversione (ottimi per crawl + UX) */}
               <li>
-                <Link
-                  href={safePath(lang, "/press")}
-                  prefetch={false}
-                  className="footer-link"
-                >
-                  {L.press}
-                </Link>
-              </li>
-
-              <li>
-                <Link
-                  href={safePath(lang, "/about")}
-                  prefetch={false}
-                  className="footer-link"
-                >
-                  {L.about}
+                <Link href={safePath(lang, "/products#buy-standard-10")} prefetch={false} className="footer-link">
+                  {lang === "it"
+                    ? "Standard 10 kg (più richiesto)"
+                    : lang === "en"
+                    ? "Standard 10 kg (most popular)"
+                    : lang === "es"
+                    ? "Standard 10 kg (más popular)"
+                    : lang === "fr"
+                    ? "Standard 10 kg (le plus populaire)"
+                    : "Standard 10 kg (beliebt)"}
                 </Link>
               </li>
 
               <li>
-                <Link
-                  href={safePath(lang, "/contact")}
-                  prefetch={false}
-                  className="footer-link"
-                >
-                  {L.contact}
+                <Link href={safePath(lang, "/products#buy-premium-10")} prefetch={false} className="footer-link">
+                  {lang === "it"
+                    ? "Premium 10 kg (top)"
+                    : lang === "en"
+                    ? "Premium 10 kg (top)"
+                    : lang === "es"
+                    ? "Premium 10 kg (top)"
+                    : lang === "fr"
+                    ? "Premium 10 kg (top)"
+                    : "Premium 10 kg (top)"}
+                </Link>
+              </li>
+
+              <li>
+                <Link href={safePath(lang, "/policy/shipping")} prefetch={false} className="footer-link">
+                  {L.shipping}
+                </Link>
+              </li>
+              <li>
+                <Link href={safePath(lang, "/policy/returns")} prefetch={false} className="footer-link">
+                  {L.returns}
                 </Link>
               </li>
             </ul>
@@ -323,40 +365,25 @@ export default function Footer({
             <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
               {L.legal}
             </h4>
+
             <ul className="space-y-2">
               <li>
-                <Link
-                  href={safePath(lang, "/policy/privacy")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/policy/privacy")} prefetch={false} className="footer-link">
                   {L.privacy}
                 </Link>
               </li>
               <li>
-                <Link
-                  href={safePath(lang, "/policy/terms")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/policy/terms")} prefetch={false} className="footer-link">
                   {L.terms}
                 </Link>
               </li>
               <li>
-                <Link
-                  href={safePath(lang, "/policy/returns")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/policy/returns")} prefetch={false} className="footer-link">
                   {L.returns}
                 </Link>
               </li>
               <li>
-                <Link
-                  href={safePath(lang, "/policy/shipping")}
-                  prefetch={false}
-                  className="footer-link"
-                >
+                <Link href={safePath(lang, "/policy/shipping")} prefetch={false} className="footer-link">
                   {L.shipping}
                 </Link>
               </li>
@@ -401,8 +428,7 @@ export default function Footer({
           color: rgba(255, 255, 255, 0.78);
           font-size: 0.9rem;
           position: relative;
-          transition: color 0.15s ease, transform 0.15s ease,
-            text-shadow 0.15s ease;
+          transition: color 0.15s ease, transform 0.15s ease, text-shadow 0.15s ease;
         }
         .footer-link::after {
           content: "";
