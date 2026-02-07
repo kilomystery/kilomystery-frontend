@@ -7,8 +7,7 @@ import ProductsTabs from "../../components/ProductsTabs";
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
 
-const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
 
 function normLang(l: string): Lang {
   const x = String(l || "it").toLowerCase();
@@ -25,10 +24,7 @@ const CURRENCY = "EUR";
 const WEIGHTS = [1, 2, 3, 5, 10] as const;
 type Kg = (typeof WEIGHTS)[number];
 
-const PRICE_TABLE: Record<
-  "std" | "prm",
-  Record<Kg, { total: number; compareAt: number }>
-> = {
+const PRICE_TABLE: Record<"std" | "prm", Record<Kg, { total: number; compareAt: number }>> = {
   std: {
     1: { total: 22.99, compareAt: 25.9 },
     2: { total: 44.88, compareAt: 51.8 },
@@ -49,51 +45,16 @@ function perKg(total: number, kg: number) {
   return Math.round((total / kg) * 100) / 100;
 }
 
-function webPageJsonLd(args: {
-  siteUrl: string;
-  lang: Lang;
-  title: string;
-  description: string;
-}) {
+function webPageJsonLd(args: { siteUrl: string; lang: Lang; title: string; description: string }) {
   const { siteUrl, lang, title, description } = args;
   const url = `${siteUrl}/${lang}/pacchi-smarriti`;
 
   const aboutByLang: Record<Lang, string[]> = {
-    it: [
-      "vendita pacchi smarriti",
-      "comprare pacchi smarriti online",
-      "pacchi non reclamati",
-      "resi non ritirati",
-      "mystery box al kg",
-    ],
-    en: [
-      "lost parcels for sale",
-      "buy lost parcels online",
-      "unclaimed returns",
-      "undelivered parcels",
-      "mystery boxes by the kilo",
-    ],
-    es: [
-      "venta de paquetes perdidos",
-      "comprar paquetes perdidos online",
-      "devoluciones no reclamadas",
-      "paquetes no entregados",
-      "mystery box por kilo",
-    ],
-    fr: [
-      "vente de colis perdus",
-      "acheter des colis perdus en ligne",
-      "retours non réclamés",
-      "colis non livrés",
-      "mystery box au kilo",
-    ],
-    de: [
-      "verlorene pakete kaufen",
-      "verlorene pakete online",
-      "nicht abgeholte rücksendungen",
-      "nicht zugestellte pakete",
-      "mystery box pro kilo",
-    ],
+    it: ["vendita pacchi smarriti", "comprare pacchi smarriti online", "pacchi non reclamati", "resi non ritirati", "mystery box al kg"],
+    en: ["lost parcels for sale", "buy lost parcels online", "unclaimed returns", "undelivered parcels", "mystery boxes by the kilo"],
+    es: ["venta de paquetes perdidos", "comprar paquetes perdidos online", "devoluciones no reclamadas", "paquetes no entregados", "mystery box por kilo"],
+    fr: ["vente de colis perdus", "acheter des colis perdus en ligne", "retours non réclamés", "colis non livrés", "mystery box au kilo"],
+    de: ["verlorene pakete kaufen", "verlorene pakete online", "nicht abgeholte rücksendungen", "nicht zugestellte pakete", "mystery box pro kilo"],
   };
 
   return {
@@ -109,20 +70,20 @@ function webPageJsonLd(args: {
       url: siteUrl,
     },
     about: aboutByLang[lang].map((name) => ({ "@type": "Thing", name })),
+    // ✅ Silo relations (aiuta crawl/cluster)
+    isRelatedTo: [
+      { "@type": "WebPage", "@id": `${siteUrl}/${lang}/pacchi-smarriti-poste` },
+      { "@type": "WebPage", "@id": `${siteUrl}/${lang}/pacchi-smarriti-amazon` },
+    ],
   };
 }
 
-function productJsonLd(args: {
-  siteUrl: string;
-  lang: Lang;
-  tier: "Standard" | "Premium";
-}) {
+function productJsonLd(args: { siteUrl: string; lang: Lang; tier: "Standard" | "Premium" }) {
   const { siteUrl, lang, tier } = args;
 
   const tab = tier === "Standard" ? "std" : "prm";
   const pageUrl = `${siteUrl}/${lang}/pacchi-smarriti`;
 
-  // ✅ DEEP LINK CONSIGLIATO (conversione + intent)
   const tierAnchor =
     tier === "Standard"
       ? `${siteUrl}/${lang}/products#buy-standard-10`
@@ -133,16 +94,12 @@ function productJsonLd(args: {
 
     return {
       "@type": "Offer",
-      url: tierAnchor, // ✅ punta alla sezione acquisto reale
+      url: tierAnchor,
       priceCurrency: CURRENCY,
       price: p.total,
       availability: "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
-      eligibleQuantity: {
-        "@type": "QuantitativeValue",
-        value: kg,
-        unitText: "kg",
-      },
+      eligibleQuantity: { "@type": "QuantitativeValue", value: kg, unitText: "kg" },
       priceSpecification: [
         {
           "@type": "UnitPriceSpecification",
@@ -154,11 +111,7 @@ function productJsonLd(args: {
           "@type": "UnitPriceSpecification",
           priceCurrency: CURRENCY,
           price: perKg(p.total, kg),
-          referenceQuantity: {
-            "@type": "QuantitativeValue",
-            value: 1,
-            unitText: "kg",
-          },
+          referenceQuantity: { "@type": "QuantitativeValue", value: 1, unitText: "kg" },
           unitText: "per kg",
         },
       ],
@@ -166,9 +119,7 @@ function productJsonLd(args: {
   });
 
   const lowPrice = Math.min(...WEIGHTS.map((kg) => PRICE_TABLE[tab][kg].total));
-  const highPrice = Math.max(
-    ...WEIGHTS.map((kg) => PRICE_TABLE[tab][kg].total)
-  );
+  const highPrice = Math.max(...WEIGHTS.map((kg) => PRICE_TABLE[tab][kg].total));
 
   const descByLang: Record<Lang, Record<"Standard" | "Premium", string>> = {
     it: {
@@ -235,7 +186,7 @@ function productJsonLd(args: {
     url: pageUrl,
     offers: {
       "@type": "AggregateOffer",
-      url: tierAnchor, // ✅ deep link conversione
+      url: tierAnchor,
       priceCurrency: CURRENCY,
       lowPrice,
       highPrice,
@@ -244,16 +195,8 @@ function productJsonLd(args: {
     },
     additionalProperty: [
       { "@type": "PropertyValue", name: "Tier", value: tier },
-      {
-        "@type": "PropertyValue",
-        name: "Weight options",
-        value: "1, 2, 3, 5, 10 kg",
-      },
-      {
-        "@type": "PropertyValue",
-        name: "Format",
-        value: "Surprise / variable contents",
-      },
+      { "@type": "PropertyValue", name: "Weight options", value: "1, 2, 3, 5, 10 kg" },
+      { "@type": "PropertyValue", name: "Format", value: "Surprise / variable contents" },
       { "@type": "PropertyValue", name: "Net weight tolerance", value: "±3%" },
       { "@type": "PropertyValue", name: "Batch seal", value: "Batch ID + date" },
     ],
@@ -262,7 +205,6 @@ function productJsonLd(args: {
 
 function itemListJsonLd(args: { siteUrl: string; lang: Lang }) {
   const { siteUrl, lang } = args;
-  const pageUrl = `${siteUrl}/${lang}/pacchi-smarriti`;
 
   const listNameByLang: Record<Lang, string> = {
     it: "KiloMystery — Pacchi Smarriti (Standard & Premium) — formati e prezzi",
@@ -287,7 +229,7 @@ function itemListJsonLd(args: { siteUrl: string; lang: Lang }) {
       items.push({
         "@type": "ListItem",
         position: pos++,
-        url: tierAnchor, // ✅ porta al punto di acquisto
+        url: tierAnchor,
         name: `${tier} · ${kg} kg`,
         item: {
           "@type": "Product",
@@ -295,16 +237,12 @@ function itemListJsonLd(args: { siteUrl: string; lang: Lang }) {
           brand: { "@type": "Brand", name: "KiloMystery" },
           offers: {
             "@type": "Offer",
-            url: tierAnchor, // ✅ conversion-first
+            url: tierAnchor,
             priceCurrency: CURRENCY,
             price: total,
             availability: "https://schema.org/InStock",
             itemCondition: "https://schema.org/NewCondition",
-            eligibleQuantity: {
-              "@type": "QuantitativeValue",
-              value: kg,
-              unitText: "kg",
-            },
+            eligibleQuantity: { "@type": "QuantitativeValue", value: kg, unitText: "kg" },
           },
         },
       });
@@ -324,76 +262,77 @@ function itemListJsonLd(args: { siteUrl: string; lang: Lang }) {
 /* =========================
    COPY (5 languages)
 ========================= */
-const COPY: Record<
-  Lang,
-  {
-    title: string;
-    description: string;
-    seoHubLine: string;
+type Copy = {
+  title: string;
+  description: string;
+  seoHubLine: string;
 
-    h1: string;
-    intro: string;
+  h1: string;
+  intro: string;
 
-    venditaTitle: string;
-    venditaIntro: string;
-    venditaBullets: string[];
+  venditaTitle: string;
+  venditaIntro: string;
+  venditaBullets: string[];
 
-    whyTitle: string;
-    whyBullets: string[];
+  whyTitle: string;
+  whyBullets: string[];
 
-    ctaPrimary: string;
-    ctaSecondary: string;
+  ctaPrimary: string;
+  ctaSecondary: string;
 
-    section1Title: string;
-    section1Body: string;
-    section2Title: string;
-    section2Body: string;
-    section3Title: string;
-    section3Body: string;
-    section4Title: string;
-    section4Body: string;
+  section1Title: string;
+  section1Body: string;
+  section2Title: string;
+  section2Body: string;
+  section3Title: string;
+  section3Body: string;
+  section4Title: string;
+  section4Body: string;
 
-    shopTitle: string;
-    shopIntro: string;
+  // ✅ NEW: silo block
+  siloTitle: string;
+  siloIntro: string;
+  siloHub: string;
+  siloPoste: string;
+  siloAmazon: string;
 
-    linksTitle: string;
-    linksBody: string;
-    linkProducts: string;
-    linkMysteryBox: string;
-    linkHowItWorks: string;
-    linkShipping: string;
-    linkReturns: string;
+  shopTitle: string;
+  shopIntro: string;
 
-    // ✅ NEW (internal links extra)
-    linksMoreTitle: string;
-    linksMoreBody: string;
-    linkFaq: string;
-    linkBlog: string;
-    linkPress: string;
-    linkAbout: string;
-    linkContact: string;
-    linkPrivacy: string;
-    linkTerms: string;
+  linksTitle: string;
+  linksBody: string;
+  linkProducts: string;
+  linkMysteryBox: string;
+  linkHowItWorks: string;
+  linkShipping: string;
+  linkReturns: string;
 
-    faqTitle: string;
-    faqIntro: string;
-    faqs: FAQ[];
+  linksMoreTitle: string;
+  linksMoreBody: string;
+  linkFaq: string;
+  linkBlog: string;
+  linkPress: string;
+  linkAbout: string;
+  linkContact: string;
+  linkPrivacy: string;
+  linkTerms: string;
 
-    finalTitle: string;
-    finalBody: string;
-    finalPrimary: string;
-    finalSecondary: string;
-  }
-> = {
-  // ==========
-  // IT
-  // ==========
+  faqTitle: string;
+  faqIntro: string;
+  faqs: FAQ[];
+
+  finalTitle: string;
+  finalBody: string;
+  finalPrimary: string;
+  finalSecondary: string;
+};
+
+const COPY: Record<Lang, Copy> = {
   it: {
     title: "Vendita Pacchi Smarriti online (al kg 1–10 kg) | KiloMystery",
     description:
       "Vendita pacchi smarriti online: scegli Standard o Premium da 1 a 10 kg. Guida chiara su pacchi smarriti, resi non ritirati e acquisto trasparente.",
-    seoHubLine:
-      "SEO hub: vendita pacchi smarriti • keyword: comprare pacchi smarriti online",
+    seoHubLine: "SEO hub: vendita pacchi smarriti • keyword: comprare pacchi smarriti online",
 
     h1: "Vendita pacchi smarriti: cosa sono e come comprarli online",
     intro:
@@ -433,13 +372,18 @@ const COPY: Record<
     section4Body:
       "Sì, quando i pacchi sono ceduti tramite canali di liquidazione dopo che non sono più reclamabili o gestibili. L’importante è acquistare da realtà trasparenti e con processi chiari. Diffida da promesse “troppo belle” (valori garantiti, smartphone assicurati, ecc.): nei pacchi smarriti conta la variabilità.",
 
+    siloTitle: "Guide dedicate: Poste e Amazon",
+    siloIntro:
+      "Vuoi approfondire una fonte specifica? Abbiamo creato guide dedicate ai principali flussi logistici: Poste e Amazon.",
+    siloHub: "Vendita Pacchi Smarriti",
+    siloPoste: "Pacchi Smarriti Poste",
+    siloAmazon: "Pacchi Smarriti Amazon",
+
     shopTitle: "Acquista pacchi smarriti su KiloMystery",
-    shopIntro:
-      "Scegli Standard o Premium, seleziona il peso (1–10 kg) e procedi all’ordine. Qui sotto trovi prezzi e formati disponibili.",
+    shopIntro: "Scegli Standard o Premium, seleziona il peso (1–10 kg) e procedi all’ordine. Qui sotto trovi prezzi e formati disponibili.",
 
     linksTitle: "Link utili per approfondire",
-    linksBody:
-      "Per confrontare formati e verificare spedizioni/resi, usa questi link interni:",
+    linksBody: "Per confrontare formati e verificare spedizioni/resi, usa questi link interni:",
     linkProducts: "Vai ai Prodotti",
     linkMysteryBox: "Guida Mystery Box",
     linkHowItWorks: "Come funziona",
@@ -447,8 +391,7 @@ const COPY: Record<
     linkReturns: "Resi",
 
     linksMoreTitle: "Risorse e pagine correlate",
-    linksMoreBody:
-      "Se stai valutando l’acquisto, ecco altre pagine utili (FAQ, blog, press e policy):",
+    linksMoreBody: "Se stai valutando l’acquisto, ecco altre pagine utili (FAQ, blog, press e policy):",
     linkFaq: "FAQ",
     linkBlog: "Blog",
     linkPress: "Press",
@@ -458,8 +401,7 @@ const COPY: Record<
     linkTerms: "Termini",
 
     faqTitle: "FAQ – Pacchi Smarriti",
-    faqIntro:
-      "Risposte rapide alle domande più comuni su pacchi smarriti, resi non ritirati e acquisto online.",
+    faqIntro: "Risposte rapide alle domande più comuni su pacchi smarriti, resi non ritirati e acquisto online.",
     faqs: [
       {
         q: "Cosa sono i pacchi smarriti?",
@@ -498,15 +440,11 @@ const COPY: Record<
     finalSecondary: "Contattaci",
   },
 
-  // ==========
-  // EN
-  // ==========
   en: {
     title: "Lost Parcels for sale (1–10 kg) | KiloMystery",
     description:
       "Lost parcels for sale online: choose Standard or Premium from 1 to 10 kg. Clear guide on lost parcels, unclaimed returns, and transparent purchasing.",
-    seoHubLine:
-      "SEO hub: lost parcels for sale • keyword: buy lost parcels online",
+    seoHubLine: "SEO hub: lost parcels for sale • keyword: buy lost parcels online",
 
     h1: "Lost parcels for sale: what they are and how to buy online",
     intro:
@@ -546,9 +484,14 @@ const COPY: Record<
     section4Body:
       "Yes—when parcels are sold through liquidation channels after they’re no longer reclaimable/processable as standard deliveries. Choose transparent sellers and avoid unrealistic guarantees (e.g., “guaranteed smartphone”). Variability is part of the format.",
 
+    siloTitle: "Dedicated guides: Poste & Amazon",
+    siloIntro: "Want to go deeper? Explore dedicated guides for major logistic streams.",
+    siloHub: "Lost Parcels for sale",
+    siloPoste: "Lost Parcels Poste",
+    siloAmazon: "Lost Parcels Amazon",
+
     shopTitle: "Buy lost parcels on KiloMystery",
-    shopIntro:
-      "Choose Standard or Premium, select weight (1–10 kg) and place your order. Prices and formats are listed below.",
+    shopIntro: "Choose Standard or Premium, select weight (1–10 kg) and place your order. Prices and formats are listed below.",
 
     linksTitle: "Helpful internal links",
     linksBody: "Compare formats and check shipping/returns:",
@@ -559,8 +502,7 @@ const COPY: Record<
     linkReturns: "Returns",
 
     linksMoreTitle: "Resources & related pages",
-    linksMoreBody:
-      "More useful pages while you decide (FAQ, blog, press and policies):",
+    linksMoreBody: "More useful pages while you decide (FAQ, blog, press and policies):",
     linkFaq: "FAQ",
     linkBlog: "Blog",
     linkPress: "Press",
@@ -603,21 +545,16 @@ const COPY: Record<
     ],
 
     finalTitle: "Ready to try lost parcels?",
-    finalBody:
-      "If you searched for “lost parcels for sale”, this page gives you clarity and direct access to products. Choose a format and start the unboxing.",
+    finalBody: "If you searched for “lost parcels for sale”, this page gives you clarity and direct access to products. Choose a format and start the unboxing.",
     finalPrimary: "Shop now",
     finalSecondary: "Contact us",
   },
 
-  // ==========
-  // ES
-  // ==========
   es: {
     title: "Venta de paquetes perdidos (1–10 kg) | KiloMystery",
     description:
       "Venta de paquetes perdidos online: elige Standard o Premium de 1 a 10 kg. Guía clara sobre paquetes perdidos, devoluciones no reclamadas y compra transparente.",
-    seoHubLine:
-      "SEO hub: venta de paquetes perdidos • keyword: comprar paquetes perdidos online",
+    seoHubLine: "SEO hub: venta de paquetes perdidos • keyword: comprar paquetes perdidos online",
 
     h1: "Venta de paquetes perdidos: qué son y cómo comprarlos online",
     intro:
@@ -657,9 +594,14 @@ const COPY: Record<
     section4Body:
       "Sí, cuando provienen de canales de liquidación tras no ser reclamables/gestionables como entregas estándar. Elige vendedores transparentes y evita garantías irreales: la variabilidad forma parte del formato.",
 
+    siloTitle: "Guías dedicadas: Poste y Amazon",
+    siloIntro: "Explora guías específicas sobre las principales fuentes logísticas.",
+    siloHub: "Venta de paquetes perdidos",
+    siloPoste: "Paquetes perdidos Poste",
+    siloAmazon: "Paquetes perdidos Amazon",
+
     shopTitle: "Compra paquetes perdidos en KiloMystery",
-    shopIntro:
-      "Elige Standard o Premium, selecciona el peso (1–10 kg) y realiza el pedido. Abajo tienes precios y formatos.",
+    shopIntro: "Elige Standard o Premium, selecciona el peso (1–10 kg) y realiza el pedido. Abajo tienes precios y formatos.",
 
     linksTitle: "Enlaces internos útiles",
     linksBody: "Compara formatos y revisa envíos/devoluciones:",
@@ -670,8 +612,7 @@ const COPY: Record<
     linkReturns: "Devoluciones",
 
     linksMoreTitle: "Recursos y páginas relacionadas",
-    linksMoreBody:
-      "Otras páginas útiles mientras decides (FAQ, blog, prensa y políticas):",
+    linksMoreBody: "Otras páginas útiles mientras decides (FAQ, blog, prensa y políticas):",
     linkFaq: "FAQ",
     linkBlog: "Blog",
     linkPress: "Prensa",
@@ -714,21 +655,16 @@ const COPY: Record<
     ],
 
     finalTitle: "¿Listo para probar paquetes perdidos?",
-    finalBody:
-      "Si buscabas “venta de paquetes perdidos”, aquí tienes una guía clara y acceso directo a productos. Elige un formato y empieza el unboxing.",
+    finalBody: "Si buscabas “venta de paquetes perdidos”, aquí tienes una guía clara y acceso directo a productos. Elige un formato y empieza el unboxing.",
     finalPrimary: "Comprar ahora",
     finalSecondary: "Contactar",
   },
 
-  // ==========
-  // FR
-  // ==========
   fr: {
     title: "Vente de colis perdus (1–10 kg) | KiloMystery",
     description:
       "Vente de colis perdus en ligne : choisissez Standard ou Premium de 1 à 10 kg. Guide clair sur colis perdus, retours non réclamés et achat transparent.",
-    seoHubLine:
-      "SEO hub: vente de colis perdus • keyword: acheter des colis perdus en ligne",
+    seoHubLine: "SEO hub: vente de colis perdus • keyword: acheter des colis perdus en ligne",
 
     h1: "Vente de colis perdus : définition et achat en ligne",
     intro:
@@ -768,9 +704,14 @@ const COPY: Record<
     section4Body:
       "Oui, quand ils proviennent de canaux de liquidation après ne plus être réclamables/traitables comme livraisons standard. Choisis des vendeurs transparents et évite les promesses irréalistes : la variabilité fait partie du format.",
 
+    siloTitle: "Guides dédiés : Poste et Amazon",
+    siloIntro: "Approfondis avec des guides sur les principaux flux logistiques.",
+    siloHub: "Vente de colis perdus",
+    siloPoste: "Colis perdus Poste",
+    siloAmazon: "Colis perdus Amazon",
+
     shopTitle: "Acheter sur KiloMystery",
-    shopIntro:
-      "Choisis Standard ou Premium, sélectionne le poids (1–10 kg) et commande. Prix et formats ci-dessous.",
+    shopIntro: "Choisis Standard ou Premium, sélectionne le poids (1–10 kg) et commande. Prix et formats ci-dessous.",
 
     linksTitle: "Liens internes utiles",
     linksBody: "Comparer les formats et consulter livraison/retours :",
@@ -781,8 +722,7 @@ const COPY: Record<
     linkReturns: "Retours",
 
     linksMoreTitle: "Ressources & pages associées",
-    linksMoreBody:
-      "D’autres pages utiles pendant ta décision (FAQ, blog, presse, politiques) :",
+    linksMoreBody: "D’autres pages utiles pendant ta décision (FAQ, blog, presse, politiques) :",
     linkFaq: "FAQ",
     linkBlog: "Blog",
     linkPress: "Presse",
@@ -825,21 +765,16 @@ const COPY: Record<
     ],
 
     finalTitle: "Prêt à tester les colis perdus ?",
-    finalBody:
-      "Si tu cherchais “vente de colis perdus”, cette page explique clairement et te permet d’acheter directement. Choisis un format et lance l’unboxing.",
+    finalBody: "Si tu cherchais “vente de colis perdus”, cette page explique clairement et te permet d’acheter directement. Choisis un format et lance l’unboxing.",
     finalPrimary: "Acheter maintenant",
     finalSecondary: "Nous contacter",
   },
 
-  // ==========
-  // DE
-  // ==========
   de: {
     title: "Verlorene Pakete kaufen (1–10 kg) | KiloMystery",
     description:
       "Verlorene Pakete online kaufen: Standard oder Premium von 1 bis 10 kg. Klare Erklärung zu verlorenen Paketen, nicht abgeholten Rücksendungen und transparentem Kauf.",
-    seoHubLine:
-      "SEO hub: verlorene pakete kaufen • keyword: verlorene pakete online",
+    seoHubLine: "SEO hub: verlorene pakete kaufen • keyword: verlorene pakete online",
 
     h1: "Verlorene Pakete kaufen: was sie sind und wie der Online-Kauf funktioniert",
     intro:
@@ -879,9 +814,14 @@ const COPY: Record<
     section4Body:
       "Ja, wenn die Ware aus Liquidationskanälen stammt und nicht mehr als Standardzustellung reklamierbar/abwickelbar ist. Kaufe bei transparenten Anbietern und vermeide unrealistische Versprechen – Variabilität gehört dazu.",
 
+    siloTitle: "Spezial-Guides: Poste & Amazon",
+    siloIntro: "Vertiefe das Thema mit Guides zu den wichtigsten Logistik-Flüssen.",
+    siloHub: "Verlorene Pakete kaufen",
+    siloPoste: "Verlorene Pakete Poste",
+    siloAmazon: "Verlorene Pakete Amazon",
+
     shopTitle: "Verlorene Pakete bei KiloMystery kaufen",
-    shopIntro:
-      "Wähle Standard oder Premium, Gewicht (1–10 kg) auswählen und bestellen. Preise und Formate findest du unten.",
+    shopIntro: "Wähle Standard oder Premium, Gewicht (1–10 kg) auswählen und bestellen. Preise und Formate findest du unten.",
 
     linksTitle: "Nützliche interne Links",
     linksBody: "Vergleiche Formate und prüfe Versand/Rückgabe:",
@@ -892,8 +832,7 @@ const COPY: Record<
     linkReturns: "Rückgabe",
 
     linksMoreTitle: "Ressourcen & verwandte Seiten",
-    linksMoreBody:
-      "Weitere nützliche Seiten (FAQ, Blog, Presse und Richtlinien):",
+    linksMoreBody: "Weitere nützliche Seiten (FAQ, Blog, Presse und Richtlinien):",
     linkFaq: "FAQ",
     linkBlog: "Blog",
     linkPress: "Presse",
@@ -936,8 +875,7 @@ const COPY: Record<
     ],
 
     finalTitle: "Bereit für verlorene Pakete?",
-    finalBody:
-      "Wenn du nach „verlorene Pakete kaufen“ gesucht hast: Hier bekommst du Klarheit und kannst direkt bestellen. Format wählen und unboxen.",
+    finalBody: "Wenn du nach „verlorene Pakete kaufen“ gesucht hast: Hier bekommst du Klarheit und kannst direkt bestellen. Format wählen und unboxen.",
     finalPrimary: "Jetzt kaufen",
     finalSecondary: "Kontakt",
   },
@@ -946,11 +884,7 @@ const COPY: Record<
 /* =========================
    METADATA
 ========================= */
-export async function generateMetadata({
-  params,
-}: {
-  params: { lang: string };
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: { lang: string } }): Promise<Metadata> {
   const lang = normLang(params?.lang);
   const c = COPY[lang];
   const url = `${SITE_URL}/${lang}/pacchi-smarriti`;
@@ -980,11 +914,7 @@ export async function generateMetadata({
 /* =========================
    PAGE
 ========================= */
-export default function PacchiSmarritiPage({
-  params,
-}: {
-  params: { lang: string };
-}) {
+export default function PacchiSmarritiPage({ params }: { params: { lang: string } }) {
   const lang = normLang(params?.lang);
   const c = COPY[lang];
   const pageUrl = `${SITE_URL}/${lang}/pacchi-smarriti`;
@@ -1003,33 +933,14 @@ export default function PacchiSmarritiPage({
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "KiloMystery",
-        item: `${SITE_URL}/${lang}`,
-      },
+      { "@type": "ListItem", position: 1, name: "KiloMystery", item: `${SITE_URL}/${lang}` },
       { "@type": "ListItem", position: 2, name: c.h1, item: pageUrl },
     ],
   };
 
-  const webPageLd = webPageJsonLd({
-    siteUrl: SITE_URL,
-    lang,
-    title: c.title,
-    description: c.description,
-  });
-
-  const productStdLd = productJsonLd({
-    siteUrl: SITE_URL,
-    lang,
-    tier: "Standard",
-  });
-  const productPrmLd = productJsonLd({
-    siteUrl: SITE_URL,
-    lang,
-    tier: "Premium",
-  });
+  const webPageLd = webPageJsonLd({ siteUrl: SITE_URL, lang, title: c.title, description: c.description });
+  const productStdLd = productJsonLd({ siteUrl: SITE_URL, lang, tier: "Standard" });
+  const productPrmLd = productJsonLd({ siteUrl: SITE_URL, lang, tier: "Premium" });
   const itemListLd = itemListJsonLd({ siteUrl: SITE_URL, lang });
 
   return (
@@ -1038,63 +949,33 @@ export default function PacchiSmarritiPage({
 
       <main className="container py-10 space-y-10">
         {/* JSON-LD */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productStdLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productPrmLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productStdLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productPrmLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListLd) }} />
 
         {/* HERO */}
         <header className="max-w-3xl">
           <p className="text-white/60 text-sm">{c.seoHubLine}</p>
-          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mt-2">
-            {c.h1}
-          </h1>
-          <p className="text-white/75 mt-4 text-lg leading-relaxed">
-            {c.intro}
-          </p>
+          <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight mt-2">{c.h1}</h1>
+          <p className="text-white/75 mt-4 text-lg leading-relaxed">{c.intro}</p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link
-              href={`/${lang}/products`}
-              className="btn btn-brand px-6 py-3 font-bold"
-            >
+            <Link href={`/${lang}/products`} className="btn btn-brand px-6 py-3 font-bold">
               {c.ctaPrimary}
             </Link>
-            <Link
-              href={`/${lang}/how-it-works`}
-              className="btn btn-ghost px-6 py-3 font-bold"
-            >
+            <Link href={`/${lang}/how-it-works`} className="btn btn-ghost px-6 py-3 font-bold">
               {c.ctaSecondary}
             </Link>
           </div>
         </header>
 
-        {/* VENDITA (commercial intent) */}
+        {/* VENDITA */}
         <section className="card">
           <h2 className="text-2xl font-extrabold">{c.venditaTitle}</h2>
-          <p className="text-white/75 mt-3 leading-relaxed">
-            {c.venditaIntro}
-          </p>
+          <p className="text-white/75 mt-3 leading-relaxed">{c.venditaIntro}</p>
 
           <ul className="mt-4 space-y-2 text-white/75">
             {c.venditaBullets.map((b, i) => (
@@ -1139,31 +1020,72 @@ export default function PacchiSmarritiPage({
         <section className="grid md:grid-cols-2 gap-5">
           <article className="card">
             <h2 className="text-2xl font-extrabold">{c.section1Title}</h2>
-            <p className="text-white/75 mt-3 leading-relaxed">
-              {c.section1Body}
-            </p>
+            <p className="text-white/75 mt-3 leading-relaxed">{c.section1Body}</p>
           </article>
 
           <article className="card">
             <h2 className="text-2xl font-extrabold">{c.section2Title}</h2>
+
+            {/* ✅ Contextual links (silo) */}
             <p className="text-white/75 mt-3 leading-relaxed">
-              {c.section2Body}
+              {c.section2Body}{" "}
+              {lang === "it" ? (
+                <>
+                  In particolare, molti stock derivano da{" "}
+                  <Link href={`/${lang}/pacchi-smarriti-poste`} className="underline hover:text-white">
+                    pacchi smarriti Poste
+                  </Link>{" "}
+                  e da{" "}
+                  <Link href={`/${lang}/pacchi-smarriti-amazon`} className="underline hover:text-white">
+                    resi Amazon non consegnati
+                  </Link>
+                  .
+                </>
+              ) : (
+                <>
+                  Explore dedicated guides:{" "}
+                  <Link href={`/${lang}/pacchi-smarriti-poste`} className="underline hover:text-white">
+                    Poste
+                  </Link>{" "}
+                  and{" "}
+                  <Link href={`/${lang}/pacchi-smarriti-amazon`} className="underline hover:text-white">
+                    Amazon
+                  </Link>
+                  .
+                </>
+              )}
             </p>
           </article>
 
           <article className="card md:col-span-2">
             <h2 className="text-2xl font-extrabold">{c.section3Title}</h2>
-            <p className="text-white/75 mt-3 leading-relaxed">
-              {c.section3Body}
-            </p>
+            <p className="text-white/75 mt-3 leading-relaxed">{c.section3Body}</p>
           </article>
 
           <article className="card md:col-span-2">
             <h2 className="text-2xl font-extrabold">{c.section4Title}</h2>
-            <p className="text-white/75 mt-3 leading-relaxed">
-              {c.section4Body}
-            </p>
+            <p className="text-white/75 mt-3 leading-relaxed">{c.section4Body}</p>
           </article>
+        </section>
+
+        {/* ✅ SILO HUB */}
+        <section className="card">
+          <h2 className="text-2xl font-extrabold">{c.siloTitle}</h2>
+          <p className="text-white/75 mt-3">{c.siloIntro}</p>
+
+          <div className="mt-5 grid md:grid-cols-3 gap-3">
+            <Link href={`/${lang}/pacchi-smarriti`} className="btn btn-brand">
+              {c.siloHub}
+            </Link>
+
+            <Link href={`/${lang}/pacchi-smarriti-poste`} className="btn btn-ghost">
+              {c.siloPoste}
+            </Link>
+
+            <Link href={`/${lang}/pacchi-smarriti-amazon`} className="btn btn-ghost">
+              {c.siloAmazon}
+            </Link>
+          </div>
         </section>
 
         {/* SHOP INLINE */}
@@ -1200,7 +1122,7 @@ export default function PacchiSmarritiPage({
           </div>
         </section>
 
-        {/* ✅ INTERNAL LINKS (8–12 total) */}
+        {/* INTERNAL LINKS (more) */}
         <section className="card">
           <h2 className="text-2xl font-extrabold">{c.linksMoreTitle}</h2>
           <p className="text-white/75 mt-3">{c.linksMoreBody}</p>
@@ -1237,10 +1159,7 @@ export default function PacchiSmarritiPage({
 
           <div className="mt-5 space-y-3">
             {c.faqs.map((f, idx) => (
-              <details
-                key={idx}
-                className="rounded-2xl border border-white/10 bg-white/5 p-4"
-              >
+              <details key={idx} className="rounded-2xl border border-white/10 bg-white/5 p-4">
                 <summary className="cursor-pointer font-bold">{f.q}</summary>
                 <p className="text-white/75 mt-2 leading-relaxed">{f.a}</p>
               </details>
@@ -1252,17 +1171,12 @@ export default function PacchiSmarritiPage({
         <section className="card text-center">
           <h2 className="text-2xl font-extrabold">{c.finalTitle}</h2>
           <p className="text-white/75 mt-2">{c.finalBody}</p>
+
           <div className="mt-5 flex justify-center gap-3 flex-wrap">
-            <Link
-              href={`/${lang}/products`}
-              className="btn btn-brand px-7 py-3 font-bold"
-            >
+            <Link href={`/${lang}/products`} className="btn btn-brand px-7 py-3 font-bold">
               {c.finalPrimary}
             </Link>
-            <Link
-              href={`/${lang}/contact`}
-              className="btn btn-ghost px-7 py-3 font-bold"
-            >
+            <Link href={`/${lang}/contact`} className="btn btn-ghost px-7 py-3 font-bold">
               {c.finalSecondary}
             </Link>
           </div>
