@@ -22,12 +22,10 @@ type Labels = {
   press: string;
   events: string;
 
-  // SEO pages
   mysteryBox: string;
   lostParcels: string;
-  lostParcelsSale?: string; // IT-only extra label
+  lostParcelsSale?: string;
 
-  // Legal
   privacy: string;
   terms: string;
   returns: string;
@@ -43,10 +41,14 @@ const COMPANY_INFO = {
   address: "Sede legale: Piazza Alessandro Romano 11, 72023 Mesagne (BR) – Italia",
 };
 
+/* =========================
+   LABELS
+========================= */
+
 const FOOTER_LABELS: Record<Lang, Labels> = {
   it: {
     menu: "Menu",
-    seoHub: "Risorse & Guide",
+    seoHub: "Guide & Risorse Premium",
     legal: "Legale",
 
     products: "Prodotti",
@@ -59,8 +61,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     press: "Press",
     events: "Eventi",
 
-    // SEO pages
-    mysteryBox: "Mystery Box (guida)",
+    mysteryBox: "Guida Mystery Box",
     lostParcels: "Pacchi Smarriti",
     lostParcelsSale: "Vendita Pacchi Smarriti",
 
@@ -69,13 +70,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     returns: "Resi",
     shipping: "Spedizioni",
 
-    newsletterTitle: "Iscriviti alla nostra newsletter",
+    newsletterTitle: "Accedi alle offerte riservate",
     rights: (y) => `© ${y} KiloMystery — Tutti i diritti riservati`,
   },
 
   en: {
     menu: "Menu",
-    seoHub: "Guides",
+    seoHub: "Premium Guides",
     legal: "Legal",
 
     products: "Products",
@@ -88,7 +89,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     press: "Press",
     events: "Events",
 
-    mysteryBox: "Mystery Box (guide)",
+    mysteryBox: "Mystery Box Guide",
     lostParcels: "Lost Parcels",
 
     privacy: "Privacy",
@@ -96,13 +97,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     returns: "Returns",
     shipping: "Shipping",
 
-    newsletterTitle: "Sign up to our newsletter",
+    newsletterTitle: "Access exclusive offers",
     rights: (y) => `© ${y} KiloMystery — All rights reserved`,
   },
 
   es: {
     menu: "Menú",
-    seoHub: "Guías",
+    seoHub: "Guías Premium",
     legal: "Legal",
 
     products: "Productos",
@@ -115,7 +116,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     press: "Prensa",
     events: "Eventos",
 
-    mysteryBox: "Mystery Box (guía)",
+    mysteryBox: "Guía Mystery Box",
     lostParcels: "Paquetes perdidos",
 
     privacy: "Privacidad",
@@ -123,13 +124,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     returns: "Devoluciones",
     shipping: "Envíos",
 
-    newsletterTitle: "Suscríbete a nuestra newsletter",
+    newsletterTitle: "Accede a ofertas exclusivas",
     rights: (y) => `© ${y} KiloMystery — Todos los derechos reservados`,
   },
 
   fr: {
     menu: "Menu",
-    seoHub: "Guides",
+    seoHub: "Guides Premium",
     legal: "Mentions légales",
 
     products: "Produits",
@@ -142,7 +143,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     press: "Presse",
     events: "Événements",
 
-    mysteryBox: "Mystery Box (guide)",
+    mysteryBox: "Guide Mystery Box",
     lostParcels: "Colis perdus",
 
     privacy: "Confidentialité",
@@ -150,13 +151,13 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     returns: "Retours",
     shipping: "Livraisons",
 
-    newsletterTitle: "Inscris-toi à notre newsletter",
+    newsletterTitle: "Accès aux offres exclusives",
     rights: (y) => `© ${y} KiloMystery — Tous droits réservés`,
   },
 
   de: {
     menu: "Menü",
-    seoHub: "Guides",
+    seoHub: "Premium Guides",
     legal: "Rechtliches",
 
     products: "Produkte",
@@ -169,7 +170,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     press: "Presse",
     events: "Events",
 
-    mysteryBox: "Mystery Box (Guide)",
+    mysteryBox: "Mystery Box Guide",
     lostParcels: "Verlorene Pakete",
 
     privacy: "Datenschutz",
@@ -177,7 +178,7 @@ const FOOTER_LABELS: Record<Lang, Labels> = {
     returns: "Rückgaben",
     shipping: "Versand",
 
-    newsletterTitle: "Melde dich zu unserem Newsletter an",
+    newsletterTitle: "Exklusive Angebote erhalten",
     rights: (y) => `© ${y} KiloMystery — Alle Rechte vorbehalten`,
   },
 };
@@ -186,6 +187,10 @@ function safePath(lang: Lang, slug: string) {
   const clean = slug.startsWith("/") ? slug : `/${slug}`;
   return `/${lang}${clean}`.replace(/\/{2,}/g, "/");
 }
+
+/* =========================
+   COMPONENT
+========================= */
 
 export default function Footer({
   lang = "it" as Lang,
@@ -200,14 +205,19 @@ export default function Footer({
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-16 border-t border-white/10 bg-gradient-to-b from-[#05070b] via-[#05070b] to-[#020308]">
+    <footer className="relative mt-20 border-t border-white/10 bg-gradient-to-b from-[#05070b] via-[#05070b] to-[#020308]">
+
+      {/* TOP GLOW */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#7A20FF] via-emerald-300/80 to-[#20D27A]" />
 
-      <div className="container py-10 relative z-10">
-        {/* LOGO */}
-        <div className="flex items-center gap-3 mb-6">
+      <div className="container py-12 relative z-10">
+
+        {/* BRAND */}
+        <div className="flex items-center gap-3 mb-8">
           <Link href={base} prefetch={false} className="inline-flex items-center group">
-            <div className="relative h-9 w-9 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_25px_rgba(122,32,255,0.45)]">
+
+            <div className="relative h-10 w-10 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_30px_rgba(122,32,255,0.5)]">
+
               <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
                 <Image
                   src="/logo.svg"
@@ -218,15 +228,19 @@ export default function Footer({
                   priority
                 />
               </div>
+
             </div>
-            <span className="ml-2 text-sm font-semibold tracking-[0.18em] uppercase text-white/60 group-hover:text-white transition">
+
+            <span className="ml-2 text-sm font-semibold tracking-[0.22em] uppercase text-white/60 group-hover:text-white transition">
               KILOMYSTERY
             </span>
+
           </Link>
         </div>
 
         {/* NEWSLETTER */}
-        <section className="mb-10 rounded-2xl border border-white/10 bg-gradient-to-tr from-white/[0.03] via-[#111827]/60 to-white/[0.06] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.75)]">
+        <section className="mb-12 rounded-2xl border border-white/10 bg-gradient-to-tr from-white/[0.04] via-[#111827]/70 to-white/[0.06] p-6 shadow-[0_25px_60px_rgba(0,0,0,0.8)]">
+
           <h3 className="text-xl md:text-2xl font-extrabold tracking-tight">
             <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
               {L.newsletterTitle}
@@ -236,222 +250,177 @@ export default function Footer({
           <div className="mt-4">
             <NewsletterForm lang={lang} />
           </div>
+
         </section>
 
-        {/* COLONNE LINK */}
-        <div className="grid gap-8 md:grid-cols-3">
-          {/* Menu */}
+        {/* LINKS GRID */}
+        <div className="grid gap-10 md:grid-cols-3">
+
+          {/* MENU */}
           <nav aria-label="Menu">
-            <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
-              {L.menu}
-            </h4>
+            <h4 className="footer-heading">{L.menu}</h4>
 
             <ul className="space-y-2">
-              <li>
-                <Link href={safePath(lang, "/products")} prefetch={false} className="footer-link">
-                  {L.products}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/how-it-works")} prefetch={false} className="footer-link">
-                  {L.how}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/faq")} prefetch={false} className="footer-link">
-                  {L.faq}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/blog")} prefetch={false} className="footer-link">
-                  {L.blog}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/press")} prefetch={false} className="footer-link">
-                  {L.press}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/events")} prefetch={false} className="footer-link">
-                  {L.events}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/about")} prefetch={false} className="footer-link">
-                  {L.about}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/contact")} prefetch={false} className="footer-link">
-                  {L.contact}
-                </Link>
-              </li>
+              {[
+                ["/products", L.products],
+                ["/how-it-works", L.how],
+                ["/faq", L.faq],
+                ["/blog", L.blog],
+                ["/press", L.press],
+                ["/events", L.events],
+                ["/about", L.about],
+                ["/contact", L.contact],
+              ].map(([url, label]) => (
+                <li key={url}>
+                  <Link href={safePath(lang, url)} prefetch={false} className="footer-link">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
 
-          {/* SEO HUB: link contestuali (sitewide) */}
+          {/* SEO HUB */}
           <nav aria-label="SEO hub">
-            <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
-              {L.seoHub}
-            </h4>
+            <h4 className="footer-heading">{L.seoHub}</h4>
 
             <ul className="space-y-2">
+
               <li>
-                <Link href={safePath(lang, "/mystery-box")} prefetch={false} className="footer-link">
+                <Link href={safePath(lang, "/mystery-box")} className="footer-link">
                   {L.mysteryBox}
                 </Link>
               </li>
 
-              {/* ✅ Pacchi smarriti: doppio anchor-text in IT per spingere “vendita” senza cambiare URL */}
               <li>
-                <Link href={safePath(lang, "/pacchi-smarriti")} prefetch={false} className="footer-link">
+                <Link href={safePath(lang, "/pacchi-smarriti")} className="footer-link">
                   {L.lostParcels}
                 </Link>
               </li>
 
-              {lang === "it" ? (
+              {lang === "it" && (
                 <li>
-                  <Link href={safePath(lang, "/pacchi-smarriti")} prefetch={false} className="footer-link">
-                    {L.lostParcelsSale || "Vendita Pacchi Smarriti"}
+                  <Link href={safePath(lang, "/pacchi-smarriti")} className="footer-link">
+                    {L.lostParcelsSale}
                   </Link>
                 </li>
-              ) : null}
+              )}
 
-              {/* ✅ Deep links conversione (ottimi per crawl + UX) */}
+              {/* POSTE */}
               <li>
-                <Link href={safePath(lang, "/products#buy-standard-10")} prefetch={false} className="footer-link">
+                <Link href={safePath(lang, "/pacchi-smarriti-poste")} className="footer-link">
                   {lang === "it"
-                    ? "Standard 10 kg (più richiesto)"
+                    ? "Pacchi Smarriti Poste"
                     : lang === "en"
-                    ? "Standard 10 kg (most popular)"
+                    ? "Lost Postal Parcels"
                     : lang === "es"
-                    ? "Standard 10 kg (más popular)"
+                    ? "Paquetes perdidos correos"
                     : lang === "fr"
-                    ? "Standard 10 kg (le plus populaire)"
-                    : "Standard 10 kg (beliebt)"}
+                    ? "Colis perdus poste"
+                    : "Verlorene Postpakete"}
                 </Link>
               </li>
 
+              {/* AMAZON */}
               <li>
-                <Link href={safePath(lang, "/products#buy-premium-10")} prefetch={false} className="footer-link">
+                <Link href={safePath(lang, "/pacchi-smarriti-amazon")} className="footer-link">
                   {lang === "it"
-                    ? "Premium 10 kg (top)"
+                    ? "Pacchi Smarriti Amazon"
                     : lang === "en"
-                    ? "Premium 10 kg (top)"
+                    ? "Amazon Return Parcels"
                     : lang === "es"
-                    ? "Premium 10 kg (top)"
+                    ? "Paquetes Amazon devueltos"
                     : lang === "fr"
-                    ? "Premium 10 kg (top)"
-                    : "Premium 10 kg (top)"}
+                    ? "Retours Amazon"
+                    : "Amazon Rücksendungen"}
                 </Link>
               </li>
 
               <li>
-                <Link href={safePath(lang, "/policy/shipping")} prefetch={false} className="footer-link">
-                  {L.shipping}
+                <Link href={safePath(lang, "/products#buy-standard-10")} className="footer-link">
+                  Standard 10 kg
                 </Link>
               </li>
+
               <li>
-                <Link href={safePath(lang, "/policy/returns")} prefetch={false} className="footer-link">
-                  {L.returns}
+                <Link href={safePath(lang, "/products#buy-premium-10")} className="footer-link">
+                  Premium 10 kg
                 </Link>
               </li>
+
             </ul>
           </nav>
 
-          {/* Legale */}
-          <nav aria-label="Legale">
-            <h4 className="footer-heading mb-3 text-lg font-extrabold tracking-tight text-white">
-              {L.legal}
-            </h4>
+          {/* LEGAL */}
+          <nav aria-label="Legal">
+            <h4 className="footer-heading">{L.legal}</h4>
 
             <ul className="space-y-2">
-              <li>
-                <Link href={safePath(lang, "/policy/privacy")} prefetch={false} className="footer-link">
-                  {L.privacy}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/policy/terms")} prefetch={false} className="footer-link">
-                  {L.terms}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/policy/returns")} prefetch={false} className="footer-link">
-                  {L.returns}
-                </Link>
-              </li>
-              <li>
-                <Link href={safePath(lang, "/policy/shipping")} prefetch={false} className="footer-link">
-                  {L.shipping}
-                </Link>
-              </li>
+              {[
+                ["/policy/privacy", L.privacy],
+                ["/policy/terms", L.terms],
+                ["/policy/returns", L.returns],
+                ["/policy/shipping", L.shipping],
+              ].map(([url, label]) => (
+                <li key={url}>
+                  <Link href={safePath(lang, url)} className="footer-link">
+                    {label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
+
         </div>
 
-        {/* LINEA FINALE */}
-        <div className="mt-10 border-t border-white/10 pt-6 text-sm text-white/60 flex flex-wrap items-center gap-2">
-          <span>{L.rights(year)}</span>
+        {/* FOOTER BOTTOM */}
+        <div className="mt-12 border-t border-white/10 pt-6 text-sm text-white/60">
+          <p>{L.rights(year)}</p>
+
+          <div className="mt-2 text-xs text-white/45 space-y-1">
+            <p>{COMPANY_INFO.name}</p>
+            <p>{COMPANY_INFO.vat}</p>
+            <p>{COMPANY_INFO.address}</p>
+          </div>
         </div>
 
-        <div className="mt-3 space-y-1 text-xs text-white/50">
-          <p>{COMPANY_INFO.name}</p>
-          <p>{COMPANY_INFO.vat}</p>
-          <p>{COMPANY_INFO.address}</p>
-        </div>
       </div>
 
+      {/* STYLES */}
       <style jsx>{`
         .footer-heading {
+          font-size: 1.1rem;
+          font-weight: 800;
+          margin-bottom: 0.75rem;
           position: relative;
-          display: inline-flex;
-          align-items: center;
         }
+
         .footer-heading::after {
           content: "";
           position: absolute;
           left: 0;
-          bottom: -0.25rem;
-          width: 42%;
+          bottom: -0.3rem;
+          width: 36%;
           height: 2px;
-          border-radius: 999px;
-          background: linear-gradient(90deg, #7a20ff, #ffffff, #20d27a);
+          background: linear-gradient(90deg, #7a20ff, #fff, #20d27a);
           opacity: 0.7;
+          border-radius: 999px;
         }
 
         .footer-link {
-          display: inline-flex;
-          align-items: center;
-          gap: 0.375rem;
-          color: rgba(255, 255, 255, 0.78);
+          color: rgba(255,255,255,0.78);
           font-size: 0.9rem;
           position: relative;
-          transition: color 0.15s ease, transform 0.15s ease, text-shadow 0.15s ease;
+          transition: all .18s ease;
         }
-        .footer-link::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          bottom: -0.18rem;
-          width: 0;
-          height: 2px;
-          border-radius: 999px;
-          background: linear-gradient(90deg, #7a20ff, #ffffff, #20d27a);
-          opacity: 0;
-          transition: width 0.18s ease, opacity 0.18s ease;
-        }
+
         .footer-link:hover {
-          color: #ffffff;
+          color: #fff;
           transform: translateX(2px);
-          text-shadow: 0 0 12px rgba(255, 255, 255, 0.18);
-        }
-        .footer-link:hover::after {
-          opacity: 1;
-          width: 100%;
+          text-shadow: 0 0 14px rgba(255,255,255,0.2);
         }
       `}</style>
+
     </footer>
   );
 }
