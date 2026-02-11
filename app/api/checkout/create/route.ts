@@ -2,11 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.myshopify.com
-
-// ✅ FIX: su Vercel la variabile è SHOPIFY_STOREFRONT_TOKEN (non SHOPIFY_STOREFRONT_ACCESS_TOKEN)
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_TOKEN;
-
-// Se vuoi cambiare versione, mettila in env SHOPIFY_API_VERSION
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-01";
 
 const LOCALE_MAP: Record<string, string> = {
@@ -57,9 +53,11 @@ export async function POST(req: NextRequest) {
     const originQuery =
       typeof body?.originQuery === "string" ? body.originQuery : "";
 
-    // ✅ nota ordine opzionale (es: bonus ruota)
-    // Esempio: "🎁 Bonus ruota: 1.25 kg"
+    // ✅ nota ordine opzionale (es: live ticket / bonus ruota ecc.)
     const orderNote = typeof body?.orderNote === "string" ? body.orderNote : "";
+
+    // ✅ LIVE REGISTRATION (oggetto con dati)
+    const live = body?.liveRegistration;
 
     // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
@@ -99,7 +97,6 @@ export async function POST(req: NextRequest) {
         } as IncomingItem;
       })
       .filter((i: IncomingItem) => {
-        // shopifyId deve esistere e qty >= 1
         return !!i.shopifyId && Number(i.qty || 0) >= 1;
       });
 
@@ -130,12 +127,8 @@ export async function POST(req: NextRequest) {
 
       const attributes: { key: string; value: string }[] = [];
 
-      if (i.tier) {
-        attributes.push({ key: "tier", value: String(i.tier) });
-      }
-      if (weight > 0) {
-        attributes.push({ key: "weightKg", value: String(weight) });
-      }
+      if (i.tier) attributes.push({ key: "tier", value: String(i.tier) });
+      if (weight > 0) attributes.push({ key: "weightKg", value: String(weight) });
 
       const line: any = {
         quantity: qty,
@@ -153,17 +146,12 @@ export async function POST(req: NextRequest) {
       { key: "locale", value: shopifyLocale },
     ];
 
-    if (returnUrl) {
-      cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
-    }
+    if (returnUrl) cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
 
     // ✅ salva anche orderNote tra gli attributes (utile per debug/backoffice)
-    if (orderNote) {
-      cartAttributes.push({ key: "orderNote", value: orderNote });
-    }
+    if (orderNote) cartAttributes.push({ key: "orderNote", value: orderNote });
 
     // ✅ LIVE REGISTRATION (aggiunta: non rompe nulla se assente)
-    const live = body?.liveRegistration;
     if (live && typeof live === "object") {
       const map: Record<string, any> = {
         liveType: "tiktok_live_mystery_weight",
@@ -202,6 +190,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    /**
+     * ✅ IMPORTANTISSIMO PER MAKE:
+     * Make (Watch Orders) legge quasi sempre SOLO Order.note.
+     * Quindi scriviamo una nota "ufficiale" nel carrello/checkout.
+     */
+    const finalOrderNote =
+      (orderNote && orderNote.trim()) ||
+      (live?.tiktokUsername
+        ? `LIVE_TIKTOK_TICKET | ${String(live.tiktokUsername).trim()}`
+        : "LIVE_TIKTOK_TICKET");
+
     const query = `
       mutation CartCreate($input: CartInput!) {
         cartCreate(input: $input) {
@@ -221,6 +220,7 @@ export async function POST(req: NextRequest) {
       input: {
         lines,
         attributes: cartAttributes,
+        note: finalOrderNote, // ✅ qui!
       },
     };
 
@@ -283,10 +283,10 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ✅ NOTA RUOTA (o nota ordine) nel checkout via query param "note"
-    // Shopify accetta ?note=... e la porta nell'ordine (note)
-    if (orderNote) {
-      url.searchParams.set("note", orderNote);
+    // ✅ fallback: forza la nota anche via query param (non fa male)
+    // Shopify accetta ?note=... e la porta nell'ordine (note) in molti casi.
+    if (finalOrderNote) {
+      url.searchParams.set("note", finalOrderNote);
     }
 
     return NextResponse.json({ url: url.toString() });
