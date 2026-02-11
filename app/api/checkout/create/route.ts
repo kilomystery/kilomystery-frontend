@@ -162,6 +162,35 @@ export async function POST(req: NextRequest) {
       cartAttributes.push({ key: "orderNote", value: orderNote });
     }
 
+    // ✅ LIVE REGISTRATION (aggiunta: non rompe nulla se assente)
+    const live = body?.liveRegistration;
+    if (live && typeof live === "object") {
+      const map: Record<string, any> = {
+        liveType: "tiktok_live_mystery_weight",
+        rules: "deposit_20_balance_24h",
+        depositEur: "20",
+        shippingUpTo5kgEur: "6",
+        shippingFreeOverKg: "5",
+        tiktokUsername: live.tiktokUsername,
+        firstName: live.firstName,
+        lastName: live.lastName,
+        email: live.email,
+        phone: live.phone,
+        address1: live.address1,
+        address2: live.address2,
+        zip: live.zip,
+        city: live.city,
+        province: live.province,
+        country: live.country,
+      };
+
+      for (const [k, v] of Object.entries(map)) {
+        if (typeof v === "string" && v.trim()) {
+          cartAttributes.push({ key: k, value: v.trim() });
+        }
+      }
+    }
+
     // (debug utile: salva anche i params marketing dentro Shopify come attributes)
     if (originQuery) {
       const qp = new URLSearchParams(
