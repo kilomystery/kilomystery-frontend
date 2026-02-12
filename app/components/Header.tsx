@@ -25,12 +25,10 @@ const LANGS = [
 type Labels = {
   navProducts: string;
   navHow: string;
+  navLostParcels: string;
+  navLive: string;
   navAbout: string;
   navEvents: string;
-  navUgc: string;
-
-  // ✅ NEW: Pacchi smarriti
-  navLostParcels: string;
 
   ariaInstagram: string;
   ariaTikTokDesktop: string;
@@ -42,10 +40,10 @@ const HEADER_LABELS: Record<Lang, Labels> = {
   it: {
     navProducts: "Prodotti",
     navHow: "Come funziona",
+    navLostParcels: "Pacchi Smarriti",
+    navLive: "Live TikTok",
     navAbout: "Chi siamo",
     navEvents: "Eventi Pop-Up",
-    navUgc: "Unboxing Contest",
-    navLostParcels: "Pacchi Smarriti",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -54,10 +52,10 @@ const HEADER_LABELS: Record<Lang, Labels> = {
   en: {
     navProducts: "Products",
     navHow: "How it works",
+    navLostParcels: "Lost Parcels",
+    navLive: "TikTok Live",
     navAbout: "About us",
     navEvents: "Pop-up events",
-    navUgc: "Unboxing contest",
-    navLostParcels: "Lost Parcels",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -66,10 +64,10 @@ const HEADER_LABELS: Record<Lang, Labels> = {
   es: {
     navProducts: "Productos",
     navHow: "Cómo funciona",
+    navLostParcels: "Paquetes perdidos",
+    navLive: "Live TikTok",
     navAbout: "Quiénes somos",
     navEvents: "Eventos pop-up",
-    navUgc: "Concurso unboxing",
-    navLostParcels: "Paquetes perdidos",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -78,10 +76,10 @@ const HEADER_LABELS: Record<Lang, Labels> = {
   fr: {
     navProducts: "Produits",
     navHow: "Comment ça marche",
+    navLostParcels: "Colis perdus",
+    navLive: "Live TikTok",
     navAbout: "À propos",
     navEvents: "Événements pop-up",
-    navUgc: "Concours unboxing",
-    navLostParcels: "Colis perdus",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -90,10 +88,10 @@ const HEADER_LABELS: Record<Lang, Labels> = {
   de: {
     navProducts: "Produkte",
     navHow: "So funktioniert’s",
+    navLostParcels: "Verlorene Pakete",
+    navLive: "TikTok Live",
     navAbout: "Über uns",
     navEvents: "Pop-up-Events",
-    navUgc: "Unboxing-Wettbewerb",
-    navLostParcels: "Verlorene Pakete",
     ariaInstagram: "Instagram",
     ariaTikTokDesktop: "TikTok KiloMystery",
     ariaTikTokMobile: "TikTok",
@@ -142,6 +140,8 @@ export default function Header({ lang = "it" as Lang }) {
     return pathname === href || pathname.startsWith(href + "/");
   };
 
+  const liveHref = `/${currentLang}/live-tiktok`;
+
   return (
     <header className="site-header sticky top-0 z-40 border-b border-white/10 bg-gradient-to-b from-[#080b11]/95 via-[#05070b]/95 to-[#05070b]/90 backdrop-blur-xl">
       {/* linea glow */}
@@ -168,7 +168,7 @@ export default function Header({ lang = "it" as Lang }) {
         </Link>
 
         {/* NAV DESKTOP */}
-        <nav className="hidden md:flex items-center gap-4">
+        <nav className="hidden md:flex items-center gap-3">
           <Link
             href={`/${currentLang}/products`}
             className={`nav-link ${
@@ -187,7 +187,7 @@ export default function Header({ lang = "it" as Lang }) {
             {labels.navHow}
           </Link>
 
-          {/* ✅ NEW: Pacchi smarriti (SEO hub) */}
+          {/* Pacchi smarriti (SEO hub) */}
           <Link
             href={`/${currentLang}/pacchi-smarriti`}
             className={`nav-link ${
@@ -197,14 +197,15 @@ export default function Header({ lang = "it" as Lang }) {
             {labels.navLostParcels}
           </Link>
 
-          {/* ✅ UGC / Contest */}
+          {/* 🔴 Live TikTok (evidenziato) */}
           <Link
-            href={`/${currentLang}/ugc`}
-            className={`nav-link ${
-              isActive(`/${currentLang}/ugc`) ? "nav-link--active" : ""
+            href={liveHref}
+            className={`nav-link-live ${
+              isActive(liveHref) ? "nav-link-live--active" : ""
             }`}
           >
-            {labels.navUgc}
+            <span className="live-dot" aria-hidden="true" />
+            {labels.navLive}
           </Link>
 
           <Link
@@ -461,7 +462,6 @@ export default function Header({ lang = "it" as Lang }) {
               {labels.navHow}
             </Link>
 
-            {/* ✅ NEW: Pacchi smarriti (mobile menu) */}
             <Link
               href={`/${currentLang}/pacchi-smarriti`}
               className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
@@ -470,13 +470,17 @@ export default function Header({ lang = "it" as Lang }) {
               {labels.navLostParcels}
             </Link>
 
-            {/* ✅ UGC / Contest */}
+            {/* 🔴 Live TikTok (mobile) */}
             <Link
-              href={`/${currentLang}/ugc`}
-              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
+              href={liveHref}
+              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition flex items-center justify-between"
               onClick={() => setOpen(false)}
             >
-              {labels.navUgc}
+              <span className="flex items-center gap-2">
+                <span className="inline-block h-2 w-2 rounded-full bg-red-400 shadow-[0_0_14px_rgba(248,113,113,0.55)]" />
+                {labels.navLive}
+              </span>
+              <span className="text-xs text-white/50">↗</span>
             </Link>
 
             <Link
@@ -564,6 +568,44 @@ export default function Header({ lang = "it" as Lang }) {
         .nav-link--active::after {
           opacity: 1;
           transform: scaleX(1);
+        }
+
+        /* Live link (leggermente evidenziato) */
+        .nav-link-live {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 0.45rem;
+          padding: 0.35rem 0.85rem;
+          border-radius: 999px;
+          font-size: 0.85rem;
+          font-weight: 700;
+          color: rgba(255, 255, 255, 0.92);
+          border: 1px solid rgba(255, 255, 255, 0.16);
+          background: rgba(255, 255, 255, 0.04);
+          box-shadow: 0 0 18px rgba(122, 32, 255, 0.12);
+          transition: transform 0.15s ease, background 0.15s ease,
+            border-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        .nav-link-live:hover {
+          transform: translateY(-0.5px);
+          background: rgba(255, 255, 255, 0.07);
+          border-color: rgba(255, 255, 255, 0.28);
+          box-shadow: 0 0 22px rgba(32, 210, 122, 0.14),
+            0 0 28px rgba(122, 32, 255, 0.14);
+        }
+        .live-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 999px;
+          background: #f87171;
+          box-shadow: 0 0 14px rgba(248, 113, 113, 0.55);
+        }
+        .nav-link-live--active {
+          border-color: rgba(255, 255, 255, 0.35);
+          background: rgba(255, 255, 255, 0.08);
+          box-shadow: 0 0 24px rgba(32, 210, 122, 0.18),
+            0 0 28px rgba(122, 32, 255, 0.18);
         }
       `}</style>
     </header>

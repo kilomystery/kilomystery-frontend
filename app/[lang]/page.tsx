@@ -8,6 +8,9 @@ import Footer from "../components/Footer";
 import ProductsTabs from "../components/ProductsTabs";
 import ContactForm from "../components/ContactForm";
 import SectionMarquee from "../components/SectionMarquee";
+import LiveTikTok from "../components/livetiktok";
+
+
 
 type CopyKey =
   | "heroTitle"
@@ -527,6 +530,14 @@ export default async function HomePage({
         <section id="prodotti">
           <ProductsTabs lang={lang as any} />
         </section>
+
+<section>
+  <LiveTikTok
+    lang={lang as any}
+    href="/live-tiktok"
+    tiktokUrl="https://www.tiktok.com/@kilomystery"
+  />
+</section>
 
         {/* MARQUEE TRA PRODOTTI E COME FUNZIONA */}
         <section>
