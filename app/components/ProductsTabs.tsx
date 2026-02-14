@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/app/components/cart/CartProvider";
-import LazyHoverVideo from "@/app/components/LazyHoverVideo";
 import { SHOPIFY_VARIANTS, Kg, Tier } from "@/app/config/shopifyProducts";
 import { trackAddToCart, trackViewItemList } from "@/app/lib/tracking";
 import type { KMCartItem } from "@/app/lib/ga";
@@ -208,6 +207,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
   const L = LABELS[safeLang];
   const currentKind: "Standard" | "Premium" = tab === "std" ? "Standard" : "Premium";
 
+  // ✅ GA4: view_item_list una volta per tab+lingua
   const listRef = useRef<string>("");
   useEffect(() => {
     const key = `products-tabs:${safeLang}:${tab}`;
@@ -301,8 +301,8 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const { total, compareAt } = PRICE_TABLE[tab][kg];
           const perKg = +(total / kg).toFixed(2);
 
-          const src = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.mp4`;
-          const poster = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.jpg`;
+          // ✅ SOLO IMMAGINI (poster/jpg già presenti in public/videos/packs)
+          const imgSrc = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.jpg`;
           const co2Text = co2ByKg[safeLang][kg];
 
           return (
@@ -326,12 +326,13 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
               <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
                 <div className="ratio-16-9">
-                  {/* IMPORTANTISSIMO: qui deve essere absolute inset-0 per rispettare .ratio-16-9 > .media */}
-                  <LazyHoverVideo
-                    src={src}
-                    poster={poster}
-                    className="media absolute inset-0 rounded-[12px]"
-                    preload="auto"
+                  <Image
+                    src={imgSrc}
+                    alt={`${isStd ? L.standard : L.premium} ${w}${L.kg}`}
+                    fill
+                    className="media rounded-[12px] object-cover"
+                    sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
+                    priority={w === 1} // solo la prima più importante
                   />
                 </div>
               </div>
@@ -344,7 +345,9 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 <div className="text-right space-y-1">
                   <div className="text-sm text-white/60 line-through">{euro(compareAt)}</div>
 
-                  <div className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}>
+                  <div
+                    className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}
+                  >
                     {euro(total)}
                   </div>
 
