@@ -208,7 +208,6 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
   const L = LABELS[safeLang];
   const currentKind: "Standard" | "Premium" = tab === "std" ? "Standard" : "Premium";
 
-  // ✅ GA4: view_item_list una volta per tab+lingua
   const listRef = useRef<string>("");
   useEffect(() => {
     const key = `products-tabs:${safeLang}:${tab}`;
@@ -327,11 +326,12 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
               <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
                 <div className="ratio-16-9">
+                  {/* IMPORTANTISSIMO: qui deve essere absolute inset-0 per rispettare .ratio-16-9 > .media */}
                   <LazyHoverVideo
                     src={src}
                     poster={poster}
-                    className="media rounded-[12px] object-cover"
-                    preload="metadata"
+                    className="media absolute inset-0 rounded-[12px]"
+                    preload="auto"
                   />
                 </div>
               </div>

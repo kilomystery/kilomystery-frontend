@@ -10,95 +10,77 @@ type Props = {
   preload?: "none" | "metadata" | "auto";
 };
 
+/**
+ * Modalità "sempre in loop":
+ * - prova autoplay aggressivo (muted + playsInline + attributi hard iOS)
+ * - riprova su visibilitychange/pageshow
+ * - sblocca con tap (touch/pointer) se iOS blocca autoplay
+ *
+ * NOTA iOS: non esiste garanzia che TUTTI i video in pagina riproducano insieme.
+ * Questo però massimizza le probabilità.
+ */
 export default function LazyHoverVideo({
   src,
   poster,
   className = "",
-  preload = "metadata",
+  preload = "auto",
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const wrapRef = useRef<HTMLDivElement | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const [needsTap, setNeedsTap] = useState(false);
 
   const key = useMemo(() => src, [src]);
 
   useEffect(() => {
     const v = videoRef.current;
-    const wrap = wrapRef.current;
-    if (!v || !wrap) return;
+    if (!v) return;
 
     let cancelled = false;
 
-    // iOS/Safari: set attributi + proprietà (più affidabile)
-    v.muted = true;
-    v.defaultMuted = true;
-    v.volume = 0;
-    v.playsInline = true;
-    v.loop = true;
-    v.preload = preload;
-    v.autoplay = true;
+    const applyIOSHardAttrs = (el: HTMLVideoElement) => {
+      // props/runtime
+      el.muted = true;
+      el.defaultMuted = true;
+      el.volume = 0;
+      el.playsInline = true;
+      el.loop = true;
+      el.autoplay = true;
+      el.preload = preload;
 
-    // attributi "hard" (iOS li gradisce)
-    v.setAttribute("muted", "");
-    v.setAttribute("playsinline", "");
-    v.setAttribute("webkit-playsinline", "");
-    v.setAttribute("autoplay", "");
-    v.setAttribute("loop", "");
-
-    const markReady = () => {
-      if (cancelled) return;
-      setIsReady(true);
+      // attributi "hard" (Safari iOS li gradisce)
+      el.setAttribute("muted", "");
+      el.setAttribute("playsinline", "");
+      el.setAttribute("webkit-playsinline", "");
+      el.setAttribute("autoplay", "");
+      el.setAttribute("loop", "");
     };
+
+    applyIOSHardAttrs(v);
 
     const playSafe = async () => {
       const vv = videoRef.current;
-      if (!vv) return;
+      if (!vv || cancelled) return;
       try {
-        // su iOS aiuta forzare muted prima del play
-        vv.muted = true;
-        vv.defaultMuted = true;
-        vv.volume = 0;
+        applyIOSHardAttrs(vv);
 
         const p = vv.play();
-        if (p && typeof (p as any).then === "function") {
-          await p;
-        }
-        setNeedsTap(false);
-        if (vv.readyState >= 2) markReady();
+        if (p && typeof (p as any).then === "function") await p;
+
+        if (!cancelled) setIsReady(true);
       } catch {
-        // autoplay bloccato -> mostriamo "tap to play"
-        setNeedsTap(true);
+        // autoplay bloccato: si sblocca con gesture (touch/pointer)
       }
     };
 
-    const pauseSafe = () => {
-      const vv = videoRef.current;
-      if (!vv) return;
-      try {
-        vv.pause();
-      } catch {}
+    const onCanPlay = () => void playSafe();
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void playSafe();
     };
-
-    const onCanPlay = () => {
-      markReady();
-      void playSafe();
-    };
+    const onPageShow = () => void playSafe();
 
     v.addEventListener("canplay", onCanPlay);
     v.addEventListener("loadeddata", onCanPlay);
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry) return;
-        if (entry.isIntersecting) void playSafe();
-        else pauseSafe();
-      },
-      { threshold: 0.25 }
-    );
-
-    io.observe(wrap);
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pageshow", onPageShow);
 
     // tentativo iniziale
     void playSafe();
@@ -107,11 +89,12 @@ export default function LazyHoverVideo({
       cancelled = true;
       v.removeEventListener("canplay", onCanPlay);
       v.removeEventListener("loadeddata", onCanPlay);
-      io.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pageshow", onPageShow);
     };
   }, [src, preload]);
 
-  // TAP fallback: sblocca autoplay su iOS
+  // gesture fallback per iOS
   const onUserGesture = async () => {
     const v = videoRef.current;
     if (!v) return;
@@ -120,21 +103,17 @@ export default function LazyHoverVideo({
       v.defaultMuted = true;
       v.volume = 0;
       await v.play();
-      setNeedsTap(false);
       setIsReady(true);
     } catch {}
   };
 
   return (
     <div
-      ref={wrapRef}
       className={`relative ${className}`}
       onTouchStart={onUserGesture}
       onPointerDown={onUserGesture}
-      role="button"
-      aria-label="Play preview"
+      aria-hidden="true"
     >
-      {/* poster finché non è pronto */}
       {poster && !isReady ? (
         <Image
           src={poster}
@@ -159,19 +138,9 @@ export default function LazyHoverVideo({
         loop
         autoPlay
         preload={preload}
-        // evita UI native
         controls={false}
         disablePictureInPicture
       />
-
-      {/* overlay solo se iOS blocca autoplay */}
-      {needsTap ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/20">
-          <div className="rounded-full bg-black/60 px-4 py-2 text-white text-sm">
-            Tocca per avviare
-          </div>
-        </div>
-      ) : null}
     </div>
   );
 }
