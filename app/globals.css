@@ -477,3 +477,35 @@ details.card[open]{ background:#0f1915 }
   opacity: 0.65;
   pointer-events: none;
 }
+/* === Unboxing Experience (HARD TikTok snap) === */
+.km-snap-feed{
+  height: 100svh;
+  overflow-y: scroll;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  scroll-snap-stop: always;
+  scroll-behavior: auto;              /* più “secco” */
+  -webkit-overflow-scrolling: touch;
+
+  /* riduce “inerzia” su alcuni browser */
+  scroll-padding-top: 0;
+  scrollbar-width: none;              /* firefox */
+}
+.km-snap-feed::-webkit-scrollbar{ display:none; } /* chrome/safari */
+
+.km-snap-item{
+  height: 100svh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.km-video-916{
+  width: 100%;
+  height: 100svh;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.km-video-overlay{
+  background: linear-gradient(to bottom, rgba(0,0,0,.12), rgba(0,0,0,0) 45%, rgba(0,0,0,.78));
+}

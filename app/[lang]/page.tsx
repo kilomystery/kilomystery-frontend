@@ -10,8 +10,6 @@ import ContactForm from "../components/ContactForm";
 import SectionMarquee from "../components/SectionMarquee";
 import LiveTikTok from "../components/livetiktok";
 
-
-
 type CopyKey =
   | "heroTitle"
   | "heroSubtitle"
@@ -63,7 +61,23 @@ type CopyKey =
   | "eventsCard3Title"
   | "eventsCard3Text"
   | "contactTitle"
-  | "contactSubtitle";
+  | "contactSubtitle"
+  // ✅ Unboxing preview
+  | "reviewsTitle"
+  | "reviewsSubtitle"
+  | "reviewsCtaPrimary"
+  | "reviewsCtaSecondary"
+  | "reviewsCard1Kicker"
+  | "reviewsCard1Title"
+  | "reviewsCard1Text"
+  | "reviewsCard2Kicker"
+  | "reviewsCard2Title"
+  | "reviewsCard2Text"
+  | "reviewsCard3Kicker"
+  | "reviewsCard3Title"
+  | "reviewsCard3Bullet1"
+  | "reviewsCard3Bullet2"
+  | "reviewsCard3Bullet3";
 
 type CopyPerLang = Record<CopyKey, string>;
 
@@ -74,6 +88,24 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Scegli Standard o Premium, seleziona il peso e aggiungi al carrello. Trasparenza, tracciabilità, sorpresa vera.",
     ctaPrices: "Vedi prezzi",
     ctaHowItWorks: "Come funziona",
+
+    // ✅ Unboxing preview (customer-facing, no “scetticismo/traffico freddo”)
+    reviewsTitle: "Guarda gli unboxing",
+    reviewsSubtitle:
+      "Prima di scegliere la tua box, scorri i video e vivi l’esperienza: aperture reali, momenti veri, sorprese diverse ogni volta.",
+    reviewsCtaPrimary: "Apri Unboxing Experience",
+    reviewsCtaSecondary: "Guarda tutti i video",
+    reviewsCard1Kicker: "Unboxing reale",
+    reviewsCard1Title: "Apri con noi (2 kg)",
+    reviewsCard1Text: "Tap e scorri in verticale come TikTok.",
+    reviewsCard2Kicker: "Video review",
+    reviewsCard2Title: "Cosa può uscire?",
+    reviewsCard2Text: "Guarda esempi e reazioni, poi scegli Standard o Premium.",
+    reviewsCard3Kicker: "In 15 secondi capisci tutto",
+    reviewsCard3Title: "Come usare i video",
+    reviewsCard3Bullet1: "Scorri: un video = una box aperta.",
+    reviewsCard3Bullet2: "Tap: play/pausa. Audio quando vuoi.",
+    reviewsCard3Bullet3: "Quando sei pronto: vai ai prodotti e scegli i kg.",
 
     howTitle: "Come funziona KiloMistery",
     howCard1Title: "Scegli peso e tipologia",
@@ -97,16 +129,13 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     sustainBullet1: "Seconda vita ai pacchi: meno rifiuti da smaltire.",
     sustainBullet2: "CO₂ evitata rispetto a discarica e incenerimento.",
     sustainBullet3: "Packaging essenziale e riciclabile dove possibile.",
-    sustainBullet4:
-      "Lotti tracciati: sai sempre da dove arriva ciò che spacchetti.",
+    sustainBullet4: "Lotti tracciati: sai sempre da dove arriva ciò che spacchetti.",
 
     faqTitle: "FAQ",
     faq1Q: "Cosa c'è nelle mystery box?",
-    faq1A:
-      "Contenuti misti e legali da stock: il bello è la sorpresa. Ogni box è sigillata e tracciata.",
+    faq1A: "Contenuti misti e legali da stock: il bello è la sorpresa. Ogni box è sigillata e tracciata.",
     faq2Q: "Posso scegliere la categoria?",
-    faq2A:
-      "No, ma puoi scegliere peso e tipologia (Standard/Premium). La selezione è curata per varietà e qualità.",
+    faq2A: "No, ma puoi scegliere peso e tipologia (Standard/Premium). La selezione è curata per varietà e qualità.",
     faq3Q: "Tempi di spedizione?",
     faq3A: "Di solito 24–72h. Ricevi il tracking appena il pacco parte.",
     faq4Q: "I prodotti sono nuovi o usati?",
@@ -125,8 +154,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     eventsCta: "Vedi calendario eventi",
     eventsCard1Kicker: "Pop-up in città",
     eventsCard1Title: "Tappe nelle principali città italiane 🇮🇹",
-    eventsCard1Text:
-      "Scopri quando saremo vicino a te, passa al corner e scopri da vicino il mondo KiloMystery.",
+    eventsCard1Text: "Scopri quando saremo vicino a te, passa al corner e scopri da vicino il mondo KiloMystery.",
     eventsCard2Kicker: "Area sostenibilità",
     eventsCard2Title: "Scopri come recuperiamo pacchi e stock ♻️",
     eventsCard2Text:
@@ -142,10 +170,25 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
 
   en: {
     heroTitle: "Mystery boxes by the kilo",
-    heroSubtitle:
-      "Choose Standard or Premium, select the weight and add to cart. Transparency, traceability, real surprise.",
+    heroSubtitle: "Choose Standard or Premium, select the weight and add to cart. Transparency, traceability, real surprise.",
     ctaPrices: "View prices",
     ctaHowItWorks: "How it works",
+
+    reviewsTitle: "Watch the unboxings",
+    reviewsSubtitle: "Before you choose, scroll the videos and feel the experience: real openings, real reactions, different surprises every time.",
+    reviewsCtaPrimary: "Open Unboxing Experience",
+    reviewsCtaSecondary: "Watch all videos",
+    reviewsCard1Kicker: "Real unboxing",
+    reviewsCard1Title: "Unbox with us (2 kg)",
+    reviewsCard1Text: "Tap and scroll vertically like TikTok.",
+    reviewsCard2Kicker: "Video review",
+    reviewsCard2Title: "What can you find?",
+    reviewsCard2Text: "See examples, then pick Standard or Premium.",
+    reviewsCard3Kicker: "Quick guide",
+    reviewsCard3Title: "How to use the feed",
+    reviewsCard3Bullet1: "Scroll: one video = one box opened.",
+    reviewsCard3Bullet2: "Tap: play/pause. Sound when you want.",
+    reviewsCard3Bullet3: "Ready? Go to products and pick your kg.",
 
     howTitle: "How KiloMystery works",
     howCard1Title: "Choose weight and type",
@@ -169,19 +212,15 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     sustainBullet1: "Second life for parcels: less waste to dispose of.",
     sustainBullet2: "CO₂ avoided compared to landfill and incineration.",
     sustainBullet3: "Essential, recyclable packaging wherever possible.",
-    sustainBullet4:
-      "Traceable batches: you always know where what you unbox comes from.",
+    sustainBullet4: "Traceable batches: you always know where what you unbox comes from.",
 
     faqTitle: "FAQ",
     faq1Q: "What’s inside the mystery boxes?",
-    faq1A:
-      "A mixed, fully legal assortment from stock: the fun is in the surprise. Every box is sealed and traceable.",
+    faq1A: "A mixed, fully legal assortment from stock: the fun is in the surprise. Every box is sealed and traceable.",
     faq2Q: "Can I choose the category?",
-    faq2A:
-      "No, but you can choose weight and type (Standard/Premium). The selection is curated for variety and quality.",
+    faq2A: "No, but you can choose weight and type (Standard/Premium). The selection is curated for variety and quality.",
     faq3Q: "What about shipping times?",
-    faq3A:
-      "Usually 24–72 hours. You receive tracking as soon as the parcel ships.",
+    faq3A: "Usually 24–72 hours. You receive tracking as soon as the parcel ships.",
     faq4Q: "Are the products new or used?",
     faq4A:
       "Products may be new, used or come from returns and idle stock. They may show signs of use or imperfect packaging, but we select them to ensure an interesting unboxing experience.",
@@ -198,8 +237,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     eventsCta: "View events calendar",
     eventsCard1Kicker: "City pop-ups",
     eventsCard1Title: "Stops in major Italian cities 🇮🇹",
-    eventsCard1Text:
-      "Find out when we’ll be near you, drop by the corner and discover the KiloMystery world up close.",
+    eventsCard1Text: "Find out when we’ll be near you, drop by the corner and discover the KiloMystery world up close.",
     eventsCard2Kicker: "Sustainability area",
     eventsCard2Title: "See how we recover parcels and stock ♻️",
     eventsCard2Text:
@@ -210,16 +248,30 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Share the experience, see what others found, take photos with your box and go home with a memory.",
 
     contactTitle: "Contact us",
-    contactSubtitle:
-      "Questions about orders, shipping or partnerships? Write to us:",
+    contactSubtitle: "Questions about orders, shipping or partnerships? Write to us:",
   },
 
   es: {
     heroTitle: "Cajas mystery al kilo",
-    heroSubtitle:
-      "Elige Standard o Premium, selecciona el peso y añádelo al carrito. Transparencia, trazabilidad y una sorpresa real.",
+    heroSubtitle: "Elige Standard o Premium, selecciona el peso y añádelo al carrito. Transparencia, trazabilidad y una sorpresa real.",
     ctaPrices: "Ver precios",
     ctaHowItWorks: "Cómo funciona",
+
+    reviewsTitle: "Mira los unboxings",
+    reviewsSubtitle: "Antes de elegir, desliza los vídeos y vive la experiencia: aperturas reales, reacciones reales, sorpresas diferentes cada vez.",
+    reviewsCtaPrimary: "Abrir Unboxing Experience",
+    reviewsCtaSecondary: "Ver todos los vídeos",
+    reviewsCard1Kicker: "Unboxing real",
+    reviewsCard1Title: "Abre con nosotros (2 kg)",
+    reviewsCard1Text: "Toca y desliza en vertical como TikTok.",
+    reviewsCard2Kicker: "Video review",
+    reviewsCard2Title: "¿Qué puede salir?",
+    reviewsCard2Text: "Mira ejemplos y luego elige Standard o Premium.",
+    reviewsCard3Kicker: "Guía rápida",
+    reviewsCard3Title: "Cómo usar el feed",
+    reviewsCard3Bullet1: "Desliza: un vídeo = una caja abierta.",
+    reviewsCard3Bullet2: "Toca: play/pausa. Audio cuando quieras.",
+    reviewsCard3Bullet3: "¿Listo? Ve a productos y elige los kg.",
 
     howTitle: "Cómo funciona KiloMystery",
     howCard1Title: "Elige peso y tipo",
@@ -240,23 +292,18 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Nuestras mystery box nacen de paquetes perdidos, devoluciones no reclamadas y stock parado. En lugar de acabar en vertederos o incineradoras, esos productos vuelven a circular en forma de unboxing sorpresa. ♻️",
     sustainP2:
       "Así convertimos el desperdicio en juego, reduciendo el impacto ambiental ligado al desecho y a la producción de nueva mercancía, dando una segunda vida a lo que ya existe. 🌿",
-    sustainBullet1:
-      "Segunda vida para los paquetes: menos residuos que eliminar.",
+    sustainBullet1: "Segunda vida para los paquetes: menos residuos que eliminar.",
     sustainBullet2: "CO₂ evitado frente a vertederos e incineración.",
     sustainBullet3: "Packaging esencial y reciclable siempre que sea posible.",
-    sustainBullet4:
-      "Lotes trazables: siempre sabes de dónde viene lo que desempaquetas.",
+    sustainBullet4: "Lotes trazables: siempre sabes de dónde viene lo que desempaquetas.",
 
     faqTitle: "FAQ",
     faq1Q: "¿Qué hay dentro de las mystery box?",
-    faq1A:
-      "Contenido mixto y legal procedente de stock: la gracia está en la sorpresa. Cada caja está sellada y es trazable.",
+    faq1A: "Contenido mixto y legal procedente de stock: la gracia está en la sorpresa. Cada caja está sellada y es trazable.",
     faq2Q: "¿Puedo elegir la categoría?",
-    faq2A:
-      "No, pero puedes elegir peso y tipo (Standard/Premium). La selección se cuida para asegurar variedad y calidad.",
+    faq2A: "No, pero puedes elegir peso y tipo (Standard/Premium). La selección se cuida para asegurar variedad y calidad.",
     faq3Q: "¿Plazos de envío?",
-    faq3A:
-      "Normalmente 24–72 horas. Recibirás el tracking en cuanto salga el paquete.",
+    faq3A: "Normalmente 24–72 horas. Recibirás el tracking en cuanto salga el paquete.",
     faq4Q: "¿Los productos son nuevos o usados?",
     faq4A:
       "Los productos pueden ser nuevos, usados o proceder de devoluciones y stock parado. Pueden mostrar signos de uso o embalaje imperfecto, pero se seleccionan para garantizar una experiencia de unboxing interesante.",
@@ -285,26 +332,38 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Comparte la experiencia, descubre qué han encontrado los demás, haz fotos con tu caja y llévate un recuerdo a casa.",
 
     contactTitle: "Contáctanos",
-    contactSubtitle:
-      "¿Dudas sobre pedidos, envíos o colaboraciones? Escríbenos:",
+    contactSubtitle: "¿Dudas sobre pedidos, envíos o colaboraciones? Escríbenos:",
   },
 
   fr: {
     heroTitle: "Mystery box au kilo",
-    heroSubtitle:
-      "Choisis Standard ou Premium, sélectionne le poids et ajoute au panier. Transparence, traçabilité, vraie surprise.",
+    heroSubtitle: "Choisis Standard ou Premium, sélectionne le poids et ajoute au panier. Transparence, traçabilité, vraie surprise.",
     ctaPrices: "Voir les prix",
     ctaHowItWorks: "Comment ça marche",
+
+    reviewsTitle: "Regarde les unboxings",
+    reviewsSubtitle: "Avant de choisir, fais défiler les vidéos : ouvertures réelles, réactions réelles, surprises différentes à chaque fois.",
+    reviewsCtaPrimary: "Ouvrir Unboxing Experience",
+    reviewsCtaSecondary: "Voir toutes les vidéos",
+    reviewsCard1Kicker: "Unboxing réel",
+    reviewsCard1Title: "Déballe avec nous (2 kg)",
+    reviewsCard1Text: "Tape et scrolle en vertical comme TikTok.",
+    reviewsCard2Kicker: "Vidéo review",
+    reviewsCard2Title: "Qu’est-ce qui peut sortir ?",
+    reviewsCard2Text: "Vois des exemples, puis choisis Standard ou Premium.",
+    reviewsCard3Kicker: "Guide rapide",
+    reviewsCard3Title: "Comment utiliser le feed",
+    reviewsCard3Bullet1: "Scroll : une vidéo = une box ouverte.",
+    reviewsCard3Bullet2: "Tap : lecture/pause. Son quand tu veux.",
+    reviewsCard3Bullet3: "Prêt ? Va aux produits et choisis les kg.",
 
     howTitle: "Comment fonctionne KiloMystery",
     howCard1Title: "Choisir le poids et le type",
     howCard1Subtitle: "Standard ou Premium de 1 à 10 kg.",
-    howCard1Bullet1:
-      "Prix clairs, aucune surprise au moment du paiement",
+    howCard1Bullet1: "Prix clairs, aucune surprise au moment du paiement",
     howCard1Bullet2: "Étiquette avec ID de lot",
     howCard2Title: "Payer en toute sécurité",
-    howCard2Subtitle:
-      "Moyens de paiement sécurisés, récapitulatif par e-mail.",
+    howCard2Subtitle: "Moyens de paiement sécurisés, récapitulatif par e-mail.",
     howCard2Bullet1: "Confirmation immédiate",
     howCard2Bullet2: "Support dédié",
     howCard3Title: "Expédition suivie",
@@ -317,34 +376,25 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Nos mystery box proviennent de colis perdus, de retours non réclamés et de stocks dormants. Au lieu de finir en décharge ou à l’incinérateur, ces produits reviennent en circulation sous forme d’unboxing surprise. ♻️",
     sustainP2:
       "Ainsi, nous transformons le gaspillage en jeu, en réduisant l’impact environnemental lié au traitement des déchets et à la production de nouveaux produits, et en donnant une seconde vie à ce qui existe déjà. 🌿",
-    sustainBullet1:
-      "Seconde vie pour les colis : moins de déchets à traiter.",
-    sustainBullet2:
-      "CO₂ évité par rapport à la décharge et à l’incinération.",
-    sustainBullet3:
-      "Packaging minimaliste et recyclable lorsque c’est possible.",
-    sustainBullet4:
-      "Lots traçables : tu sais toujours d’où vient ce que tu déballe.",
+    sustainBullet1: "Seconde vie pour les colis : moins de déchets à traiter.",
+    sustainBullet2: "CO₂ évité par rapport à la décharge et à l’incinération.",
+    sustainBullet3: "Packaging minimaliste et recyclable lorsque c’est possible.",
+    sustainBullet4: "Lots traçables : tu sais toujours d’où vient ce que tu déballe.",
 
     faqTitle: "FAQ",
     faq1Q: "Que trouve-t-on dans les mystery box ?",
-    faq1A:
-      "Contenu varié et 100 % légal issu de stocks : tout l’intérêt est dans la surprise. Chaque box est scellée et traçable.",
+    faq1A: "Contenu varié et 100 % légal issu de stocks : tout l’intérêt est dans la surprise. Chaque box est scellée et traçable.",
     faq2Q: "Puis-je choisir la catégorie ?",
-    faq2A:
-      "Non, mais tu peux choisir le poids et le type (Standard/Premium). La sélection est pensée pour la variété et la qualité.",
+    faq2A: "Non, mais tu peux choisir le poids et le type (Standard/Premium). La sélection est pensée pour la variété et la qualité.",
     faq3Q: "Quels sont les délais de livraison ?",
-    faq3A:
-      "En général 24–72 h. Tu reçois le numéro de suivi dès que le colis est expédié.",
+    faq3A: "En général 24–72 h. Tu reçois le numéro de suivi dès que le colis est expédié.",
     faq4Q: "Les produits sont-ils neufs ou d’occasion ?",
     faq4A:
       "Les produits peuvent être neufs, d’occasion ou issus de retours et de stocks dormants. Ils peuvent présenter des marques d’usage ou un emballage imparfait, mais ils sont sélectionnés pour garantir une expérience d’unboxing intéressante.",
-    faq5Q:
-      "La valeur de la box est-elle toujours supérieure au prix ?",
+    faq5Q: "La valeur de la box est-elle toujours supérieure au prix ?",
     faq5A:
       "L’expérience est conçue comme une mystery : la valeur perçue peut varier d’une box à l’autre. En moyenne, nous visons un bon rapport qualité/prix, mais nous ne pouvons pas garantir une valeur minimale précise pour chaque box.",
-    faq6Q:
-      "Puis-je récupérer ma box lors d’un événement pop-up ?",
+    faq6Q: "Puis-je récupérer ma box lors d’un événement pop-up ?",
     faq6A:
       "Lors de certains événements, il est possible d’acheter les mystery box sur place. Consulte toujours la page événements pour les détails à jour sur les modalités de vente.",
 
@@ -366,8 +416,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Partage ton expérience, découvre ce que les autres ont trouvé, prends des photos avec ta box et repars avec un souvenir.",
 
     contactTitle: "Contactez-nous",
-    contactSubtitle:
-      "Des questions sur les commandes, les livraisons ou les partenariats ? Écrivez-nous :",
+    contactSubtitle: "Des questions sur les commandes, les livraisons ou les partenariats ? Écrivez-nous :",
   },
 
   de: {
@@ -377,20 +426,33 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     ctaPrices: "Preise ansehen",
     ctaHowItWorks: "So funktioniert’s",
 
+    reviewsTitle: "Unboxings ansehen",
+    reviewsSubtitle: "Bevor du wählst: scrolle durch die Videos – echte Öffnungen, echte Reaktionen, jedes Mal anders.",
+    reviewsCtaPrimary: "Unboxing Experience öffnen",
+    reviewsCtaSecondary: "Alle Videos ansehen",
+    reviewsCard1Kicker: "Echtes Unboxing",
+    reviewsCard1Title: "Unbox mit uns (2 kg)",
+    reviewsCard1Text: "Tippe und scrolle vertikal wie TikTok.",
+    reviewsCard2Kicker: "Video Review",
+    reviewsCard2Title: "Was kann drin sein?",
+    reviewsCard2Text: "Sieh Beispiele, dann wähle Standard oder Premium.",
+    reviewsCard3Kicker: "Kurzanleitung",
+    reviewsCard3Title: "So nutzt du den Feed",
+    reviewsCard3Bullet1: "Scroll: ein Video = eine geöffnete Box.",
+    reviewsCard3Bullet2: "Tap: Play/Pause. Ton, wenn du willst.",
+    reviewsCard3Bullet3: "Bereit? Zu Produkten und kg wählen.",
+
     howTitle: "So funktioniert KiloMystery",
     howCard1Title: "Gewicht und Typ wählen",
     howCard1Subtitle: "Standard oder Premium von 1–10 kg.",
-    howCard1Bullet1:
-      "Klare Preise, keine Überraschungen beim Checkout",
+    howCard1Bullet1: "Klare Preise, keine Überraschungen beim Checkout",
     howCard1Bullet2: "Etikett mit Posten-ID",
     howCard2Title: "Sicher bezahlen",
-    howCard2Subtitle:
-      "Sichere Zahlungsmethoden, Bestellübersicht per E-Mail.",
+    howCard2Subtitle: "Sichere Zahlungsmethoden, Bestellübersicht per E-Mail.",
     howCard2Bullet1: "Sofortige Bestätigung",
     howCard2Bullet2: "Eigener Support",
     howCard3Title: "Sendung mit Tracking",
-    howCard3Subtitle:
-      "Sendungsverfolgung in der Regel innerhalb von 24–72 Stunden.",
+    howCard3Subtitle: "Sendungsverfolgung in der Regel innerhalb von 24–72 Stunden.",
     howCard3Bullet1: "Sichere Verpackung",
     howCard3Bullet2: "Die Überraschung beginnt beim Auspacken",
 
@@ -399,25 +461,18 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Unsere Mystery Boxen entstehen aus verlorenen Paketen, nicht abgeholten Retouren und ruhenden Lagerbeständen. Statt auf der Deponie oder in der Verbrennung zu landen, kommen diese Produkte als Überraschungs-Unboxing wieder in den Kreislauf. ♻️",
     sustainP2:
       "So machen wir aus potenziellem Müll ein Spiel, verringern die Umweltbelastung durch Entsorgung und Neuproduktion und geben dem, was bereits existiert, ein zweites Leben. 🌿",
-    sustainBullet1:
-      "Zweites Leben für Pakete: weniger Abfall zur Entsorgung.",
-    sustainBullet2:
-      "Vermeidetes CO₂ im Vergleich zu Deponie und Verbrennung.",
-    sustainBullet3:
-      "Reduziertes, möglichst recycelbares Packaging.",
-    sustainBullet4:
-      "Nachverfolgbare Posten: du weißt immer, woher dein Inhalt kommt.",
+    sustainBullet1: "Zweites Leben für Pakete: weniger Abfall zur Entsorgung.",
+    sustainBullet2: "Vermeidetes CO₂ im Vergleich zu Deponie und Verbrennung.",
+    sustainBullet3: "Reduziertes, möglichst recycelbares Packaging.",
+    sustainBullet4: "Nachverfolgbare Posten: du weißt immer, woher dein Inhalt kommt.",
 
     faqTitle: "FAQ",
     faq1Q: "Was steckt in den Mystery Boxen?",
-    faq1A:
-      "Gemischte, vollständig legale Inhalte aus Lagerbeständen – der Reiz liegt in der Überraschung. Jede Box ist versiegelt und nachverfolgbar.",
+    faq1A: "Gemischte, vollständig legale Inhalte aus Lagerbeständen – der Reiz liegt in der Überraschung. Jede Box ist versiegelt und nachverfolgbar.",
     faq2Q: "Kann ich die Kategorie auswählen?",
-    faq2A:
-      "Nein, aber du kannst Gewicht und Typ (Standard/Premium) wählen. Die Auswahl wird für Vielfalt und Qualität kuratiert.",
+    faq2A: "Nein, aber du kannst Gewicht und Typ (Standard/Premium) wählen. Die Auswahl wird für Vielfalt und Qualität kuratiert.",
     faq3Q: "Wie lange dauert der Versand?",
-    faq3A:
-      "In der Regel 24–72 Stunden. Du erhältst die Sendungsnummer, sobald das Paket auf dem Weg ist.",
+    faq3A: "In der Regel 24–72 Stunden. Du erhältst die Sendungsnummer, sobald das Paket auf dem Weg ist.",
     faq4Q: "Sind die Produkte neu oder gebraucht?",
     faq4A:
       "Die Produkte können neu, gebraucht oder aus Retouren und ruhenden Beständen sein. Sie können Gebrauchsspuren oder eine nicht perfekte Verpackung aufweisen, werden aber so ausgewählt, dass das Unboxing spannend bleibt.",
@@ -446,8 +501,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
       "Teile deine Erfahrungen, sieh, was andere gefunden haben, mach Fotos mit deiner Box und nimm eine Erinnerung mit nach Hause.",
 
     contactTitle: "Kontaktiere uns",
-    contactSubtitle:
-      "Fragen zu Bestellungen, Versand oder Partnerschaften? Schreib uns:",
+    contactSubtitle: "Fragen zu Bestellungen, Versand oder Partnerschaften? Schreib uns:",
   },
 };
 
@@ -472,13 +526,11 @@ export default async function HomePage({
 
   return (
     <>
-      {/* HEADER con lingua dal server */}
       <Header lang={lang as any} />
 
       <main className="container space-y-16 py-10">
-        {/* === HERO (NUOVO) === */}
+        {/* === HERO === */}
         <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 pt-10 md:pt-12">
-          {/* LOGO */}
           <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
             <Image
               src="/logo.png"
@@ -490,19 +542,14 @@ export default async function HomePage({
             />
           </div>
 
-          {/* TITOLO con gradient */}
           <h1 className="text-center text-4xl md:text-6xl font-extrabold leading-tight">
             <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
               {t.heroTitle}
             </span>
           </h1>
 
-          {/* SOTTOTITOLO */}
-          <p className="mx-auto mt-4 max-w-2xl text-center text-white/70">
-            {t.heroSubtitle}
-          </p>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-white/70">{t.heroSubtitle}</p>
 
-          {/* CTA pill */}
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <a
               href={`/${lang}/products`}
@@ -531,31 +578,82 @@ export default async function HomePage({
           <ProductsTabs lang={lang as any} />
         </section>
 
-<section>
-  <LiveTikTok
-    lang={lang as any}
-    href="/live-tiktok"
-    tiktokUrl="https://www.tiktok.com/@kilomystery"
-  />
-</section>
+        {/* ✅ UNBOXING PREVIEW (fiducia: “guarda e scegli”) */}
+        <section className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-extrabold">{t.reviewsTitle}</h2>
+              <p className="text-white/70 text-sm md:text-base mt-1 max-w-2xl">{t.reviewsSubtitle}</p>
+            </div>
 
-        {/* MARQUEE TRA PRODOTTI E COME FUNZIONA */}
+            <div className="flex flex-wrap gap-2">
+              <a href={`/${lang}/unboxing-experience`} className="btn btn-brand btn-sm md:btn-lg">
+                {t.reviewsCtaPrimary}
+              </a>
+              <a href={`/${lang}/unboxing-experience`} className="btn btn-ghost btn-sm md:btn-lg">
+                {t.reviewsCtaSecondary}
+              </a>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <a href={`/${lang}/unboxing-experience`} className="card !p-0 overflow-hidden">
+              <div className="ratio-16-9">
+                <img className="media" src="/videos/unboxing/posters/u-001.jpg" alt={t.reviewsCard1Title} />
+              </div>
+              <div className="p-4">
+                <p className="text-xs uppercase tracking-[.15em] text-white/60">{t.reviewsCard1Kicker}</p>
+                <p className="mt-1 font-extrabold">{t.reviewsCard1Title}</p>
+                <p className="text-white/60 text-sm mt-1">{t.reviewsCard1Text}</p>
+              </div>
+            </a>
+
+            <a href={`/${lang}/unboxing-experience`} className="card !p-0 overflow-hidden">
+              <div className="ratio-16-9">
+                <img className="media" src="/videos/unboxing/posters/u-002.jpg" alt={t.reviewsCard2Title} />
+              </div>
+              <div className="p-4">
+                <p className="text-xs uppercase tracking-[.15em] text-white/60">{t.reviewsCard2Kicker}</p>
+                <p className="mt-1 font-extrabold">{t.reviewsCard2Title}</p>
+                <p className="text-white/60 text-sm mt-1">{t.reviewsCard2Text}</p>
+              </div>
+            </a>
+
+            <div className="card">
+              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-2">{t.reviewsCard3Kicker}</p>
+              <p className="font-extrabold">{t.reviewsCard3Title}</p>
+
+              <ul className="mt-3 text-white/70 text-sm space-y-2">
+                <li>• {t.reviewsCard3Bullet1}</li>
+                <li>• {t.reviewsCard3Bullet2}</li>
+                <li>• {t.reviewsCard3Bullet3}</li>
+              </ul>
+
+              <a href={`/${lang}/unboxing-experience`} className="btn btn-brand w-full mt-4">
+                {t.reviewsCtaPrimary}
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* LIVE TIKTOK */}
+        <section>
+          <LiveTikTok lang={lang as any} href="/live-tiktok" tiktokUrl="https://www.tiktok.com/@kilomystery" />
+        </section>
+
+        {/* MARQUEE */}
         <section>
           <SectionMarquee lang={lang as any} />
         </section>
 
         {/* COME FUNZIONA */}
         <section id="come-funziona" className="space-y-6">
-          <h2 className="text-2xl md:text-3xl font-extrabold">
-            {t.howTitle}
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold">{t.howTitle}</h2>
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="card">
               <div className="text-3xl">🧪</div>
-              <h3 className="mt-2 text-lg font-extrabold">
-                {t.howCard1Title}
-              </h3>
+              <h3 className="mt-2 text-lg font-extrabold">{t.howCard1Title}</h3>
               <p className="text-white/70">{t.howCard1Subtitle}</p>
               <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
                 <li>{t.howCard1Bullet1}</li>
@@ -565,9 +663,7 @@ export default async function HomePage({
 
             <div className="card">
               <div className="text-3xl">🔐</div>
-              <h3 className="mt-2 text-lg font-extrabold">
-                {t.howCard2Title}
-              </h3>
+              <h3 className="mt-2 text-lg font-extrabold">{t.howCard2Title}</h3>
               <p className="text-white/70">{t.howCard2Subtitle}</p>
               <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
                 <li>{t.howCard2Bullet1}</li>
@@ -577,9 +673,7 @@ export default async function HomePage({
 
             <div className="card">
               <div className="text-3xl">🚚</div>
-              <h3 className="mt-2 text-lg font-extrabold">
-                {t.howCard3Title}
-              </h3>
+              <h3 className="mt-2 text-lg font-extrabold">{t.howCard3Title}</h3>
               <p className="text-white/70">{t.howCard3Subtitle}</p>
               <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
                 <li>{t.howCard3Bullet1}</li>
@@ -609,49 +703,35 @@ export default async function HomePage({
 
         {/* FAQ */}
         <section className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-extrabold">
-            {t.faqTitle}
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold">{t.faqTitle}</h2>
 
           <details className="card">
-            <summary className="font-semibold cursor-pointer">
-              {t.faq1Q}
-            </summary>
+            <summary className="font-semibold cursor-pointer">{t.faq1Q}</summary>
             <p className="text-white/70 mt-2">{t.faq1A}</p>
           </details>
 
           <details className="card">
-            <summary className="font-semibold cursor-pointer">
-              {t.faq2Q}
-            </summary>
+            <summary className="font-semibold cursor-pointer">{t.faq2Q}</summary>
             <p className="text-white/70 mt-2">{t.faq2A}</p>
           </details>
 
           <details className="card">
-            <summary className="font-semibold cursor-pointer">
-              {t.faq3Q}
-            </summary>
+            <summary className="font-semibold cursor-pointer">{t.faq3Q}</summary>
             <p className="text-white/70 mt-2">{t.faq3A}</p>
           </details>
 
           <details className="card">
-            <summary className="font-semibold cursor-pointer">
-              {t.faq4Q}
-            </summary>
+            <summary className="font-semibold cursor-pointer">{t.faq4Q}</summary>
             <p className="text-white/70 mt-2">{t.faq4A}</p>
           </details>
 
           <details className="card">
-            <summary className="font-semibold cursor-pointer">
-              {t.faq5Q}
-            </summary>
+            <summary className="font-semibold cursor-pointer">{t.faq5Q}</summary>
             <p className="text-white/70 mt-2">{t.faq5A}</p>
           </details>
 
           <details className="card">
-            <summary className="font-semibold cursor-pointer">
-              {t.faq6Q}
-            </summary>
+            <summary className="font-semibold cursor-pointer">{t.faq6Q}</summary>
             <p className="text-white/70 mt-2">{t.faq6A}</p>
           </details>
         </section>
@@ -664,40 +744,29 @@ export default async function HomePage({
                 <span>{t.eventsTitle}</span>
                 <span className="text-2xl">📍🎪</span>
               </h2>
-              <p className="text-white/70 text-sm md:text-base mt-1 max-w-xl">
-                {t.eventsSubtitle}
-              </p>
+              <p className="text-white/70 text-sm md:text-base mt-1 max-w-xl">{t.eventsSubtitle}</p>
             </div>
 
-            <a
-              href="https://www.kilomystery.com/it/events"
-              className="btn btn-brand btn-sm md:btn-lg"
-            >
+            <a href="https://www.kilomystery.com/it/events" className="btn btn-brand btn-sm md:btn-lg">
               {t.eventsCta}
             </a>
           </div>
 
           <div className="grid gap-3 md:grid-cols-3 text-sm text-white/75">
             <div className="card">
-              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
-                {t.eventsCard1Kicker}
-              </p>
+              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">{t.eventsCard1Kicker}</p>
               <p className="font-semibold">{t.eventsCard1Title}</p>
               <p className="text-xs text-white/60 mt-1">{t.eventsCard1Text}</p>
             </div>
 
             <div className="card">
-              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
-                {t.eventsCard2Kicker}
-              </p>
+              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">{t.eventsCard2Kicker}</p>
               <p className="font-semibold">{t.eventsCard2Title}</p>
               <p className="text-xs text-white/60 mt-1">{t.eventsCard2Text}</p>
             </div>
 
             <div className="card">
-              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">
-                {t.eventsCard3Kicker}
-              </p>
+              <p className="text-xs uppercase tracking-[.15em] text-emerald-300/80 mb-1">{t.eventsCard3Kicker}</p>
               <p className="font-semibold">{t.eventsCard3Title}</p>
               <p className="text-xs text-white/60 mt-1">{t.eventsCard3Text}</p>
             </div>
@@ -706,15 +775,12 @@ export default async function HomePage({
 
         {/* CONTATTACI */}
         <section className="space-y-4">
-          <h2 className="text-2xl md:text-3xl font-extrabold">
-            {t.contactTitle}
-          </h2>
+          <h2 className="text-2xl md:text-3xl font-extrabold">{t.contactTitle}</h2>
           <p className="text-white/70">{t.contactSubtitle}</p>
           <ContactForm lang={lang} />
         </section>
       </main>
 
-      {/* FOOTER */}
       <Footer lang={lang as any} />
     </>
   );
