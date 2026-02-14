@@ -25,3 +25,7 @@ pnpm-debug.log*
 # Editor
 .vscode/
 .idea/
+
+# --- Unboxing videos: never commit originals or temp encodes ---
+public/videos/unboxing/*.ORIG.mp4
+public/videos/unboxing/encoded/
