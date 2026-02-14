@@ -21,12 +21,14 @@ const COPY: Record<Lang, { sticky: string; cta: string; audioOn: string; audioOf
   de: { sticky: "🎁 Mystery Box kaufen", cta: "Boxen ansehen", audioOn: "Ton ON", audioOff: "Ton OFF" },
 };
 
+const R2_BASE = "https://pub-739cba076b6b438d93a3d5ca5c1df978.r2.dev";
+
 const VIDEOS: UnboxingVideo[] = [
   {
     id: "u-001",
     title: { it: "Unboxing 2kg – pacchi smarriti" },
     caption: { it: "Nessun filtro. Solo sorpresa." },
-    src: "/videos/unboxing/u-001.mp4",
+    src: `${R2_BASE}/u-001.mp4`,
     poster: "/videos/unboxing/posters/u-001.jpg",
     ctaHref: "/products#buy-standard-10",
   },
@@ -34,11 +36,12 @@ const VIDEOS: UnboxingVideo[] = [
     id: "u-002",
     title: { it: "Unboxing 3kg – cosa c’era dentro?" },
     caption: { it: "Potrebbe esserci QUALSIASI COSA…" },
-    src: "/videos/unboxing/u-002.mp4",
+    src: `${R2_BASE}/u-002.mp4`,
     poster: "/videos/unboxing/posters/u-002.jpg",
     ctaHref: "/products#buy-premium-10",
   },
 ];
+
 
 function useActiveIndex(count: number) {
   const containerRef = useRef<HTMLDivElement | null>(null);
