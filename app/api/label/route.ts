@@ -1,4 +1,3 @@
-// app/api/label/route.ts
 import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
@@ -8,6 +7,11 @@ export const runtime = "nodejs";
 
 function reqParam(url: URL, key: string) {
   return (url.searchParams.get(key) ?? "").trim();
+}
+
+function parseKg(weightKg: string) {
+  const m = weightKg.replace(",", ".").match(/(\d+(\.\d+)?)/);
+  return m ? Number(m[1]) : 0;
 }
 
 export async function GET(req: Request) {
@@ -20,123 +24,46 @@ export async function GET(req: Request) {
     const date = reqParam(url, "date");
     const warehouse = reqParam(url, "warehouse");
     const lang = reqParam(url, "lang") || "it";
+    const channel = reqParam(url, "channel");
+    const externalOrderId = reqParam(url, "externalOrderId");
+    const discount = reqParam(url, "discount");
 
-    if (!id || !product || !weightKg || !date || !warehouse) {
-      return NextResponse.json(
-        {
-          error:
-            "Missing query params: id, product, weightKg, date, warehouse (and optional lang)",
-        },
-        { status: 400 }
-      );
-    }
+    const kg = parseKg(weightKg);
+    const CO2_FACTOR = 0.25;
+    const co2 = Math.round(kg * CO2_FACTOR * 100) / 100;
 
-    // ✅ Import dinamici (no require, no eslint)
     const QRCode = (await import("qrcode")).default;
     const fontkit = (await import("@pdf-lib/fontkit")).default;
 
-    // QR -> pagina verify con stesso id (anche se per ora è solo “formato”)
     const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(id)}`;
-
-
-    const qrPngBuffer: Buffer = await QRCode.toBuffer(qrTarget, {
-      type: "png",
-      errorCorrectionLevel: "M",
-      margin: 1,
-      width: 300,
-    });
-
-    // ✅ Fonts (tu hai questi due file)
-    const fontRegularPath = path.join(
-      process.cwd(),
-      "public",
-      "fonts",
-      "Inter-Regular.ttf"
-    );
-    const fontBoldPath = path.join(
-      process.cwd(),
-      "public",
-      "fonts",
-      "Inter-Bold.ttf"
-    );
-
-    const fontRegularBytes = fs.readFileSync(fontRegularPath);
-    const fontBoldBytes = fs.readFileSync(fontBoldPath);
-
-    // 4x6 inch @ 72pt/in => 288 x 432
-    const W = 288;
-    const H = 432;
-    const M = 18;
+    const qrPngBuffer: Buffer = await QRCode.toBuffer(qrTarget);
 
     const pdf = await PDFDocument.create();
     pdf.registerFontkit(fontkit);
 
+    const fontRegularBytes = fs.readFileSync(
+      path.join(process.cwd(), "public/fonts/Inter-Regular.ttf")
+    );
+    const fontBoldBytes = fs.readFileSync(
+      path.join(process.cwd(), "public/fonts/Inter-Bold.ttf")
+    );
+
     const fontRegular = await pdf.embedFont(fontRegularBytes);
     const fontBold = await pdf.embedFont(fontBoldBytes);
 
-    const page = pdf.addPage([W, H]);
+    const page = pdf.addPage([288, 432]);
+    const M = 18;
+    let y = 380;
 
-    // Background
-    page.drawRectangle({
-      x: 0,
-      y: 0,
-      width: W,
-      height: H,
-      color: rgb(1, 1, 1),
-    });
+    function label(t: string) {
+      page.drawText(t, { x: M, y, size: 11, font: fontBold });
+      y -= 16;
+    }
 
-    // Header
-    page.drawText("KILO MYSTERY", {
-      x: M,
-      y: H - M - 18,
-      size: 18,
-      font: fontBold,
-      color: rgb(0.043, 0.059, 0.078),
-    });
-
-    page.drawText("Shipping label", {
-      x: M,
-      y: H - M - 40,
-      size: 10,
-      font: fontRegular,
-      color: rgb(0.42, 0.45, 0.51),
-    });
-
-    // Separator
-    page.drawLine({
-      start: { x: M, y: H - 60 },
-      end: { x: W - M, y: H - 60 },
-      thickness: 1,
-      color: rgb(0.9, 0.91, 0.92),
-    });
-
-    // Left content
-    let y = H - 74;
-
-    const label = (t: string) => {
-      page.drawText(t, {
-        x: M,
-        y,
-        size: 11,
-        font: fontBold,
-        color: rgb(0.067, 0.094, 0.153),
-      });
-      y -= 14;
-    };
-
-    const value = (t: string, maxWidth = 170) => {
-      const approxChars = Math.max(10, Math.floor(maxWidth / 6.2));
-      const out = t.length > approxChars ? t.slice(0, approxChars - 1) + "…" : t;
-
-      page.drawText(out, {
-        x: M,
-        y,
-        size: 12,
-        font: fontRegular,
-        color: rgb(0.067, 0.094, 0.153),
-      });
+    function value(t: string) {
+      page.drawText(t, { x: M, y, size: 12, font: fontRegular });
       y -= 22;
-    };
+    }
 
     label("Order ID");
     value(id);
@@ -147,56 +74,51 @@ export async function GET(req: Request) {
     label("Weight");
     value(weightKg);
 
+    label("CO₂ avoided");
+    value(`${co2} kg`);
+
     label("Date");
     value(date);
 
     label("Warehouse");
     value(warehouse);
 
-    // QR a destra
+    if (channel) {
+      label("Channel");
+      value(channel);
+    }
+
+    if (externalOrderId) {
+      label("Order ref");
+      value(externalOrderId);
+    }
+
+    if (discount) {
+      y -= 10;
+      page.drawText("Sconto prossimo ordine:", {
+        x: M,
+        y,
+        size: 10,
+        font: fontBold,
+      });
+      y -= 18;
+      page.drawText(discount.toUpperCase(), {
+        x: M,
+        y,
+        size: 18,
+        font: fontBold,
+      });
+    }
+
     const qrImage = await pdf.embedPng(qrPngBuffer);
-    const qrSize = 110;
-    const qrX = W - M - qrSize;
-    const qrY = H - 110 - qrSize;
-
-    page.drawImage(qrImage, {
-      x: qrX,
-      y: qrY,
-      width: qrSize,
-      height: qrSize,
-    });
-
-    page.drawText("Scan to verify", {
-      x: qrX + 14,
-      y: qrY - 12,
-      size: 8,
-      font: fontRegular,
-      color: rgb(0.42, 0.45, 0.51),
-    });
-
-    // Footer
-    page.drawText("www.kilomystery.com", {
-      x: M,
-      y: 12,
-      size: 8,
-      font: fontRegular,
-      color: rgb(0.6, 0.64, 0.69),
-    });
+    page.drawImage(qrImage, { x: 150, y: 200, width: 110, height: 110 });
 
     const pdfBytes = await pdf.save();
 
     return new NextResponse(Buffer.from(pdfBytes), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Disposition": `inline; filename="label-${id}.pdf"`,
-        "Cache-Control": "no-store",
-      },
+      headers: { "Content-Type": "application/pdf" },
     });
   } catch (err: any) {
-    return NextResponse.json(
-      { error: "Failed to generate label", details: String(err?.message ?? err) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
