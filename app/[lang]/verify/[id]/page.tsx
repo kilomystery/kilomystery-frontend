@@ -23,6 +23,13 @@ type Copy = {
   dateLabel: string;
   seqLabel: string;
 
+  co2Label: string;
+  co2Hint: string;
+
+  ctaTitle: string;
+  ctaP: string;
+  ctaBtn: string;
+
   backHome: string;
   verifyAnother: string;
 
@@ -33,154 +40,194 @@ type Copy = {
   lineExp: string;
 
   unknown: string;
-
-  co2Title: string;
-  co2Desc: string;
-  ctaTitle: string;
-  ctaBuy: string;
-  ctaSignup: string;
 };
 
 const VERIFY_COPY: Record<Lang, Copy> = {
   it: {
     title: "Verifica autenticità",
-    subtitle: "Questa è la pagina ufficiale KiloMystery per la verifica del codice presente sull’etichetta.",
+    subtitle:
+      "Questa è la pagina ufficiale KiloMystery per la verifica del codice presente sull’etichetta.",
     officialBadge: "Pagina ufficiale",
+
     okTitle: "Autenticità verificata",
     okP1: "Prodotto originale KiloMystery verificato con successo.",
-    okP2: "Ogni lotto è identificato e tracciato per garantire qualità, trasparenza e un’esperienza di unboxing affidabile.",
+    okP2:
+      "Ogni lotto è identificato per garantire qualità e un’esperienza di unboxing affidabile.",
+
     badTitle: "Codice non riconosciuto",
-    badP1: "Non riusciamo a confermare questo codice. Controlla che sia completo e riprova.",
-    badP2: "Se l’etichetta risulta danneggiata o il problema persiste, contattaci: ti aiuteremo a verificare.",
+    badP1: "Controlla che il codice sia completo e riprova.",
+    badP2: "Se il problema persiste, contattaci: ti aiuteremo a verificare.",
+
     lotLabel: "Codice lotto",
     lineLabel: "Linea",
     weightLabel: "Peso",
     dateLabel: "Data lotto",
     seqLabel: "Progressivo",
+
+    co2Label: "CO₂ evitata",
+    co2Hint: "Calcolo stimato: 0,25 kg CO₂ per 1 kg.",
+
+    ctaTitle: "Vuoi un altro box?",
+    ctaP: "Scopri i nuovi pacchi smarriti e continua a risparmiare CO₂ con il recupero.",
+    ctaBtn: "Acquista ora",
+
     backHome: "Torna al sito",
     verifyAnother: "Verifica un altro codice",
+
     footerNote: "KiloMystery · Verifica autenticità tramite codice lotto su etichetta ufficiale.",
+
     lineStd: "Standard",
     linePrm: "Premium",
     lineExp: "Explorer",
     unknown: "—",
-    co2Title: "CO₂ evitata",
-    co2Desc: "Grazie a questo acquisto contribuisci a ridurre sprechi e emissioni.",
-    ctaTitle: "Vuoi sbloccare offerte e drop?",
-    ctaBuy: "Compra un altro pacco",
-    ctaSignup: "Iscriviti e ricevi promo",
   },
+
   en: {
     title: "Authenticity check",
-    subtitle: "This is the official KiloMystery page to verify the code printed on your label.",
+    subtitle: "This is the official KiloMystery page to verify the code on your label.",
     officialBadge: "Official page",
+
     okTitle: "Authenticity confirmed",
     okP1: "Original KiloMystery product successfully verified.",
-    okP2: "Each batch is identified and tracked to ensure quality, transparency, and a reliable unboxing experience.",
+    okP2: "Each batch is identified to ensure quality and a reliable unboxing experience.",
+
     badTitle: "Code not recognized",
-    badP1: "We can’t confirm this code. Please check that it’s complete and try again.",
-    badP2: "If the label is damaged or the issue persists, contact us and we’ll help you verify it.",
+    badP1: "Please check the code and try again.",
+    badP2: "If the issue persists, contact us and we’ll help you verify it.",
+
     lotLabel: "Batch code",
     lineLabel: "Line",
     weightLabel: "Weight",
     dateLabel: "Batch date",
     seqLabel: "Sequence",
+
+    co2Label: "CO₂ avoided",
+    co2Hint: "Estimated: 0.25 kg CO₂ per 1 kg.",
+
+    ctaTitle: "Want another box?",
+    ctaP: "Explore new lost parcels and keep saving CO₂ through recovery.",
+    ctaBtn: "Shop now",
+
     backHome: "Back to site",
     verifyAnother: "Verify another code",
+
     footerNote: "KiloMystery · Authenticity check via batch code on the official label.",
+
     lineStd: "Standard",
     linePrm: "Premium",
     lineExp: "Explorer",
     unknown: "—",
-    co2Title: "CO₂ avoided",
-    co2Desc: "Thanks to your purchase you help reduce waste and emissions.",
-    ctaTitle: "Want offers and new drops?",
-    ctaBuy: "Buy another box",
-    ctaSignup: "Sign up for promos",
   },
+
   es: {
     title: "Verificación de autenticidad",
-    subtitle: "Esta es la página oficial de KiloMystery para verificar el código impreso en la etiqueta.",
+    subtitle: "Esta es la página oficial de KiloMystery para verificar el código de la etiqueta.",
     officialBadge: "Página oficial",
+
     okTitle: "Autenticidad verificada",
     okP1: "Producto original de KiloMystery verificado correctamente.",
-    okP2: "Cada lote está identificado y trazado para garantizar calidad, transparencia y una experiencia de unboxing fiable.",
+    okP2: "Cada lote está identificado para asegurar calidad y una experiencia fiable.",
+
     badTitle: "Código no reconocido",
-    badP1: "No podemos confirmar este código. Comprueba que esté completo y vuelve a intentarlo.",
-    badP2: "Si la etiqueta está dañada o el problema persiste, contáctanos y te ayudaremos a verificarlo.",
+    badP1: "Comprueba el código y vuelve a intentarlo.",
+    badP2: "Si el problema persiste, contáctanos.",
+
     lotLabel: "Código de lote",
     lineLabel: "Línea",
     weightLabel: "Peso",
-    dateLabel: "Fecha del lote",
+    dateLabel: "Fecha",
     seqLabel: "Consecutivo",
+
+    co2Label: "CO₂ evitada",
+    co2Hint: "Estimado: 0,25 kg CO₂ por 1 kg.",
+
+    ctaTitle: "¿Quieres otra caja?",
+    ctaP: "Descubre nuevos paquetes perdidos y sigue ahorrando CO₂.",
+    ctaBtn: "Comprar",
+
     backHome: "Volver al sitio",
     verifyAnother: "Verificar otro código",
-    footerNote: "KiloMystery · Verificación de autenticidad mediante código de lote en la etiqueta oficial.",
+
+    footerNote: "KiloMystery · Verificación de autenticidad mediante código de lote.",
+
     lineStd: "Standard",
     linePrm: "Premium",
     lineExp: "Explorer",
     unknown: "—",
-    co2Title: "CO₂ evitada",
-    co2Desc: "Gracias a tu compra ayudas a reducir residuos y emisiones.",
-    ctaTitle: "¿Quieres ofertas y nuevos drops?",
-    ctaBuy: "Comprar otro pack",
-    ctaSignup: "Suscríbete para promos",
   },
+
   fr: {
     title: "Vérification d’authenticité",
-    subtitle: "Voici la page officielle KiloMystery pour vérifier le code présent sur l’étiquette.",
+    subtitle: "Voici la page officielle KiloMystery pour vérifier le code de l’étiquette.",
     officialBadge: "Page officielle",
+
     okTitle: "Authenticité confirmée",
     okP1: "Produit KiloMystery original vérifié avec succès.",
-    okP2: "Chaque lot est identifié et suivi afin de garantir qualité, transparence et une expérience d’unboxing fiable.",
+    okP2: "Chaque lot est identifié pour garantir qualité et fiabilité.",
+
     badTitle: "Code non reconnu",
-    badP1: "Nous ne parvenons pas à confirmer ce code. Vérifie qu’il est complet et réessaie.",
-    badP2: "Si l’étiquette est abîmée ou si le problème persiste, contacte-nous : nous t’aiderons à vérifier.",
+    badP1: "Vérifie le code et réessaie.",
+    badP2: "Si le problème persiste, contacte-nous.",
+
     lotLabel: "Code de lot",
     lineLabel: "Gamme",
     weightLabel: "Poids",
-    dateLabel: "Date du lot",
+    dateLabel: "Date",
     seqLabel: "Numéro",
+
+    co2Label: "CO₂ évitée",
+    co2Hint: "Estimation : 0,25 kg CO₂ par 1 kg.",
+
+    ctaTitle: "Envie d’une autre box ?",
+    ctaP: "Découvre de nouveaux colis perdus et continue d’économiser du CO₂.",
+    ctaBtn: "Acheter",
+
     backHome: "Retour au site",
     verifyAnother: "Vérifier un autre code",
-    footerNote: "KiloMystery · Vérification d’authenticité via code de lot sur l’étiquette officielle.",
+
+    footerNote: "KiloMystery · Vérification d’authenticité via code de lot.",
+
     lineStd: "Standard",
     linePrm: "Premium",
     lineExp: "Explorer",
     unknown: "—",
-    co2Title: "CO₂ évitée",
-    co2Desc: "Grâce à votre achat, vous contribuez à réduire le gaspillage et les émissions.",
-    ctaTitle: "Envie d’offres et de nouveaux drops ?",
-    ctaBuy: "Acheter un autre pack",
-    ctaSignup: "S’inscrire aux promos",
   },
+
   de: {
     title: "Echtheitsprüfung",
-    subtitle: "Dies ist die offizielle KiloMystery-Seite zur Prüfung des Codes auf deinem Etikett.",
+    subtitle: "Dies ist die offizielle KiloMystery-Seite zur Prüfung des Codes auf dem Etikett.",
     officialBadge: "Offizielle Seite",
+
     okTitle: "Echtheit bestätigt",
     okP1: "Originales KiloMystery-Produkt erfolgreich verifiziert.",
-    okP2: "Jede Charge ist eindeutig gekennzeichnet und nachvollziehbar – für Qualität, Transparenz und ein verlässliches Unboxing-Erlebnis.",
+    okP2: "Jede Charge ist eindeutig gekennzeichnet – für Qualität und Transparenz.",
+
     badTitle: "Code nicht erkannt",
-    badP1: "Wir können diesen Code nicht bestätigen. Bitte prüfe, ob er vollständig ist, und versuche es erneut.",
-    badP2: "Wenn das Etikett beschädigt ist oder das Problem bleibt, kontaktiere uns – wir helfen dir gerne weiter.",
+    badP1: "Bitte prüfe den Code und versuche es erneut.",
+    badP2: "Wenn das Problem bleibt, kontaktiere uns.",
+
     lotLabel: "Chargencode",
     lineLabel: "Linie",
     weightLabel: "Gewicht",
-    dateLabel: "Chargendatum",
+    dateLabel: "Datum",
     seqLabel: "Nummer",
+
+    co2Label: "Eingesparte CO₂",
+    co2Hint: "Schätzung: 0,25 kg CO₂ pro 1 kg.",
+
+    ctaTitle: "Noch eine Box?",
+    ctaP: "Entdecke neue verlorene Pakete und spare weiter CO₂.",
+    ctaBtn: "Jetzt kaufen",
+
     backHome: "Zur Website",
     verifyAnother: "Anderen Code prüfen",
-    footerNote: "KiloMystery · Echtheitsprüfung per Chargencode auf dem offiziellen Etikett.",
+
+    footerNote: "KiloMystery · Echtheitsprüfung per Chargencode.",
+
     lineStd: "Standard",
     linePrm: "Premium",
     lineExp: "Explorer",
     unknown: "—",
-    co2Title: "CO₂ eingespart",
-    co2Desc: "Mit deinem Kauf hilfst du, Abfall und Emissionen zu reduzieren.",
-    ctaTitle: "Willst du Angebote und neue Drops?",
-    ctaBuy: "Noch ein Paket kaufen",
-    ctaSignup: "Für Promos anmelden",
   },
 };
 
@@ -190,12 +237,16 @@ type Parsed = {
   date?: string; // YYYY-MM-DD
   type?: "STD" | "PRM" | "EXP" | string;
   weight?: string; // "5KG"
+  weightNum?: number; // 5
   seq?: string; // "0001"
   reason?: string;
 };
 
 function parseLot(codeRaw: string): Parsed {
   const code = (codeRaw || "").trim();
+
+  // Formato: KM-YYYYMMDD-TYPE-WEIGHTKG-SEQ
+  // es: KM-20260128-PRM-5KG-0001
   const re = /^KM-(\d{8})-([A-Z]{3})-(\d+(?:\.\d+)?)KG-(\d{4})$/i;
   const m = code.match(re);
 
@@ -203,13 +254,13 @@ function parseLot(codeRaw: string): Parsed {
     return {
       ok: false,
       code,
-      reason: "Formato non riconosciuto. Controlla che il codice sia completo e senza spazi.",
+      reason: "Formato non riconosciuto.",
     };
   }
 
   const yyyymmdd = m[1];
   const type = m[2].toUpperCase();
-  const weightNum = m[3];
+  const weightNum = Number(m[3]);
   const seq = m[4];
 
   const yyyy = yyyymmdd.slice(0, 4);
@@ -217,7 +268,15 @@ function parseLot(codeRaw: string): Parsed {
   const dd = yyyymmdd.slice(6, 8);
   const date = `${yyyy}-${mm}-${dd}`;
 
-  return { ok: true, code, date, type, weight: `${weightNum}KG`, seq };
+  return {
+    ok: true,
+    code,
+    date,
+    type,
+    weight: `${weightNum}KG`,
+    weightNum,
+    seq,
+  };
 }
 
 function typeLabel(t: string | undefined, c: Copy) {
@@ -228,9 +287,10 @@ function typeLabel(t: string | undefined, c: Copy) {
   return t;
 }
 
-function parseWeightNumber(weight: string | undefined) {
-  const m = (weight || "").replace(",", ".").match(/(\d+(\.\d+)?)/);
-  return m ? Number(m[1]) : 0;
+function formatCo2(kg: number) {
+  const co2 = Math.round(kg * 0.25 * 100) / 100;
+  // 1.5 -> "1.5", 1 -> "1"
+  return String(co2).replace(".", ",");
 }
 
 export default function VerifyResultPage({ params }: { params: { lang: string; id: string } }) {
@@ -240,9 +300,10 @@ export default function VerifyResultPage({ params }: { params: { lang: string; i
   const decoded = decodeURIComponent(params.id || "");
   const parsed = parseLot(decoded);
 
-  const factor = Number(process.env.CO2_FACTOR_PER_KG || "0");
-  const kg = parseWeightNumber(parsed.weight);
-  const co2 = factor > 0 ? Math.round(kg * factor * 100) / 100 : 0;
+  const co2Text =
+    parsed.ok && typeof parsed.weightNum === "number"
+      ? `${formatCo2(parsed.weightNum)} kg`
+      : t.unknown;
 
   return (
     <>
@@ -277,21 +338,27 @@ export default function VerifyResultPage({ params }: { params: { lang: string; i
                 </div>
               </div>
 
-              <div className="mt-5 grid md:grid-cols-4 gap-3">
+              <div className="mt-5 grid md:grid-cols-5 gap-3">
                 <Fact label={t.lineLabel} value={typeLabel(parsed.type, t)} />
                 <Fact label={t.weightLabel} value={parsed.weight || t.unknown} />
+                <Fact label={t.co2Label} value={co2Text} hint={t.co2Hint} />
                 <Fact label={t.dateLabel} value={parsed.date || t.unknown} />
                 <Fact label={t.seqLabel} value={parsed.seq || t.unknown} />
               </div>
 
-              {/* CO2 */}
-              {co2 > 0 && (
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4">
-                  <div className="text-xs text-white/60">{t.co2Title}</div>
-                  <div className="mt-1 text-2xl font-bold text-white">{co2} kg</div>
-                  <div className="mt-1 text-sm text-white/70">{t.co2Desc}</div>
+              {/* CTA */}
+              <div className="mt-5 rounded-2xl border border-white/10 bg-black/20 p-4 md:p-5">
+                <div className="text-base font-semibold text-white/90">{t.ctaTitle}</div>
+                <div className="mt-1 text-sm text-white/70">{t.ctaP}</div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link href={`/${lang}/products`} className="btn btn-brand">
+                    {t.ctaBtn}
+                  </Link>
+                  <Link href={`/${lang}/verify`} className="btn btn-ghost">
+                    {t.verifyAnother}
+                  </Link>
                 </div>
-              )}
+              </div>
             </div>
           ) : (
             <div className="mt-6 rounded-2xl border border-red-500/25 bg-red-500/10 p-5">
@@ -306,31 +373,19 @@ export default function VerifyResultPage({ params }: { params: { lang: string; i
                   <div className="mt-3 font-mono text-sm text-white">{parsed.code}</div>
                 </div>
               </div>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link href={`/${lang}`} className="btn btn-brand">
+                  {t.backHome}
+                </Link>
+                <Link href={`/${lang}/verify`} className="btn btn-ghost">
+                  {t.verifyAnother}
+                </Link>
+              </div>
             </div>
           )}
 
-          {/* CTA marketing */}
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5">
-            <div className="text-lg font-semibold text-white">{t.ctaTitle}</div>
-            <div className="mt-3 flex flex-wrap gap-3">
-              <Link href={`/${lang}`} className="btn btn-brand">
-                {t.ctaBuy}
-              </Link>
-              <Link href={`/${lang}/signup`} className="btn btn-ghost">
-                {t.ctaSignup}
-              </Link>
-              <Link href={`/${lang}/verify`} className="btn btn-ghost">
-                {t.verifyAnother}
-              </Link>
-            </div>
-          </div>
-
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href={`/${lang}`} className="btn btn-ghost">
-              {t.backHome}
-            </Link>
-          </div>
-
+          {/* FOOT NOTE */}
           <div className="mt-6 text-xs text-white/50">{t.footerNote}</div>
         </div>
       </main>
@@ -340,11 +395,12 @@ export default function VerifyResultPage({ params }: { params: { lang: string; i
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({ label, value, hint }: { label: string; value: string; hint?: string }) {
   return (
     <div className="rounded-xl border border-white/10 bg-black/20 p-3">
       <div className="text-xs text-white/60">{label}</div>
       <div className="mt-1 text-sm font-semibold text-white/90">{value}</div>
+      {hint ? <div className="mt-1 text-[11px] text-white/50">{hint}</div> : null}
     </div>
   );
 }
