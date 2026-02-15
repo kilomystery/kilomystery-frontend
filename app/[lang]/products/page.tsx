@@ -3,23 +3,107 @@
 
 /* eslint-disable react/no-unescaped-entities */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { useCart } from "../../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
 import SectionInsideBox from "../../components/SectionInsideBox";
-import LazyHoverVideo from "../../components/LazyHoverVideo";
 import { trackAddToCart, trackViewContent, trackViewItemList } from "@/app/lib/tracking";
 import type { KMCartItem } from "@/app/lib/ga";
 
 type Kg = 1 | 2 | 3 | 5 | 10;
 
-const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
-const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
+// ✅ SOLO JPG (HOTFIX iOS)
 const stdJ = (kg: Kg) => `/videos/packs/std-${kg}.jpg`;
 const prmJ = (kg: Kg) => `/videos/packs/prm-${kg}.jpg`;
+
+// ✅ VIDEO (prima cosa nella card) + fallback su JPG (iOS encode hotfix)
+const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
+const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
+
+function isIOSDevice() {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent || "";
+  const platform = (window.navigator as any).platform || "";
+  const maxTouchPoints = (window.navigator as any).maxTouchPoints || 0;
+
+  const iOS = /iPad|iPhone|iPod/.test(ua) || /iPad|iPhone|iPod/.test(platform);
+  const iPadOS13Plus = platform === "MacIntel" && maxTouchPoints > 1; // iPadOS
+  return iOS || iPadOS13Plus;
+}
+
+function VideoFirstMedia({
+  videoSrc,
+  posterSrc,
+  alt,
+  priority,
+}: {
+  videoSrc: string;
+  posterSrc: string;
+  alt: string;
+  priority?: boolean;
+}) {
+  const [useFallback, setUseFallback] = useState(false);
+  const [canPlay, setCanPlay] = useState(false);
+  const triedRef = useRef(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Se su iOS non riesce a decodificare, a volte non “crasha” subito: forziamo un fallback dopo un attimo
+    const iOS = isIOSDevice();
+    if (!iOS) return;
+
+    triedRef.current = true;
+
+    const t = setTimeout(() => {
+      if (!canPlay) setUseFallback(true);
+    }, 1200);
+
+    return () => clearTimeout(t);
+  }, [canPlay]);
+
+  // Se il video fallisce su qualsiasi device → fallback JPG
+  function handleVideoError() {
+    setUseFallback(true);
+  }
+
+  function handleCanPlay() {
+    setCanPlay(true);
+  }
+
+  return (
+    <>
+      {!useFallback ? (
+        <video
+          src={videoSrc}
+          playsInline
+          muted
+          loop
+          autoPlay
+          preload="metadata"
+          poster={posterSrc}
+          className="media rounded-[12px] object-cover"
+          onError={handleVideoError}
+          onCanPlay={handleCanPlay}
+        />
+      ) : null}
+
+      {useFallback ? (
+        <Image
+          src={posterSrc}
+          alt={alt}
+          fill
+          className="media rounded-[12px] object-cover"
+          sizes="(min-width: 1024px) 520px, (min-width: 768px) 50vw, 92vw"
+          priority={priority}
+        />
+      ) : null}
+    </>
+  );
+}
 
 /* =========================================================
    ✅ PREZZI FRONTEND (REAL + COMPARE) — ALLINEATI A SHOPIFY
@@ -96,7 +180,6 @@ type CopyKey =
   | "seoCtaPrimary"
   | "seoCtaSecondary"
   | "seoCtaTertiary"
-  // ✅ internal linking “vendita pacchi smarriti”
   | "lostParcelsTitle"
   | "lostParcelsText"
   | "lostParcelsPrimary"
@@ -435,11 +518,41 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
 
 // CO₂ text per kg e per lingua
 const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
-  1: { it: "≈0,25 kg di CO₂ evitati", en: "≈0.25 kg of CO₂ saved", es: "≈0,25 kg de CO₂ evitados", fr: "≈0,25 kg de CO₂ évités", de: "≈0,25 kg CO₂ eingespart" },
-  2: { it: "≈0,5 kg di CO₂ evitati", en: "≈0.5 kg of CO₂ saved", es: "≈0,5 kg de CO₂ evitados", fr: "≈0,5 kg de CO₂ évités", de: "≈0,5 kg CO₂ eingespart" },
-  3: { it: "≈0,75 kg di CO₂ evitati", en: "≈0.75 kg of CO₂ saved", es: "≈0,75 kg de CO₂ evitados", fr: "≈0,75 kg de CO₂ évités", de: "≈0,75 kg CO₂ eingespart" },
-  5: { it: "≈1,25 kg di CO₂ evitati", en: "≈1.25 kg of CO₂ saved", es: "≈1,25 kg de CO₂ evitados", fr: "≈1,25 kg de CO₂ évités", de: "≈1,25 kg CO₂ eingespart" },
-  10:{ it: "≈2,5 kg di CO₂ evitati", en: "≈2.5 kg of CO₂ saved", es: "≈2,5 kg de CO₂ evitados", fr: "≈2,5 kg de CO₂ évités", de: "≈2,5 kg CO₂ eingespart" },
+  1: {
+    it: "≈0,25 kg di CO₂ evitati",
+    en: "≈0.25 kg of CO₂ saved",
+    es: "≈0,25 kg de CO₂ evitados",
+    fr: "≈0,25 kg de CO₂ évités",
+    de: "≈0,25 kg CO₂ eingespart",
+  },
+  2: {
+    it: "≈0,5 kg di CO₂ evitati",
+    en: "≈0.5 kg of CO₂ saved",
+    es: "≈0,5 kg de CO₂ evitados",
+    fr: "≈0,5 kg de CO₂ évités",
+    de: "≈0,5 kg CO₂ eingespart",
+  },
+  3: {
+    it: "≈0,75 kg di CO₂ evitati",
+    en: "≈0.75 kg of CO₂ saved",
+    es: "≈0,75 kg de CO₂ evitados",
+    fr: "≈0,75 kg de CO₂ évités",
+    de: "≈0,75 kg CO₂ eingespart",
+  },
+  5: {
+    it: "≈1,25 kg di CO₂ evitati",
+    en: "≈1.25 kg of CO₂ saved",
+    es: "≈1,25 kg de CO₂ evitados",
+    fr: "≈1,25 kg de CO₂ évités",
+    de: "≈1,25 kg CO₂ eingespart",
+  },
+  10: {
+    it: "≈2,5 kg di CO₂ evitati",
+    en: "≈2.5 kg of CO₂ saved",
+    es: "≈2,5 kg de CO₂ evitados",
+    fr: "≈2,5 kg de CO₂ évités",
+    de: "≈2,5 kg CO₂ eingespart",
+  },
 };
 
 function safeError(label: string, err: unknown) {
@@ -457,22 +570,34 @@ function safeError(label: string, err: unknown) {
 }
 
 const VARIANT_IDS: Record<"Standard" | "Premium", Record<Kg, string>> = {
-  Standard: { 1: "52045370360146", 2: "52045370392914", 3: "52045370425682", 5: "52045370458450", 10: "52045370491218" },
-  Premium: { 1: "52045402571090", 2: "52045402603858", 3: "52045402636626", 5: "52045402669394", 10: "52045402702162" },
+  Standard: {
+    1: "52045370360146",
+    2: "52045370392914",
+    3: "52045370425682",
+    5: "52045370458450",
+    10: "52045370491218",
+  },
+  Premium: {
+    1: "52045402571090",
+    2: "52045402603858",
+    3: "52045402636626",
+    5: "52045402669394",
+    10: "52045402702162",
+  },
 };
 
 function PackCard({
   kind,
   kg,
+  image,
   video,
-  poster,
   lang,
   t,
 }: {
   kind: "Standard" | "Premium";
   kg: Kg;
+  image: string;
   video: string;
-  poster: string;
   lang: Lang;
   t: CopyPerLang;
 }) {
@@ -493,9 +618,9 @@ function PackCard({
       weightKg: kg,
       pricePerKg: pricePerKgValue,
       qty: 1,
-      image: video,
+      image, // ✅ JPG
     }),
-    [kind, kg, pricePerKgValue, variantId, video]
+    [kind, kg, pricePerKgValue, variantId, image]
   );
 
   const viewTrackedRef = useRef(false);
@@ -532,7 +657,11 @@ function PackCard({
   const co2Text = co2ByKg[kg][lang] ?? co2ByKg[kg].it ?? "";
 
   return (
-    <article id={`${kind}-${kg}-card`} className={`card ${isStd ? "card--standard" : "card--premium"}`} data-anchor={anchorId}>
+    <article
+      id={`${kind}-${kg}-card`}
+      className={`card ${isStd ? "card--standard" : "card--premium"}`}
+      data-anchor={anchorId}
+    >
       {anchorId ? <div id={anchorId} /> : null}
 
       <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
@@ -544,7 +673,7 @@ function PackCard({
 
       <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
         <div className="ratio-16-9">
-          <LazyHoverVideo className="media rounded-[12px] object-cover" src={video} poster={poster} preload="none" />
+          <VideoFirstMedia videoSrc={video} posterSrc={image} alt={`${kind} ${kg} kg`} priority={kg === 1} />
         </div>
       </div>
 
@@ -574,7 +703,11 @@ function PackCard({
       </ul>
 
       <div className="mt-4">
-        <button type="button" onClick={handleAddToCart} className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}>
+        <button
+          type="button"
+          onClick={handleAddToCart}
+          className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}
+        >
           {t.addToCart}
         </button>
       </div>
@@ -594,7 +727,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
       weightKg: EXPLORER_TOTAL_KG,
       pricePerKg: EXPLORER_PRICE_PER_KG,
       qty: 1,
-      image: "/videos/packs/ExplorerBox.mp4",
+      image: "/videos/packs/ExplorerBox.jpg", // ✅ JPG
     };
 
     addItem(cartItem as any);
@@ -621,11 +754,13 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
           <div className="relative flex flex-col md:flex-row gap-4 items-center md:items-stretch">
             <div className="w-full md:w-1/2">
               <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
-                <LazyHoverVideo
-                  src="/videos/packs/ExplorerBox.mp4"
-                  poster="/videos/packs/ExplorerBox.jpg"
-                  className="w-full h-full object-cover"
-                  preload="none"
+                <Image
+                  src="/videos/packs/ExplorerBox.jpg"
+                  alt="Explorer Box"
+                  fill
+                  className="object-cover"
+                  sizes="(min-width: 768px) 520px, 92vw"
+                  priority={false}
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-2 text-xs text-white/80 flex items-center justify-between">
                   <span className="tracking-[.18em] uppercase text-emerald-200/90">Explorer</span>
@@ -691,7 +826,9 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
 
                   <div className="text-xs text-white/60">
                     ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg{" "}
-                    <span className="line-through ml-1 text-white/45">{EXPLORER_COMPARE_PER_KG.toFixed(2)} €/kg</span>
+                    <span className="line-through ml-1 text-white/45">
+                      {EXPLORER_COMPARE_PER_KG.toFixed(2)} €/kg
+                    </span>
                   </div>
                 </div>
 
@@ -821,7 +958,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
   const pageUrl = `${siteUrl}/${lang}/products`;
 
-  // ✅ Consiglio: le Offer URL puntano a anchor che portano dritto ai blocchi 10kg (alta conversione)
   const offerUrlStd10 = `${pageUrl}#buy-standard-10`;
   const offerUrlPrm10 = `${pageUrl}#buy-premium-10`;
 
@@ -847,7 +983,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
         lowPrice: "20.15",
         highPrice: "26.90",
         availability: "https://schema.org/InStock",
-        url: offerUrlStd10, // ✅ conversion-friendly
+        url: offerUrlStd10,
       },
     }),
     [lang, pageUrl, offerUrlStd10]
@@ -873,7 +1009,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
     [lang, pageUrl, siteUrl]
   );
 
-  // ✅ NEW: BreadcrumbList (aiuta Google a capire gerarchia)
   const breadcrumbJsonLd = useMemo(
     () => ({
       "@context": "https://schema.org",
@@ -905,7 +1040,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
     [lang, pageUrl, siteUrl]
   );
 
-  // ✅ NEW: ItemList (lista prodotti principali)
   const itemListJsonLd = useMemo(() => {
     const baseName =
       lang === "it"
@@ -923,7 +1057,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
     (["Standard", "Premium"] as const).forEach((kind, idxK) => {
       ([1, 2, 3, 5, 10] as const).forEach((kg, idxW) => {
         const { total } = prices(kind, kg);
-        const url = `${pageUrl}#buy-${kind.toLowerCase()}-10`; // ✅ punta al blocco forte
+        const url = `${pageUrl}#buy-${kind.toLowerCase()}-10`;
         const position = idxK * 10 + idxW + 1;
 
         items.push({
@@ -946,7 +1080,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       });
     });
 
-    // Explorer
     items.push({
       "@type": "ListItem",
       position: 99,
@@ -1030,7 +1163,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        {/* ✅ INTERNAL LINKS BOOST (pacchi smarriti) */}
         <section className="card p-5 md:p-6 bg-gradient-to-br from-white/[0.04] via-[#111827]/60 to-white/[0.06]">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="space-y-2">
@@ -1109,8 +1241,8 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
                 key={`std-${kg}`}
                 kind="Standard"
                 kg={kg as Kg}
+                image={stdJ(kg as Kg)}
                 video={stdV(kg as Kg)}
-                poster={stdJ(kg as Kg)}
                 lang={lang}
                 t={t}
               />
@@ -1130,8 +1262,8 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
                 key={`prm-${kg}`}
                 kind="Premium"
                 kg={kg as Kg}
+                image={prmJ(kg as Kg)}
                 video={prmV(kg as Kg)}
-                poster={prmJ(kg as Kg)}
                 lang={lang}
                 t={t}
               />
@@ -1141,6 +1273,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
 
         <ExplorerCard lang={lang} t={t} />
 
+        {/* ✅ NON TOCCATA (unboxing scroll etc.) */}
         <SectionInsideBox lang={lang} />
 
         <section id="policy" className="card">
