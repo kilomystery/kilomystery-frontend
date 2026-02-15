@@ -21,6 +21,11 @@ const SITE_URL = (
 ).replace(/\/$/, "");
 
 /* =========================
+   GA4
+========================= */
+const GA_MEASUREMENT_ID = "G-126C6KCE5S";
+
+/* =========================
    Metadata
 ========================= */
 export const metadata: Metadata = {
@@ -91,7 +96,47 @@ export default async function LangLayout({
         }}
       />
 
-      <div className={`${inter.className} antialiased`} data-lang-layout="1" data-lang={lang}>
+      {/* GA4: carica gtag.js */}
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        strategy="afterInteractive"
+      />
+
+      {/* GA4: init + Consent Mode v2 default denied + cross-domain Shopify */}
+      <Script
+        id="km-ga4-init"
+        strategy="afterInteractive"
+        dangerouslySetInnerHTML={{
+          __html: `
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+
+// Consent Mode v2 - default: denied (EEA)
+gtag('consent', 'default', {
+  ad_storage: 'denied',
+  analytics_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied',
+  wait_for_update: 500
+});
+
+gtag('js', new Date());
+
+// GA4 config + cross-domain (Vercel <-> Shopify checkout)
+gtag('config', '${GA_MEASUREMENT_ID}', {
+  linker: {
+    domains: ['kilomystery.com', 'checkout.shopify.com', 'myshopify.com']
+  }
+});
+          `.trim(),
+        }}
+      />
+
+      <div
+        className={`${inter.className} antialiased`}
+        data-lang-layout="1"
+        data-lang={lang}
+      >
         <CartProviderRoot>
           {children}
           <CookieBanner />

@@ -190,6 +190,83 @@ const co2ByKg: Record<Lang, Record<Kg, string>> = {
 
 const euro = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
+function isIOSDevice() {
+  if (typeof window === "undefined") return false;
+  const ua = window.navigator.userAgent || "";
+  const platform = (window.navigator as any).platform || "";
+  const maxTouchPoints = (window.navigator as any).maxTouchPoints || 0;
+
+  const iOS = /iPad|iPhone|iPod/.test(ua) || /iPad|iPhone|iPod/.test(platform);
+  const iPadOS13Plus = platform === "MacIntel" && maxTouchPoints > 1; // iPadOS
+  return iOS || iPadOS13Plus;
+}
+
+function VideoFirstMedia({
+  videoSrc,
+  posterSrc,
+  alt,
+  priority,
+}: {
+  videoSrc: string;
+  posterSrc: string;
+  alt: string;
+  priority?: boolean;
+}) {
+  const [useFallback, setUseFallback] = useState(false);
+  const [canPlay, setCanPlay] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const iOS = isIOSDevice();
+    if (!iOS) return;
+
+    const t = setTimeout(() => {
+      if (!canPlay) setUseFallback(true);
+    }, 1200);
+
+    return () => clearTimeout(t);
+  }, [canPlay]);
+
+  function handleVideoError() {
+    setUseFallback(true);
+  }
+
+  function handleCanPlay() {
+    setCanPlay(true);
+  }
+
+  return (
+    <>
+      {!useFallback ? (
+        <video
+          src={videoSrc}
+          playsInline
+          muted
+          loop
+          autoPlay
+          preload="metadata"
+          poster={posterSrc}
+          className="media rounded-[12px] object-cover"
+          onError={handleVideoError}
+          onCanPlay={handleCanPlay}
+        />
+      ) : null}
+
+      {useFallback ? (
+        <Image
+          src={posterSrc}
+          alt={alt}
+          fill
+          className="media rounded-[12px] object-cover"
+          sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
+          priority={priority}
+        />
+      ) : null}
+    </>
+  );
+}
+
 /* =========================
    COMPONENT
 ========================= */
@@ -301,8 +378,11 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const { total, compareAt } = PRICE_TABLE[tab][kg];
           const perKg = +(total / kg).toFixed(2);
 
-          // ✅ SOLO IMMAGINI (poster/jpg già presenti in public/videos/packs)
-          const imgSrc = `/videos/packs/${tab === "std" ? "std" : "prm"}-${w}.jpg`;
+          // ✅ VIDEO prima, fallback su JPG (public/videos/packs)
+          const base = tab === "std" ? "std" : "prm";
+          const imgSrc = `/videos/packs/${base}-${w}.jpg`;
+          const videoSrc = `/videos/packs/${base}-${w}.mp4`;
+
           const co2Text = co2ByKg[safeLang][kg];
 
           return (
@@ -326,12 +406,10 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
               <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
                 <div className="ratio-16-9">
-                  <Image
-                    src={imgSrc}
+                  <VideoFirstMedia
+                    videoSrc={videoSrc}
+                    posterSrc={imgSrc}
                     alt={`${isStd ? L.standard : L.premium} ${w}${L.kg}`}
-                    fill
-                    className="media rounded-[12px] object-cover"
-                    sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
                     priority={w === 1} // solo la prima più importante
                   />
                 </div>

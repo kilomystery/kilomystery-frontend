@@ -27,9 +27,14 @@ function setCookie(name: string, value: string, days = 180) {
   if (typeof document === "undefined") return;
 
   const maxAge = days * 24 * 60 * 60;
-  const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+  const hostname =
+    typeof window !== "undefined" ? window.location.hostname : "";
+
   const shouldSetDomain =
-    hostname && hostname !== "localhost" && hostname.endsWith("kilomystery.com");
+    hostname &&
+    hostname !== "localhost" &&
+    hostname.endsWith("kilomystery.com");
+
   const domainAttr = shouldSetDomain ? "; Domain=.kilomystery.com" : "";
 
   document.cookie = `${name}=${encodeURIComponent(
@@ -40,10 +45,30 @@ function setCookie(name: string, value: string, days = 180) {
 function getCookie(name: string) {
   if (typeof document === "undefined") return undefined;
 
-  const row = document.cookie.split("; ").find((r) => r.startsWith(name + "="));
+  const row = document.cookie
+    .split("; ")
+    .find((r) => r.startsWith(name + "="));
+
   if (!row) return undefined;
 
   return decodeURIComponent(row.split("=")[1] || "");
+}
+
+/* =========================
+   GA4 Consent Update
+========================= */
+function updateGoogleConsent(choice: "accept" | "reject") {
+  if (typeof window === "undefined") return;
+
+  const granted = choice === "accept";
+
+  // Aggiorna Consent Mode v2
+  window.gtag?.("consent", "update", {
+    ad_storage: granted ? "granted" : "denied",
+    analytics_storage: granted ? "granted" : "denied",
+    ad_user_data: granted ? "granted" : "denied",
+    ad_personalization: granted ? "granted" : "denied",
+  });
 }
 
 /* =========================
@@ -56,15 +81,24 @@ export default function CookieBanner() {
     const savedCookie = getCookie("km_cookie_consent");
     const savedLocal = localStorage.getItem("km-cookie-consent");
     const saved = savedCookie || savedLocal || "";
-    if (!saved) setOpen(true);
+
+    if (!saved) {
+      setOpen(true);
+    } else {
+      // Se già salvato, aggiorna subito GA
+      updateGoogleConsent(saved as "accept" | "reject");
+    }
   }, []);
 
-  /* Click handler */
   function handle(choice: "accept" | "reject") {
-    // persistenza
+    // salva scelta
     localStorage.setItem("km-cookie-consent", choice);
     setCookie("km_cookie_consent", choice);
 
+    // aggiorna GA4
+    updateGoogleConsent(choice);
+
+    // compatibilità con stub layout
     if (typeof window !== "undefined") {
       window.kmApplyConsent?.(choice);
     }
