@@ -128,19 +128,21 @@ export default function LazyHoverVideo({
       ) : null}
 
       <video
-        key={key}
-        ref={videoRef}
-        className="absolute inset-0 h-full w-full object-cover"
-        src={src}
-        poster={poster}
-        muted
-        playsInline
-        loop
-        autoPlay
-        preload={preload}
-        controls={false}
-        disablePictureInPicture
-      />
+  key={key}
+  ref={videoRef}
+  className="absolute inset-0 h-full w-full object-cover"
+  poster={poster}
+  muted
+  playsInline
+  loop
+  autoPlay
+  preload={preload}
+  controls={false}
+  disablePictureInPicture
+>
+  <source src={src} type="video/mp4" />
+</video>
+
     </div>
   );
 }

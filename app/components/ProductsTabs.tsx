@@ -1,3 +1,4 @@
+// ProductsTabs component
 "use client";
 
 import Image from "next/image";
@@ -213,44 +214,51 @@ function VideoFirstMedia({
   priority?: boolean;
 }) {
   const [useFallback, setUseFallback] = useState(false);
-  const [canPlay, setCanPlay] = useState(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const iOS = isIOSDevice();
-    if (!iOS) return;
+    const _iOS = isIOSDevice();
+    void _iOS;
 
-    const t = setTimeout(() => {
-      if (!canPlay) setUseFallback(true);
-    }, 1200);
+    const v = videoRef.current;
+    if (!v) return;
 
-    return () => clearTimeout(t);
-  }, [canPlay]);
+    const tryPlay = async () => {
+      try {
+        const p = v.play();
+        if (p && typeof (p as any).then === "function") {
+          await p;
+        }
+      } catch {
+        // Non forziamo fallback: fallback solo su errore reale (decode/network)
+      }
+    };
+
+    tryPlay();
+  }, [videoSrc]);
 
   function handleVideoError() {
     setUseFallback(true);
-  }
-
-  function handleCanPlay() {
-    setCanPlay(true);
   }
 
   return (
     <>
       {!useFallback ? (
         <video
-          src={videoSrc}
+          ref={videoRef}
           playsInline
           muted
           loop
           autoPlay
-          preload="metadata"
+          preload="auto"
           poster={posterSrc}
           className="media rounded-[12px] object-cover"
           onError={handleVideoError}
-          onCanPlay={handleCanPlay}
-        />
+        >
+          <source src={videoSrc} type="video/mp4" />
+        </video>
       ) : null}
 
       {useFallback ? (
