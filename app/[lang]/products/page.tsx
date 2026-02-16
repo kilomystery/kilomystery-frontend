@@ -5,11 +5,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
-import { useCart } from "../../components/cart/CartProvider";
+import Header from "./../components/Header";
+import Footer from "./../components/Footer";
+import { useCart } from "./../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
-import SectionInsideBox from "../../components/SectionInsideBox";
+import SectionInsideBox from "./../components/SectionInsideBox";
 import { trackAddToCart, trackViewContent, trackViewItemList } from "@/app/lib/tracking";
 import type { KMCartItem } from "@/app/lib/ga";
 
@@ -46,49 +46,52 @@ function VideoFirstMedia({
   priority?: boolean;
 }) {
   const [useFallback, setUseFallback] = useState(false);
-  const [canPlay, setCanPlay] = useState(false);
-  const triedRef = useRef(false);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Se su iOS non riesce a decodificare, a volte non “crasha” subito: forziamo un fallback dopo un attimo
-    const iOS = isIOSDevice();
-    if (!iOS) return;
+    // manteniamo la funzione usata (evita warning/strict settings)
+    const _iOS = isIOSDevice();
+    void _iOS;
 
-    triedRef.current = true;
+    const v = videoRef.current;
+    if (!v) return;
 
-    const t = setTimeout(() => {
-      if (!canPlay) setUseFallback(true);
-    }, 1200);
+    const tryPlay = async () => {
+      try {
+        const p = v.play();
+        if (p && typeof (p as any).then === "function") {
+          await p;
+        }
+      } catch {
+        // Non forziamo fallback: fallback solo su errore reale (decode/network)
+      }
+    };
 
-    return () => clearTimeout(t);
-  }, [canPlay]);
+    tryPlay();
+  }, [videoSrc]);
 
-  // Se il video fallisce su qualsiasi device → fallback JPG
   function handleVideoError() {
     setUseFallback(true);
-  }
-
-  function handleCanPlay() {
-    setCanPlay(true);
   }
 
   return (
     <>
       {!useFallback ? (
         <video
-          src={videoSrc}
+          ref={videoRef}
           playsInline
           muted
           loop
           autoPlay
-          preload="metadata"
+          preload="auto"
           poster={posterSrc}
           className="media rounded-[12px] object-cover"
           onError={handleVideoError}
-          onCanPlay={handleCanPlay}
-        />
+        >
+          <source src={videoSrc} type="video/mp4" />
+        </video>
       ) : null}
 
       {useFallback ? (
