@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import crypto from "crypto";
 
 export const runtime = "nodejs";
 
@@ -13,6 +14,12 @@ function yyyymmdd(d = new Date()) {
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}${mm}${dd}`;
+}
+
+// suffisso random robusto (unico anche se rigeneri)
+function randSuffix(bytes = 2) {
+  // 2 bytes => 4 hex chars (es: A3F9)
+  return crypto.randomBytes(bytes).toString("hex").toUpperCase();
 }
 
 // es: "PRM-5KG" / "STD-10KG" / "EXP-15KG" / "UP-PRM-1KG"
@@ -159,7 +166,8 @@ export async function GET(req: Request) {
         .join(" | ");
 
       for (let p = 1; p <= packages; p++) {
-        const lotId = `KM-${today}-ORDER-${orderNum}-${String(p).padStart(2, "0")}`;
+        const lotId = `KM-${today}-ORDER-${orderNum}-P${String(p).padStart(2, "0")}-${randSuffix(2)}`;
+
         labels.push({
           lotId,
           product: `Order ${orderName}`,
@@ -186,7 +194,7 @@ export async function GET(req: Request) {
         // 1 etichetta per quantità (se qty>1)
         for (let i = 1; i <= qty; i++) {
           const lotCore = base || "ITEM";
-          const lotId = `KM-${today}-${lotCore}-${orderNum}-${String(seq).padStart(2, "0")}`;
+          const lotId = `KM-${today}-${lotCore}-${orderNum}-S${String(seq).padStart(2, "0")}-${randSuffix(2)}`;
           seq++;
 
           labels.push({
