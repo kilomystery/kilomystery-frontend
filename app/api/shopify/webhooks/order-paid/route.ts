@@ -15,29 +15,28 @@ function verifyShopifyHmac(rawBody: string, hmacHeader: string | null) {
   return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(hmacHeader));
 }
 
-function pad6(n: number) {
-  return String(n).padStart(6, "0");
-}
-function pad2(n: number) {
-  return String(n).padStart(2, "0");
-}
-function todayYMD() {
-  const d = new Date();
+function todayYMD(d = new Date()) {
   const yyyy = String(d.getFullYear());
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${yyyy}${mm}${dd}`;
 }
 
+/**
+ * STD-1KG -> STD1KG
+ * PRM-5KG -> PRM5KG
+ * EXP-15KG -> EXP15KG
+ * UP-PRM-1KG -> UPPRM1KG
+ */
 function parseSkuToCode(skuRaw: string) {
-  // accetta "PRM-5KG", "STD-1KG", "EXP-15KG", "GIFT-MIX-1KG"
   const sku = (skuRaw || "").trim().toUpperCase();
   if (!sku) return null;
+  const cleaned = sku.replace(/\s+/g, "-").replace(/[^A-Z0-9]/g, "");
+  return cleaned || null;
+}
 
-  // se vuoi: normalizza un po’ gli SKU
-  // es: "PRM 5KG" -> "PRM-5KG"
-  const cleaned = sku.replace(/\s+/g, "-");
-  return cleaned;
+function rand4() {
+  return crypto.randomBytes(2).toString("hex").toUpperCase(); // 4 chars
 }
 
 async function shopifyGraphQL(query: string, variables: any) {
@@ -70,40 +69,35 @@ export async function POST(req: Request) {
   const order = JSON.parse(rawBody);
 
   const orderGid: string | undefined = order?.admin_graphql_api_id;
-  const orderNumber: number | undefined = order?.order_number;
-  const createdAt: string | undefined = order?.created_at;
+  const orderNumber: number | undefined = order?.order_number; // es 1057
+  const createdAtRaw: string | undefined = order?.created_at;
 
   if (!orderGid || !orderNumber) {
     return NextResponse.json({ error: "Missing orderGid/orderNumber" }, { status: 400 });
   }
 
-  const ymd = todayYMD();
-  const seqOrder = pad6(orderNumber);
+  const createdAt = createdAtRaw ? new Date(createdAtRaw) : new Date();
+  const ymd = todayYMD(createdAt);
+  const orderSeq = String(orderNumber); // ✅ niente 000000
 
   const lineItems = Array.isArray(order?.line_items) ? order.line_items : [];
   if (!lineItems.length) {
     return NextResponse.json({ error: "No line_items" }, { status: 400 });
   }
 
-  // Genera 1 LOT per ogni riga e per quantità
-  // Se qty=2, crea -01 e -02 per quella riga
   const lots: Array<{ lotId: string; title: string; sku: string; qtyIndex: number }> = [];
-
-  let running = 0;
 
   for (const li of lineItems) {
     const title = String(li?.title || "").trim();
     const skuRaw = String(li?.sku || "").trim();
-    const qty = Number(li?.quantity || 1);
+    const qty = Math.max(1, Number(li?.quantity || 1));
 
-    const codeFromSku = parseSkuToCode(skuRaw);
-    const code = codeFromSku || "UNKNOWN";
+    const code = parseSkuToCode(skuRaw) || "UNKNOWN";
 
-    for (let i = 1; i <= Math.max(1, qty); i++) {
-      running += 1;
-      const itemSeq = pad2(running);
-
-      const lotId = `KM-${ymd}-${code}-${seqOrder}-${itemSeq}`;
+    for (let i = 1; i <= qty; i++) {
+      // ✅ FORMATO RICHIESTO:
+      // KM-20260216-STD1KG-1057-A4F9
+      const lotId = `KM-${ymd}-${code}-${orderSeq}-${rand4()}`;
 
       lots.push({
         lotId,
@@ -114,9 +108,6 @@ export async function POST(req: Request) {
     }
   }
 
-  // Salviamo in 2 modi:
-  // 1) metafield JSON sull'ordine con tutta la lista
-  // 2) (opzionale più avanti) metafield per riga
   const mutation = `
     mutation SetMetafield($metafields: [MetafieldsSetInput!]!) {
       metafieldsSet(metafields: $metafields) {
@@ -135,7 +126,7 @@ export async function POST(req: Request) {
         type: "json",
         value: JSON.stringify({
           orderNumber,
-          createdAt,
+          createdAt: createdAt.toISOString(),
           lots,
         }),
       },
