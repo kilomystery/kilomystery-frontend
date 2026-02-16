@@ -5,11 +5,11 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import Header from "../../components/Header";
-import Footer from "../../components/Footer";
-import { useCart } from "../../components/cart/CartProvider";
+import Header from "./../components/Header";
+import Footer from "./../components/Footer";
+import { useCart } from "./../components/cart/CartProvider";
 import { Lang, normalizeLang } from "@/i18n/lang";
-import SectionInsideBox from "../../components/SectionInsideBox";
+import SectionInsideBox from "./../components/SectionInsideBox";
 import { trackAddToCart, trackViewContent, trackViewItemList } from "@/app/lib/tracking";
 import type { KMCartItem } from "@/app/lib/ga";
 
