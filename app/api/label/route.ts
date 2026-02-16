@@ -9,116 +9,227 @@ function reqParam(url: URL, key: string) {
   return (url.searchParams.get(key) ?? "").trim();
 }
 
-function parseKg(weightKg: string) {
-  const m = weightKg.replace(",", ".").match(/(\d+(\.\d+)?)/);
+function parseKgFromWeight(weightKg: string) {
+  const m = (weightKg || "").replace(",", ".").match(/(\d+(\.\d+)?)/);
   return m ? Number(m[1]) : 0;
+}
+
+function calcCo2(kg: number) {
+  const factor = Number(process.env.CO2_FACTOR_PER_KG || "0.25");
+  return Math.round(kg * factor * 100) / 100;
 }
 
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
 
+    // parametri (compatibili con quelli che già usi)
     const id = reqParam(url, "id");
     const product = reqParam(url, "product");
     const weightKg = reqParam(url, "weightKg");
     const date = reqParam(url, "date");
     const warehouse = reqParam(url, "warehouse");
     const lang = reqParam(url, "lang") || "it";
-    const channel = reqParam(url, "channel");
-    const externalOrderId = reqParam(url, "externalOrderId");
-    const discount = reqParam(url, "discount");
 
-    const kg = parseKg(weightKg);
-    const CO2_FACTOR = 0.25;
-    const co2 = Math.round(kg * CO2_FACTOR * 100) / 100;
+    // extra opzionali
+    const channel = reqParam(url, "channel") || ""; // es "Shopify"
+    const externalOrderId = reqParam(url, "externalOrderId") || ""; // es "#1057"
+    const discount = reqParam(url, "discount") || "";
+
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 });
+    if (!product) return NextResponse.json({ error: "Missing product" }, { status: 400 });
+    if (!weightKg) return NextResponse.json({ error: "Missing weightKg" }, { status: 400 });
+    if (!date) return NextResponse.json({ error: "Missing date" }, { status: 400 });
+    if (!warehouse) return NextResponse.json({ error: "Missing warehouse" }, { status: 400 });
 
     const QRCode = (await import("qrcode")).default;
     const fontkit = (await import("@pdf-lib/fontkit")).default;
 
     const qrTarget = `https://www.kilomystery.com/${lang}/verify/${encodeURIComponent(id)}`;
-    const qrPngBuffer: Buffer = await QRCode.toBuffer(qrTarget);
+    const qrPngBuffer: Buffer = await QRCode.toBuffer(qrTarget, {
+      type: "png",
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 300,
+    });
+
+    // fonts
+    const fontRegularPath = path.join(process.cwd(), "public", "fonts", "Inter-Regular.ttf");
+    const fontBoldPath = path.join(process.cwd(), "public", "fonts", "Inter-Bold.ttf");
+    const fontRegularBytes = fs.readFileSync(fontRegularPath);
+    const fontBoldBytes = fs.readFileSync(fontBoldPath);
+
+    // layout identico all’email
+    const W = 288;
+    const H = 432;
+    const M = 18;
 
     const pdf = await PDFDocument.create();
     pdf.registerFontkit(fontkit);
 
-    const fontRegularBytes = fs.readFileSync(
-      path.join(process.cwd(), "public/fonts/Inter-Regular.ttf")
-    );
-    const fontBoldBytes = fs.readFileSync(
-      path.join(process.cwd(), "public/fonts/Inter-Bold.ttf")
-    );
-
     const fontRegular = await pdf.embedFont(fontRegularBytes);
     const fontBold = await pdf.embedFont(fontBoldBytes);
 
-    const page = pdf.addPage([288, 432]);
-    const M = 18;
-    let y = 380;
+    const page = pdf.addPage([W, H]);
 
-    function label(t: string) {
-      page.drawText(t, { x: M, y, size: 11, font: fontBold });
-      y -= 16;
-    }
+    // BG bianco
+    page.drawRectangle({ x: 0, y: 0, width: W, height: H, color: rgb(1, 1, 1) });
 
-    function value(t: string) {
-      page.drawText(t, { x: M, y, size: 12, font: fontRegular });
+    // Header
+    page.drawText("KILO MYSTERY", {
+      x: M,
+      y: H - M - 18,
+      size: 18,
+      font: fontBold,
+      color: rgb(0.043, 0.059, 0.078),
+    });
+
+    page.drawText("Shipping label", {
+      x: M,
+      y: H - M - 40,
+      size: 10,
+      font: fontRegular,
+      color: rgb(0.42, 0.45, 0.51),
+    });
+
+    // Separator
+    page.drawLine({
+      start: { x: M, y: H - 60 },
+      end: { x: W - M, y: H - 60 },
+      thickness: 1,
+      color: rgb(0.9, 0.91, 0.92),
+    });
+
+    let y = H - 74;
+
+    const drawLabel = (t: string) => {
+      page.drawText(t, {
+        x: M,
+        y,
+        size: 11,
+        font: fontBold,
+        color: rgb(0.067, 0.094, 0.153),
+      });
+      y -= 14;
+    };
+
+    const drawValue = (t: string, maxWidth = 170) => {
+      // truncate “semplice” per evitare overflow
+      const approxChars = Math.max(10, Math.floor(maxWidth / 6.2));
+      const out = t.length > approxChars ? t.slice(0, approxChars - 1) + "…" : t;
+
+      page.drawText(out, {
+        x: M,
+        y,
+        size: 12,
+        font: fontRegular,
+        color: rgb(0.067, 0.094, 0.153),
+      });
       y -= 22;
-    }
+    };
 
-    label("Order ID");
-    value(id);
+    drawLabel("Order ID");
+    drawValue(id);
 
-    label("Product");
-    value(product);
+    drawLabel("Product");
+    drawValue(product);
 
-    label("Weight");
-    value(weightKg);
+    drawLabel("Weight");
+    drawValue(weightKg);
 
-    label("CO₂ avoided");
-    value(`${co2} kg`);
+    const kgNum = parseKgFromWeight(weightKg);
+    const co2 = calcCo2(kgNum);
+    drawLabel("CO₂ avoided");
+    drawValue(`${co2} kg`);
 
-    label("Date");
-    value(date);
+    drawLabel("Date");
+    drawValue(date);
 
-    label("Warehouse");
-    value(warehouse);
+    drawLabel("Warehouse");
+    drawValue(warehouse);
 
+    // opzionali: uguali alla mail
     if (channel) {
-      label("Channel");
-      value(channel);
+      drawLabel("Sales channel");
+      drawValue(channel);
     }
 
     if (externalOrderId) {
-      label("Order ref");
-      value(externalOrderId);
+      drawLabel("Order ref");
+      drawValue(externalOrderId);
     }
 
+    // QR a destra
+    const qrImage = await pdf.embedPng(qrPngBuffer);
+    const qrSize = 110;
+    const qrX = W - M - qrSize;
+    const qrY = H - 110 - qrSize;
+
+    page.drawImage(qrImage, { x: qrX, y: qrY, width: qrSize, height: qrSize });
+
+    page.drawText("Scan to verify", {
+      x: qrX + 14,
+      y: qrY - 12,
+      size: 8,
+      font: fontRegular,
+      color: rgb(0.42, 0.45, 0.51),
+    });
+
+    // Discount box (opzionale)
     if (discount) {
-      y -= 10;
-      page.drawText("Sconto prossimo ordine:", {
+      page.drawRectangle({
         x: M,
-        y,
+        y: 64,
+        width: W - M * 2,
+        height: 54,
+        color: rgb(0.98, 0.98, 1),
+        borderColor: rgb(0.85, 0.86, 0.9),
+        borderWidth: 1,
+      });
+
+      page.drawText("Sconto sul prossimo ordine", {
+        x: M + 10,
+        y: 102,
         size: 10,
         font: fontBold,
+        color: rgb(0.067, 0.094, 0.153),
       });
-      y -= 18;
+
       page.drawText(discount.toUpperCase(), {
-        x: M,
-        y,
+        x: M + 10,
+        y: 78,
         size: 18,
         font: fontBold,
+        color: rgb(0.067, 0.094, 0.153),
       });
     }
 
-    const qrImage = await pdf.embedPng(qrPngBuffer);
-    page.drawImage(qrImage, { x: 150, y: 200, width: 110, height: 110 });
+    // Footer
+    page.drawLine({
+      start: { x: M, y: 30 },
+      end: { x: W - M, y: 30 },
+      thickness: 1,
+      color: rgb(0.9, 0.91, 0.92),
+    });
+
+    page.drawText("www.kilomystery.com", {
+      x: M,
+      y: 14,
+      size: 9,
+      font: fontRegular,
+      color: rgb(0.6, 0.64, 0.69),
+    });
 
     const pdfBytes = await pdf.save();
 
     return new NextResponse(Buffer.from(pdfBytes), {
-      headers: { "Content-Type": "application/pdf" },
+      headers: {
+        "Content-Type": "application/pdf",
+        // utile se vuoi scaricare da browser col nome giusto
+        "Content-Disposition": `inline; filename="label-${id}.pdf"`,
+      },
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return NextResponse.json({ error: "PDF label generation failed", details: String(err?.message ?? err) }, { status: 500 });
   }
 }
