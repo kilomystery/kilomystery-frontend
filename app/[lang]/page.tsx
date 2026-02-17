@@ -533,7 +533,7 @@ export default async function HomePage({
         <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 pt-10 md:pt-12">
           <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
             <Image
-              src="/logo.png"
+              src="/logo.svg"
               alt="KiloMystery"
               width={320}
               height={180}
