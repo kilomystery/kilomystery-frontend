@@ -116,20 +116,21 @@ function VideoFirstMedia({
 
 const PRICE_TABLE: Record<"Standard" | "Premium", Record<Kg, { total: number; compareTotal: number }>> = {
   Standard: {
-    1: { total: 22.9, compareTotal: 25.9 },
-    2: { total: 44.88, compareTotal: 51.8 },
-    3: { total: 65.28, compareTotal: 77.7 },
-    5: { total: 105.35, compareTotal: 129.5 },
-    10: { total: 201.5, compareTotal: 259.0 },
+    1: { total: 25.9, compareTotal: 26.9 },
+    2: { total: 49.9, compareTotal: 53.8 },
+    3: { total: 70.9, compareTotal: 80.7 },
+    5: { total: 110.9, compareTotal: 134.5 },
+    10:{ total: 211.9, compareTotal: 269.0 },
   },
   Premium: {
-    1: { total: 26.9, compareTotal: 29.9 },
-    2: { total: 51.12, compareTotal: 59.8 },
-    3: { total: 74.25, compareTotal: 89.7 },
-    5: { total: 118.35, compareTotal: 149.5 },
-    10: { total: 215.2, compareTotal: 299.0 },
+    1: { total: 28.9, compareTotal: 29.9 },
+    2: { total: 53.9, compareTotal: 59.8 },
+    3: { total: 77.9, compareTotal: 89.7 },
+    5: { total: 124.9, compareTotal: 149.5 },
+    10:{ total: 225.9, compareTotal: 299.0 },
   },
 };
+
 
 function prices(kind: "Standard" | "Premium", kg: Kg) {
   const { total, compareTotal } = PRICE_TABLE[kind][kg];
@@ -143,8 +144,9 @@ const euro = (n: number) => n.toLocaleString("it-IT", { style: "currency", curre
 // === EXPLORER BOX (BUNDLE) — ALLINEATA A SHOPIFY ===
 const EXPLORER_SHOPIFY_ID = "52089141363026";
 const EXPLORER_TOTAL_KG = 16; // 15kg + 1kg omaggio
-const EXPLORER_PRICE_TOTAL = 314.0; // prezzo reale
-const EXPLORER_COMPARE_TOTAL = 418.5; // prezzo di confronto
+const EXPLORER_PRICE_TOTAL = 329.9;  // prezzo reale (marketing)
+const EXPLORER_COMPARE_TOTAL = 454.4; // confronto: mix 50/50 (28,40€/kg * 16kg)
+
 
 const EXPLORER_PRICE_PER_KG = +(EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
 const EXPLORER_COMPARE_PER_KG = +(EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
@@ -380,9 +382,9 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
 
     wheelTitle: "Ruleta de la suerte",
     wheelText:
-      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos como peso adicional a tu pedido.",
-    wheelCtaStd: "Ir a 10 kg Standard",
-    wheelCtaPrm: "Ir a 10 kg Premium",
+      "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos a tu pedido.",
+    wheelCtaStd: "Ir a los 10 kg Standard",
+    wheelCtaPrm: "Ir a los 10 kg Premium",
 
     seoCtaTitle: "¿Buscas una Mystery Box?",
     seoCtaText:
@@ -892,6 +894,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           weightKg: kg,
           pricePerKg: +(total / kg).toFixed(2),
           qty: 1,
+          image: undefined,
         });
       });
     });
@@ -985,8 +988,8 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "EUR",
-        lowPrice: "20.15",
-        highPrice: "26.90",
+        lowPrice: "25.90",   // ✅ aggiornato
+        highPrice: "225.90", // ✅ aggiornato
         availability: "https://schema.org/InStock",
         url: offerUrlStd10,
       },

@@ -117,7 +117,7 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     howCard2Bullet1: "Conferma immediata",
     howCard2Bullet2: "Assistenza dedicata",
     howCard3Title: "Spedizione tracciata",
-    howCard3Subtitle: "Tracking 24–72h (di solito).",
+    howCard3Subtitle: "Consegna in 24–48h (di solito).",
     howCard3Bullet1: "Imballo sicuro",
     howCard3Bullet2: "Sorpresa all’apertura",
 
