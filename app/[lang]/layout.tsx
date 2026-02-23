@@ -21,9 +21,9 @@ const SITE_URL = (
 ).replace(/\/$/, "");
 
 /* =========================
-   GA4
+   GA4 (DEVE combaciare con Shopify App Google)
 ========================= */
-const GA_MEASUREMENT_ID = "G-126C6KCE5S";
+const GA_MEASUREMENT_ID = "G-YEY91KKVR2";
 
 /* =========================
    Metadata
@@ -45,7 +45,12 @@ export const metadata: Metadata = {
     url: SITE_URL,
     siteName: "KiloMystery",
     images: [
-      { url: `${SITE_URL}/og.jpg`, width: 1200, height: 630, alt: "KiloMystery" },
+      {
+        url: `${SITE_URL}/og.jpg`,
+        width: 1200,
+        height: 630,
+        alt: "KiloMystery",
+      },
     ],
   },
   twitter: {
@@ -84,25 +89,28 @@ export default async function LangLayout({
           __html: `
 (function(){
   window.__kmPendingConsentChoice = window.__kmPendingConsentChoice || null;
+
+  // Funzione che il tuo CookieBanner chiamerà per applicare il consenso
   window.kmApplyConsent =
     window.kmApplyConsent ||
     function(choice){
       window.__kmPendingConsentChoice =
         typeof choice === "string" ? choice : null;
     };
+
   window.__kmStubLoaded = true;
 })();
           `.trim(),
         }}
       />
 
-      {/* GA4: carica gtag.js */}
+      {/* GA4: carica gtag.js (ID corretto) */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
         strategy="afterInteractive"
       />
 
-      {/* GA4: init + Consent Mode v2 default denied + cross-domain Shopify */}
+      {/* GA4: init + Consent Mode v2 default denied + cross-domain verso Shopify */}
       <Script
         id="km-ga4-init"
         strategy="afterInteractive"
@@ -111,7 +119,7 @@ export default async function LangLayout({
 window.dataLayer = window.dataLayer || [];
 function gtag(){dataLayer.push(arguments);}
 
-// Consent Mode v2 - default: denied (EEA)
+// Consent Mode v2 - default denied finché non accetti
 gtag('consent', 'default', {
   ad_storage: 'denied',
   analytics_storage: 'denied',
@@ -122,10 +130,14 @@ gtag('consent', 'default', {
 
 gtag('js', new Date());
 
-// GA4 config + cross-domain (Vercel <-> Shopify checkout)
+// GA4 config + cross-domain (frontend -> shop.kilomystery.com)
 gtag('config', '${GA_MEASUREMENT_ID}', {
   linker: {
-    domains: ['kilomystery.com', 'checkout.shopify.com', 'myshopify.com']
+    domains: [
+      'kilomystery.com',
+      'www.kilomystery.com',
+      'shop.kilomystery.com'
+    ]
   }
 });
           `.trim(),
