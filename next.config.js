@@ -28,6 +28,20 @@ const nextConfig = {
         destination: "/it?utm_source=instagram&utm_medium=social&utm_campaign=bio",
         permanent: false,
       },
+
+      // Influencer links
+      {
+        source: "/susy",
+        destination:
+          "/?utm_source=susy&utm_medium=influencer&utm_campaign=collab_marzo",
+        permanent: false,
+      },
+      {
+        source: "/ary",
+        destination:
+          "/?utm_source=ary&utm_medium=influencer&utm_campaign=collab_marzo",
+        permanent: false,
+      },
     ];
   },
 
