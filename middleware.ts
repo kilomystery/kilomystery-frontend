@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
+import { UTM_LINKS } from "./utm-links";
 
 const PUBLIC_FILE = /\.(.*)$/;
 const LANG_COOKIE = "km_lang";
@@ -34,9 +35,36 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // =========================
+  // ENTERPRISE TRACKING ROUTES
+  // =========================
+
+  // A) Non forzare prefisso lingua su /r/*
+  // (questa route serve solo a fare redirect server-side con UTM)
+  if (pathname.startsWith("/r/")) {
+    return NextResponse.next();
+  }
+
+  // B) Se URL è tipo "/susy" (o "/tiktok" ecc.) e lo slug è mappato,
+  // fai rewrite interno a "/r/susy" PRIMA della logica lingua.
+  // Così eviti che diventi "/it/susy" (che ti rompeva attribuzione).
   const segments = pathname.split("/").filter(Boolean);
   const first = segments[0];
   const hasLang = SUPPORTED_LANGS.includes(first as Lang);
+
+  // caso: "/susy" => segments.length === 1 e non ha lingua
+  if (!hasLang && segments.length === 1) {
+    const slug = first?.toLowerCase();
+    if (slug && UTM_LINKS[slug]) {
+      const rewrite = url.clone();
+      rewrite.pathname = `/r/${slug}`;
+      return NextResponse.rewrite(rewrite);
+    }
+  }
+
+  // =========================
+  // TUA LOGICA LINGUA (INVARIATA)
+  // =========================
 
   // 2) Determina lingua
   let lang: Lang;
@@ -58,9 +86,9 @@ export function middleware(req: NextRequest) {
 
   // 3) Se manca il prefisso lingua -> redirect a /:lang/...
   if (!hasLang) {
-    const redirect = url.clone();
-    redirect.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
-    const res = NextResponse.redirect(redirect);
+    const redirectUrl = url.clone();
+    redirectUrl.pathname = `/${lang}${pathname === "/" ? "" : pathname}`;
+    const res = NextResponse.redirect(redirectUrl);
     res.cookies.set(LANG_COOKIE, lang, { path: "/", sameSite: "lax" });
     return res;
   }
