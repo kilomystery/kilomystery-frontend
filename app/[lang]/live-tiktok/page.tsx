@@ -10,6 +10,7 @@ type CopyKey =
   | "kickerLive"
   | "title"
   | "subtitle"
+  | "subtitleModes"
   | "pillDeposit"
   | "pillDeadline"
   | "pillUnder5"
@@ -19,6 +20,7 @@ type CopyKey =
   | "how2"
   | "how3"
   | "how4"
+  | "how5Auction"
   | "pricingTitle"
   | "pricingA"
   | "pricingB"
@@ -34,6 +36,7 @@ type CopyKey =
   | "rulesD"
   | "rulesE"
   | "rulesF"
+  | "rulesG"
   | "formKicker"
   | "formTitle"
   | "formIntro"
@@ -72,6 +75,8 @@ type CopyKey =
   | "faq3a"
   | "faq4q"
   | "faq4a"
+  | "faq5q"
+  | "faq5a"
   | "linksTitle"
   | "linksReturns"
   | "linksShipping"
@@ -102,6 +107,8 @@ const COPY: Record<Lang, CopyPerLang> = {
     title: "LIVE TikTok · Mystery Box al peso",
     subtitle:
       "Registrati con un acconto per entrare nella lista LIVE. In diretta pesiamo ogni pacco e comunichiamo il prezzo. Dopo la live ricevi il link per il saldo.",
+    subtitleModes:
+      "⚡ Due formule LIVE: (1) Vendita al kg “al buio” (pacco chiuso) · (2) Unboxing + Asta: apriamo in live e poi si rilancia nei commenti per aggiudicarsi l’oggetto.",
 
     pillDeposit: `Acconto ${euro(DEPOSIT_EUR)}`,
     pillDeadline: `Saldo entro ${BALANCE_DEADLINE_HOURS}h`,
@@ -111,8 +118,11 @@ const COPY: Record<Lang, CopyPerLang> = {
     howTitle: "Come funziona",
     how1: `Registrazione + acconto: versi ${euro(DEPOSIT_EUR)} per essere inserito in lista.`,
     how2: `In live scrivi: “IO + @tuousername”. Assegniamo solo se sei registrato.`,
-    how3: "Pesiamo la mystery in diretta e comunichiamo il totale in base al peso (Premium €/kg).",
+    how3:
+      "Formula 1 (al kg, pacco chiuso): pesiamo la mystery in diretta e comunichiamo il totale in base al peso (Premium €/kg).",
     how4: `Dopo la live ti inviamo il link per il saldo (totale − acconto). Saldo entro ${BALANCE_DEADLINE_HOURS} ore.`,
+    how5Auction:
+      "Formula 2 (Unboxing + Asta): apriamo i pacchi in diretta, mostriamo l’oggetto e parte l’asta nei commenti. Chi offre di più se lo aggiudica e riceve il link di pagamento dopo la live.",
 
     pricingTitle: "Prezzo Premium al kg",
     pricingA: `Sotto ${SHIPPING_FREE_FROM_KG} kg: ${PRICE_PER_KG_UNDER_5.toFixed(2)} €/kg`,
@@ -126,11 +136,15 @@ const COPY: Record<Lang, CopyPerLang> = {
 
     rulesTitle: "Regolamento (chiaro e semplice)",
     rulesA: "La partecipazione è riservata agli utenti registrati con acconto (ticket).",
-    rulesB: "Fa fede l’ordine della chat in diretta. Lo username in chat deve combaciare con quello registrato.",
-    rulesC: "L’acconto è un anticipo per partecipare e viene scalato dal primo pagamento saldo che ti inviamo dopo la live.",
+    rulesB:
+      "Fa fede l’ordine della chat in diretta. Lo username in chat deve combaciare con quello registrato.",
+    rulesC:
+      "L’acconto è un anticipo per partecipare e viene scalato dal primo pagamento saldo che ti inviamo dopo la live.",
     rulesD: `Il saldo deve essere pagato entro ${BALANCE_DEADLINE_HOURS} ore dall’invio del link. In caso contrario il pacco può essere riassegnato.`,
     rulesE: "Puoi aggiudicarti più pacchi nella stessa live (assegnazioni multiple).",
     rulesF: "I prezzi sono calcolati in base al peso e alle soglie indicate sopra.",
+    rulesG:
+      "L’acconto vale per entrambe le formule LIVE: vendita al kg (pacco chiuso) e Unboxing + Asta (rilanci nei commenti dopo aver visto l’oggetto).",
 
     formKicker: "Registrazione",
     formTitle: "Registrazione",
@@ -160,10 +174,13 @@ const COPY: Record<Lang, CopyPerLang> = {
     countryLabel: "Paese",
     countryPlaceholder: "IT",
 
-    accept: `Confermo: acconto ${euro(DEPOSIT_EUR)}, saldo entro ${BALANCE_DEADLINE_HOURS}h, prezzi al kg e spedizione come indicato.`,
+    accept: `Confermo: acconto ${euro(
+      DEPOSIT_EUR
+    )}, saldo entro ${BALANCE_DEADLINE_HOURS}h, prezzi al kg/spedizione come indicato e possibilità di partecipare anche alla formula Unboxing + Asta.`,
     buttonIdle: `Registrati e versa ${euro(DEPOSIT_EUR)}`,
     buttonLoading: "Apro il checkout…",
-    privacy: "I dati inseriti vengono usati solo per la gestione della LIVE e della spedizione. Niente spam.",
+    privacy:
+      "I dati inseriti vengono usati solo per la gestione della LIVE e della spedizione. Niente spam.",
 
     faqTitle: "FAQ",
     faq1q: "Il ticket vale per una sola live?",
@@ -171,13 +188,16 @@ const COPY: Record<Lang, CopyPerLang> = {
       "Il ticket è l’acconto per entrare in lista LIVE. Le regole operative e le tempistiche vengono comunicate nella pagina e in diretta.",
     faq2q: "Come viene calcolato il prezzo?",
     faq2a:
-      "In base ai kg pesati in live e alle soglie: sotto 5kg 26,90 €/kg, da 5kg in su 23,70 €/kg. Spedizione 6€ fino a 5kg, gratis da 5kg in su.",
+      "Per la formula al kg: in base ai kg pesati in live e alle soglie (<5kg 26,90 €/kg; ≥5kg 23,70 €/kg). Spedizione 6€ fino a 5kg, gratis da 5kg in su. Per la formula Unboxing + Asta: il prezzo finale dipende dall’asta nei commenti.",
     faq3q: "Posso prendere più pacchi in live?",
     faq3a:
-      "Sì. Ogni pacco viene registrato e riceverai i link di saldo dopo la live.",
+      "Sì. Ogni pacco/oggetto viene registrato e riceverai i link di pagamento dopo la live.",
     faq4q: "Quando ricevo il link di pagamento del saldo?",
     faq4a:
-      "Dopo la live ti inviamo un link Shopify per pagare il saldo. Il saldo va pagato entro 24 ore dall’invio del link.",
+      "Dopo la live ti inviamo un link Shopify per pagare. Il saldo va pagato entro 24 ore dall’invio del link.",
+    faq5q: "Quali sono le due formule LIVE?",
+    faq5a:
+      "1) Vendita al kg “al buio” (pacco chiuso): pesiamo il pacco e calcoliamo il totale. 2) Unboxing + Asta: apriamo in live, mostriamo l’oggetto e si rilancia nei commenti per aggiudicarselo. L’acconto vale per entrambe.",
 
     linksTitle: "Link utili",
     linksReturns: "Politica Resi",
@@ -190,6 +210,8 @@ const COPY: Record<Lang, CopyPerLang> = {
     title: "TikTok LIVE · Mystery Boxes by weight",
     subtitle:
       "Register with a deposit to join the LIVE list. During the live we weigh each box and announce the price. After the live you’ll receive the payment link for the balance.",
+    subtitleModes:
+      "⚡ Two LIVE formats: (1) Blind by-weight sale (sealed box) · (2) Unboxing + Auction: we open live and then you bid in the comments to win the item.",
 
     pillDeposit: `Deposit ${euro(DEPOSIT_EUR)}`,
     pillDeadline: `Balance within ${BALANCE_DEADLINE_HOURS}h`,
@@ -199,8 +221,11 @@ const COPY: Record<Lang, CopyPerLang> = {
     howTitle: "How it works",
     how1: `Registration + deposit: pay ${euro(DEPOSIT_EUR)} to be added to the LIVE list.`,
     how2: `During the live type: “ME + @yourusername”. We assign only if you’re registered.`,
-    how3: "We weigh the box live and announce the total based on weight (Premium €/kg).",
+    how3:
+      "Format 1 (by weight, sealed box): we weigh the box live and announce the total based on weight (Premium €/kg).",
     how4: `After the live we send the payment link for the balance (total − deposit). Balance within ${BALANCE_DEADLINE_HOURS} hours.`,
+    how5Auction:
+      "Format 2 (Unboxing + Auction): we open the packages live, show the item, and an auction starts in the comments. Highest bid wins and receives the payment link after the live.",
 
     pricingTitle: "Premium price per kg",
     pricingA: `Under ${SHIPPING_FREE_FROM_KG} kg: ${PRICE_PER_KG_UNDER_5.toFixed(2)} €/kg`,
@@ -214,11 +239,15 @@ const COPY: Record<Lang, CopyPerLang> = {
 
     rulesTitle: "Rules (simple & clear)",
     rulesA: "Participation is reserved for registered users with a deposit (ticket).",
-    rulesB: "Chat order during the live counts. Your chat username must match the registered one.",
-    rulesC: "The deposit is an advance to participate and is deducted from the first balance payment we send after the live.",
+    rulesB:
+      "Chat order during the live counts. Your chat username must match the registered one.",
+    rulesC:
+      "The deposit is an advance to participate and is deducted from the first balance payment we send after the live.",
     rulesD: `The balance must be paid within ${BALANCE_DEADLINE_HOURS} hours after we send the link. Otherwise the box may be reassigned.`,
     rulesE: "You can win multiple boxes during the same live (multiple assignments).",
     rulesF: "Prices are calculated by weight and the tiers shown above.",
+    rulesG:
+      "The deposit is valid for both LIVE formats: blind by-weight (sealed box) and Unboxing + Auction (bidding in the comments after seeing the item).",
 
     formKicker: "Registration",
     formTitle: "Registration",
@@ -248,7 +277,9 @@ const COPY: Record<Lang, CopyPerLang> = {
     countryLabel: "Country",
     countryPlaceholder: "IT",
 
-    accept: `I confirm: deposit ${euro(DEPOSIT_EUR)}, balance within ${BALANCE_DEADLINE_HOURS}h, pricing & shipping as shown.`,
+    accept: `I confirm: deposit ${euro(
+      DEPOSIT_EUR
+    )}, balance within ${BALANCE_DEADLINE_HOURS}h, pricing & shipping as shown, and access to the Unboxing + Auction format.`,
     buttonIdle: `Register and pay ${euro(DEPOSIT_EUR)}`,
     buttonLoading: "Opening checkout…",
     privacy: "Your data is used only to manage the LIVE and shipping. No spam.",
@@ -259,13 +290,16 @@ const COPY: Record<Lang, CopyPerLang> = {
       "The ticket is the deposit to join the LIVE list. Operational rules are communicated on this page and during the live.",
     faq2q: "How is the price calculated?",
     faq2a:
-      "Based on the weight measured live and the tiers: under 5kg 26.90 €/kg, from 5kg 23.70 €/kg. Shipping: 6€ up to 5kg, free from 5kg.",
+      "For the by-weight format: based on the weight measured live and the tiers (under 5kg 26.90 €/kg, from 5kg 23.70 €/kg). Shipping: 6€ up to 5kg, free from 5kg. For Unboxing + Auction: the final price depends on the bids in the comments.",
     faq3q: "Can I get multiple boxes in one live?",
     faq3a:
-      "Yes. Each box is recorded and you’ll receive the balance payment links after the live.",
+      "Yes. Each box/item is recorded and you’ll receive the payment links after the live.",
     faq4q: "When do I receive the balance payment link?",
     faq4a:
-      "After the live we send a Shopify payment link for the balance. Balance must be paid within 24 hours after we send the link.",
+      "After the live we send a Shopify payment link. Balance must be paid within 24 hours after we send the link.",
+    faq5q: "What are the two LIVE formats?",
+    faq5a:
+      "1) Blind by-weight (sealed box): we weigh the package and calculate the total. 2) Unboxing + Auction: we open live, show the item and you bid in the comments to win. The deposit is valid for both.",
 
     linksTitle: "Useful links",
     linksReturns: "Return Policy",
@@ -278,6 +312,8 @@ const COPY: Record<Lang, CopyPerLang> = {
     title: "TikTok LIVE · Mystery Boxes por peso",
     subtitle:
       "Regístrate con un anticipo para entrar en la lista LIVE. Durante el directo pesamos cada caja y anunciamos el precio. Después del live recibirás el enlace para pagar el saldo.",
+    subtitleModes:
+      "⚡ Dos formatos LIVE: (1) Venta por kg “a ciegas” (caja cerrada) · (2) Unboxing + Subasta: abrimos en directo y luego pujas en los comentarios para llevarte el artículo.",
 
     pillDeposit: `Anticipo ${euro(DEPOSIT_EUR)}`,
     pillDeadline: `Saldo en ${BALANCE_DEADLINE_HOURS}h`,
@@ -287,8 +323,11 @@ const COPY: Record<Lang, CopyPerLang> = {
     howTitle: "Cómo funciona",
     how1: `Registro + anticipo: pagas ${euro(DEPOSIT_EUR)} para entrar en la lista LIVE.`,
     how2: `En el live escribe: “YO + @tuusuario”. Asignamos solo si estás registrado.`,
-    how3: "Pesamos la caja en directo y anunciamos el total según el peso (Premium €/kg).",
+    how3:
+      "Formato 1 (por kg, caja cerrada): pesamos la caja en directo y anunciamos el total según el peso (Premium €/kg).",
     how4: `Después del live enviamos el enlace para pagar el saldo (total − anticipo). Saldo en ${BALANCE_DEADLINE_HOURS} horas.`,
+    how5Auction:
+      "Formato 2 (Unboxing + Subasta): abrimos los paquetes en directo, mostramos el artículo y empieza la subasta en los comentarios. La puja más alta gana y recibe el enlace de pago después del live.",
 
     pricingTitle: "Precio Premium por kg",
     pricingA: `Menos de ${SHIPPING_FREE_FROM_KG} kg: ${PRICE_PER_KG_UNDER_5.toFixed(2)} €/kg`,
@@ -302,11 +341,15 @@ const COPY: Record<Lang, CopyPerLang> = {
 
     rulesTitle: "Reglas (claras y simples)",
     rulesA: "La participación es solo para usuarios registrados con anticipo (ticket).",
-    rulesB: "Cuenta el orden del chat en directo. El usuario del chat debe coincidir con el registrado.",
-    rulesC: "El anticipo es un adelanto para participar y se descuenta del primer pago de saldo que enviamos después del live.",
+    rulesB:
+      "Cuenta el orden del chat en directo. El usuario del chat debe coincidir con el registrado.",
+    rulesC:
+      "El anticipo es un adelanto para participar y se descuenta del primer pago de saldo que enviamos después del live.",
     rulesD: `El saldo debe pagarse dentro de ${BALANCE_DEADLINE_HOURS} horas desde el envío del enlace. Si no, la caja puede reasignarse.`,
-    rulesE: "Puedes ganar varias cajas en el mismo live (asignaciones múltiples).",
+    rulesE: "Puedes ganar varios paquetes en el mismo live (asignaciones múltiples).",
     rulesF: "Los precios se calculan por peso y por las franjas indicadas arriba.",
+    rulesG:
+      "El anticipo vale para ambos formatos LIVE: venta por kg “a ciegas” (caja cerrada) y Unboxing + Subasta (pujas en los comentarios tras ver el artículo).",
 
     formKicker: "Registro",
     formTitle: "Registro",
@@ -336,7 +379,9 @@ const COPY: Record<Lang, CopyPerLang> = {
     countryLabel: "País",
     countryPlaceholder: "IT",
 
-    accept: `Confirmo: anticipo ${euro(DEPOSIT_EUR)}, saldo en ${BALANCE_DEADLINE_HOURS}h, precios y envío como se indica.`,
+    accept: `Confirmo: anticipo ${euro(
+      DEPOSIT_EUR
+    )}, saldo en ${BALANCE_DEADLINE_HOURS}h, precios y envío como se indica, y acceso al formato Unboxing + Subasta.`,
     buttonIdle: `Registrarme y pagar ${euro(DEPOSIT_EUR)}`,
     buttonLoading: "Abriendo checkout…",
     privacy: "Tus datos se usan solo para gestionar el LIVE y el envío. Sin spam.",
@@ -347,13 +392,16 @@ const COPY: Record<Lang, CopyPerLang> = {
       "El ticket es el anticipo para entrar en la lista LIVE. Las reglas operativas se comunican en esta página y durante el live.",
     faq2q: "¿Cómo se calcula el precio?",
     faq2a:
-      "Según el peso medido en directo y las franjas: <5kg 26,90 €/kg, ≥5kg 23,70 €/kg. Envío: 6€ hasta 5kg y gratis desde 5kg.",
-    faq3q: "¿Puedo obtener varias cajas en un live?",
+      "Para el formato por kg: según el peso medido en directo y las franjas (<5kg 26,90 €/kg, ≥5kg 23,70 €/kg). Envío: 6€ hasta 5kg y gratis desde 5kg. Para Unboxing + Subasta: el precio final depende de las pujas en los comentarios.",
+    faq3q: "¿Puedo obtener varios paquetes en un live?",
     faq3a:
-      "Sí. Cada caja se registra y recibirás los enlaces de pago del saldo después del live.",
+      "Sí. Cada paquete/artículo se registra y recibirás los enlaces de pago después del live.",
     faq4q: "¿Cuándo recibo el enlace para pagar el saldo?",
     faq4a:
-      "Después del live enviamos un enlace de Shopify para pagar el saldo. Debe pagarse dentro de 24 horas desde el envío.",
+      "Después del live enviamos un enlace de Shopify para pagar. Debe pagarse dentro de 24 horas desde el envío.",
+    faq5q: "¿Cuáles son los dos formatos LIVE?",
+    faq5a:
+      "1) Venta por kg “a ciegas” (caja cerrada): pesamos y calculamos el total. 2) Unboxing + Subasta: abrimos en directo, mostramos el artículo y pujas en comentarios para llevártelo. El anticipo vale para ambos.",
 
     linksTitle: "Enlaces útiles",
     linksReturns: "Política de devoluciones",
@@ -366,6 +414,8 @@ const COPY: Record<Lang, CopyPerLang> = {
     title: "TikTok LIVE · Mystery Boxes au poids",
     subtitle:
       "Inscris-toi avec un acompte pour rejoindre la liste LIVE. Pendant le live, on pèse chaque box et on annonce le prix. Après le live, tu reçois le lien pour payer le solde.",
+    subtitleModes:
+      "⚡ Deux formats LIVE : (1) Vente au kg “à l’aveugle” (box scellée) · (2) Unboxing + Enchères : on ouvre en direct puis tu enchéris dans les commentaires pour remporter l’objet.",
 
     pillDeposit: `Acompte ${euro(DEPOSIT_EUR)}`,
     pillDeadline: `Solde sous ${BALANCE_DEADLINE_HOURS}h`,
@@ -375,13 +425,17 @@ const COPY: Record<Lang, CopyPerLang> = {
     howTitle: "Comment ça marche",
     how1: `Inscription + acompte : paie ${euro(DEPOSIT_EUR)} pour être ajouté à la liste LIVE.`,
     how2: `Pendant le live, écris : “MOI + @tonpseudo”. Attribution uniquement si tu es inscrit.`,
-    how3: "On pèse la box en direct et on annonce le total selon le poids (Premium €/kg).",
+    how3:
+      "Format 1 (au kg, box scellée) : on pèse la box en direct et on annonce le total selon le poids (Premium €/kg).",
     how4: `Après le live, on t’envoie le lien pour payer le solde (total − acompte). Solde sous ${BALANCE_DEADLINE_HOURS} heures.`,
+    how5Auction:
+      "Format 2 (Unboxing + Enchères) : on ouvre les colis en direct, on montre l’objet et les enchères commencent dans les commentaires. La meilleure enchère gagne et reçoit le lien de paiement après le live.",
 
     pricingTitle: "Prix Premium au kg",
     pricingA: `Sous ${SHIPPING_FREE_FROM_KG} kg : ${PRICE_PER_KG_UNDER_5.toFixed(2)} €/kg`,
     pricingB: `À partir de ${SHIPPING_FREE_FROM_KG} kg : ${PRICE_PER_KG_FROM_5.toFixed(2)} €/kg`,
-    pricingC: "Seuil : à 5,00 kg, le tarif réduit s’applique (et la livraison devient gratuite).",
+    pricingC:
+      "Seuil : à 5,00 kg, le tarif réduit s’applique (et la livraison devient gratuite).",
 
     shippingTitle: "Livraison",
     shippingA: `Jusqu’à ${SHIPPING_FREE_FROM_KG} kg : ${euro(SHIPPING_UP_TO_5KG_EUR)}`,
@@ -389,12 +443,18 @@ const COPY: Record<Lang, CopyPerLang> = {
     shippingNote: "Note : la livraison est calculée sur le total de kg attribués.",
 
     rulesTitle: "Règles (simples et claires)",
-    rulesA: "La participation est réservée aux utilisateurs inscrits avec acompte (ticket).",
-    rulesB: "L’ordre du chat en direct fait foi. Le pseudo du chat doit correspondre au pseudo enregistré.",
-    rulesC: "L’acompte est une avance pour participer et est déduit du premier paiement de solde envoyé après le live.",
+    rulesA:
+      "La participation est réservée aux utilisateurs inscrits avec acompte (ticket).",
+    rulesB:
+      "L’ordre du chat en direct fait foi. Le pseudo du chat doit correspondre au pseudo enregistré.",
+    rulesC:
+      "L’acompte est une avance pour participer et est déduit du premier paiement de solde envoyé après le live.",
     rulesD: `Le solde doit être payé dans les ${BALANCE_DEADLINE_HOURS} heures après l’envoi du lien. Sinon, la box peut être réattribuée.`,
-    rulesE: "Tu peux remporter plusieurs boxes pendant le même live (attributions multiples).",
+    rulesE:
+      "Tu peux remporter plusieurs boxes pendant le même live (attributions multiples).",
     rulesF: "Les prix sont calculés selon le poids et les paliers ci-dessus.",
+    rulesG:
+      "L’acompte est valable pour les deux formats LIVE : vente au kg “à l’aveugle” (box scellée) et Unboxing + Enchères (enchères dans les commentaires après avoir vu l’objet).",
 
     formKicker: "Inscription",
     formTitle: "Inscription",
@@ -424,10 +484,13 @@ const COPY: Record<Lang, CopyPerLang> = {
     countryLabel: "Pays",
     countryPlaceholder: "IT",
 
-    accept: `Je confirme : acompte ${euro(DEPOSIT_EUR)}, solde sous ${BALANCE_DEADLINE_HOURS}h, prix et livraison comme indiqué.`,
+    accept: `Je confirme : acompte ${euro(
+      DEPOSIT_EUR
+    )}, solde sous ${BALANCE_DEADLINE_HOURS}h, prix & livraison comme indiqué, et accès au format Unboxing + Enchères.`,
     buttonIdle: `S’inscrire et payer ${euro(DEPOSIT_EUR)}`,
     buttonLoading: "Ouverture du checkout…",
-    privacy: "Tes données sont utilisées uniquement pour gérer le LIVE et la livraison. Pas de spam.",
+    privacy:
+      "Tes données sont utilisées uniquement pour gérer le LIVE et la livraison. Pas de spam.",
 
     faqTitle: "FAQ",
     faq1q: "Le ticket est-il valable pour un seul live ?",
@@ -435,13 +498,16 @@ const COPY: Record<Lang, CopyPerLang> = {
       "Le ticket est l’acompte pour rejoindre la liste LIVE. Les règles opérationnelles sont indiquées sur cette page et rappelées en live.",
     faq2q: "Comment le prix est-il calculé ?",
     faq2a:
-      "Selon le poids mesuré en direct et les paliers : <5kg 26,90 €/kg, ≥5kg 23,70 €/kg. Livraison : 6€ jusqu’à 5kg et gratuite à partir de 5kg.",
+      "Pour le format au kg : selon le poids mesuré en direct et les paliers (<5kg 26,90 €/kg, ≥5kg 23,70 €/kg). Livraison : 6€ jusqu’à 5kg et gratuite à partir de 5kg. Pour Unboxing + Enchères : le prix final dépend des enchères dans les commentaires.",
     faq3q: "Puis-je prendre plusieurs boxes pendant un live ?",
     faq3a:
-      "Oui. Chaque box est enregistrée et tu recevras les liens de paiement du solde après le live.",
+      "Oui. Chaque box/objet est enregistré et tu recevras les liens de paiement après le live.",
     faq4q: "Quand vais-je recevoir le lien de paiement du solde ?",
     faq4a:
-      "Après le live, nous envoyons un lien Shopify pour payer le solde. Il doit être payé dans les 24 heures après l’envoi.",
+      "Après le live, nous envoyons un lien Shopify pour payer. Il doit être payé dans les 24 heures après l’envoi.",
+    faq5q: "Quels sont les deux formats LIVE ?",
+    faq5a:
+      "1) Vente au kg “à l’aveugle” (box scellée) : on pèse et on calcule le total. 2) Unboxing + Enchères : on ouvre en direct, on montre l’objet et tu enchéris dans les commentaires pour gagner. L’acompte vaut pour les deux.",
 
     linksTitle: "Liens utiles",
     linksReturns: "Politique de retour",
@@ -454,6 +520,8 @@ const COPY: Record<Lang, CopyPerLang> = {
     title: "TikTok LIVE · Mystery Boxes nach Gewicht",
     subtitle:
       "Registriere dich mit einer Anzahlung, um auf die LIVE-Liste zu kommen. Im Live wiegen wir jede Box und nennen den Preis. Nach dem Live erhältst du den Zahlungslink für den Restbetrag.",
+    subtitleModes:
+      "⚡ Zwei LIVE-Formate: (1) Blindverkauf nach Gewicht (versiegelte Box) · (2) Unboxing + Auktion: wir öffnen live und danach bietest du in den Kommentaren, um den Artikel zu gewinnen.",
 
     pillDeposit: `Anzahlung ${euro(DEPOSIT_EUR)}`,
     pillDeadline: `Restbetrag in ${BALANCE_DEADLINE_HOURS}h`,
@@ -463,8 +531,11 @@ const COPY: Record<Lang, CopyPerLang> = {
     howTitle: "So funktioniert es",
     how1: `Registrierung + Anzahlung: zahle ${euro(DEPOSIT_EUR)}, um auf die LIVE-Liste zu kommen.`,
     how2: `Im Live schreibe: „ICH + @deinusername“. Zuteilung nur, wenn du registriert bist.`,
-    how3: "Wir wiegen die Box live und nennen den Gesamtpreis nach Gewicht (Premium €/kg).",
+    how3:
+      "Format 1 (nach Gewicht, versiegelte Box): wir wiegen live und nennen den Gesamtpreis nach Gewicht (Premium €/kg).",
     how4: `Nach dem Live senden wir den Zahlungslink für den Restbetrag (Gesamt − Anzahlung). Zahlung innerhalb von ${BALANCE_DEADLINE_HOURS} Stunden.`,
+    how5Auction:
+      "Format 2 (Unboxing + Auktion): wir öffnen die Pakete live, zeigen den Artikel und die Auktion startet in den Kommentaren. Höchstgebot gewinnt und erhält den Zahlungslink nach dem Live.",
 
     pricingTitle: "Premium-Preis pro kg",
     pricingA: `Unter ${SHIPPING_FREE_FROM_KG} kg: ${PRICE_PER_KG_UNDER_5.toFixed(2)} €/kg`,
@@ -474,15 +545,21 @@ const COPY: Record<Lang, CopyPerLang> = {
     shippingTitle: "Versand",
     shippingA: `Bis ${SHIPPING_FREE_FROM_KG} kg: ${euro(SHIPPING_UP_TO_5KG_EUR)}`,
     shippingB: `Ab ${SHIPPING_FREE_FROM_KG} kg: Kostenlos`,
-    shippingNote: "Hinweis: Versand wird anhand der insgesamt zugeteilten kg berechnet.",
+    shippingNote:
+      "Hinweis: Versand wird anhand der insgesamt zugeteilten kg berechnet.",
 
     rulesTitle: "Regeln (klar & einfach)",
     rulesA: "Teilnahme nur für registrierte Nutzer mit Anzahlung (Ticket).",
-    rulesB: "Die Reihenfolge im Live-Chat zählt. Der Chat-Username muss mit der Registrierung übereinstimmen.",
-    rulesC: "Die Anzahlung ist ein Vorschuss und wird beim ersten Restbetrag-Link nach dem Live abgezogen.",
+    rulesB:
+      "Die Reihenfolge im Live-Chat zählt. Der Chat-Username muss mit der Registrierung übereinstimmen.",
+    rulesC:
+      "Die Anzahlung ist ein Vorschuss und wird beim ersten Restbetrag-Link nach dem Live abgezogen.",
     rulesD: `Der Restbetrag muss innerhalb von ${BALANCE_DEADLINE_HOURS} Stunden nach Link-Versand bezahlt werden. Andernfalls kann die Box neu vergeben werden.`,
-    rulesE: "Du kannst mehrere Boxen im selben Live gewinnen (mehrere Zuteilungen).",
+    rulesE:
+      "Du kannst mehrere Boxen im selben Live gewinnen (mehrere Zuteilungen).",
     rulesF: "Preise werden nach Gewicht und den oben genannten Stufen berechnet.",
+    rulesG:
+      "Die Anzahlung gilt für beide LIVE-Formate: Blindverkauf nach Gewicht (versiegelte Box) und Unboxing + Auktion (Gebote in den Kommentaren, nachdem du den Artikel gesehen hast).",
 
     formKicker: "Registrierung",
     formTitle: "Registrierung",
@@ -512,10 +589,13 @@ const COPY: Record<Lang, CopyPerLang> = {
     countryLabel: "Land",
     countryPlaceholder: "IT",
 
-    accept: `Ich bestätige: Anzahlung ${euro(DEPOSIT_EUR)}, Restbetrag in ${BALANCE_DEADLINE_HOURS}h, Preise & Versand wie angegeben.`,
+    accept: `Ich bestätige: Anzahlung ${euro(
+      DEPOSIT_EUR
+    )}, Restbetrag in ${BALANCE_DEADLINE_HOURS}h, Preise & Versand wie angegeben, und Zugang zum Format Unboxing + Auktion.`,
     buttonIdle: `Registrieren und ${euro(DEPOSIT_EUR)} zahlen`,
     buttonLoading: "Checkout wird geöffnet…",
-    privacy: "Deine Daten werden nur für LIVE-Abwicklung und Versand genutzt. Kein Spam.",
+    privacy:
+      "Deine Daten werden nur für LIVE-Abwicklung und Versand genutzt. Kein Spam.",
 
     faqTitle: "FAQ",
     faq1q: "Gilt das Ticket nur für ein Live?",
@@ -523,13 +603,16 @@ const COPY: Record<Lang, CopyPerLang> = {
       "Das Ticket ist die Anzahlung für die LIVE-Liste. Die Abläufe werden auf dieser Seite und im Live erklärt.",
     faq2q: "Wie wird der Preis berechnet?",
     faq2a:
-      "Nach live gemessenem Gewicht und Stufen: <5kg 26,90 €/kg, ≥5kg 23,70 €/kg. Versand: 6€ bis 5kg, kostenlos ab 5kg.",
+      "Für das Gewicht-Format: nach live gemessenem Gewicht und Stufen (<5kg 26,90 €/kg, ≥5kg 23,70 €/kg). Versand: 6€ bis 5kg, kostenlos ab 5kg. Für Unboxing + Auktion: der Endpreis ergibt sich aus den Geboten in den Kommentaren.",
     faq3q: "Kann ich mehrere Boxen im Live bekommen?",
     faq3a:
-      "Ja. Jede Box wird erfasst und du erhältst nach dem Live die Zahlungslinks für den Restbetrag.",
+      "Ja. Jede Box/jeder Artikel wird erfasst und du erhältst nach dem Live die Zahlungslinks.",
     faq4q: "Wann erhalte ich den Zahlungslink für den Restbetrag?",
     faq4a:
       "Nach dem Live senden wir einen Shopify-Link. Zahlung innerhalb von 24 Stunden nach Versand.",
+    faq5q: "Welche zwei LIVE-Formate gibt es?",
+    faq5a:
+      "1) Blindverkauf nach Gewicht (versiegelte Box): wir wiegen und berechnen den Gesamtpreis. 2) Unboxing + Auktion: wir öffnen live, zeigen den Artikel und du bietest in den Kommentaren, um zu gewinnen. Die Anzahlung gilt für beide.",
 
     linksTitle: "Nützliche Links",
     linksReturns: "Rückgabe",
@@ -666,6 +749,7 @@ export default function LiveTikTokPage({ params }: { params: { lang: string } })
           </h1>
 
           <p className="text-white/75">{t.subtitle}</p>
+          <p className="text-white/75">{t.subtitleModes}</p>
 
           <div className="flex flex-wrap gap-2 pt-2">
             <span className="pill pill--prm">{t.pillDeposit}</span>
@@ -684,6 +768,7 @@ export default function LiveTikTokPage({ params }: { params: { lang: string } })
               <li>{t.how2}</li>
               <li>{t.how3}</li>
               <li>{t.how4}</li>
+              <li>{t.how5Auction}</li>
             </ul>
           </article>
 
@@ -716,6 +801,7 @@ export default function LiveTikTokPage({ params }: { params: { lang: string } })
             <li>{t.rulesD}</li>
             <li>{t.rulesE}</li>
             <li>{t.rulesF}</li>
+            <li>{t.rulesG}</li>
           </ul>
         </section>
 
@@ -926,6 +1012,10 @@ export default function LiveTikTokPage({ params }: { params: { lang: string } })
             <div>
               <p className="font-semibold text-white/85">{t.faq4q}</p>
               <p className="text-white/70">{t.faq4a}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-white/85">{t.faq5q}</p>
+              <p className="text-white/70">{t.faq5a}</p>
             </div>
           </div>
         </section>
