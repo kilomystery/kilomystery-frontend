@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { cookies, headers } from "next/headers";
 import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
-import { UTM_LINKS } from "../../../utm-links";
+import { UTM_LINKS } from "@/src/utm-links";
 
 async function getLang(): Promise<Lang> {
   const c = (await cookies()).get("km_lang")?.value;
