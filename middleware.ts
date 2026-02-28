@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
-import { UTM_LINKS } from "./utm-links";
+import { UTM_LINKS } from "./src/utm-links";
 
 const PUBLIC_FILE = /\.(.*)$/;
 const LANG_COOKIE = "km_lang";
