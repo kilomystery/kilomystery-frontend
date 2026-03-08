@@ -525,9 +525,21 @@ export default async function HomePage({
   const t = HOME_COPY[lang] ?? HOME_COPY.it;
 
   return (
-    <>
-    <SectionMarquee lang={lang as any} />
-      <Header lang={lang as any} />
+   <>
+  <div className="border-b border-white/10 bg-[#0d1714] py-2 text-center text-[11px] sm:text-xs font-semibold text-white">
+    {lang === "it"
+      ? "🆓 Italia: spedizione gratuita oltre 50€ · Europa oltre 100€"
+      : lang === "en"
+      ? "🆓 Italy: free shipping over €50 · Europe over €100"
+      : lang === "es"
+      ? "🆓 Italia: envío gratis a partir de 50€ · Europa a partir de 100€"
+      : lang === "fr"
+      ? "🆓 Italie : livraison gratuite dès 50€ · Europe dès 100€"
+      : "🆓 Italien: kostenloser Versand über 50€ · Europa über 100€"}
+  </div>
+
+  <SectionMarquee lang={lang as any} />
+  <Header lang={lang as any} />
 
       <main className="container space-y-16 py-10">
         {/* === HERO === */}
