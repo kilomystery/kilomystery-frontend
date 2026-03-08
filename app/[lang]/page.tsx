@@ -526,6 +526,7 @@ export default async function HomePage({
 
   return (
     <>
+    <SectionMarquee lang={lang as any} />
       <Header lang={lang as any} />
 
       <main className="container space-y-16 py-10">
