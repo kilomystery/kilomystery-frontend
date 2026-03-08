@@ -585,7 +585,8 @@ export default async function HomePage({
             </a>
           </div>
         </section>
-
+<HowItWorksScroll lang={lang} />
+        
         {/* PRODOTTI */}
         <section id="prodotti">
           <ProductsTabs lang={lang as any} />
@@ -659,7 +660,6 @@ export default async function HomePage({
           <SectionMarquee lang={lang as any} />
         </section>
 
-        <HowItWorksScroll lang={lang} />
         
         {/* SOSTENIBILITÀ */}
         <section className="space-y-4">
