@@ -2,36 +2,41 @@
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
 
-const LABELS: Record<Lang, string[]> = {
+const ITEMS: Record<Lang, string[]> = {
   it: [
-    "Spedizione tracciata",
-    "Pagamenti sicuri",
-    "Seconda vita ai pacchi",
-    "Spedizione in tutta Europa",
+    "Tracking incluso",
+    "Checkout sicuro",
+    "Pacchi da lotti reali",
+    "Spediamo in tutta Europa",
+    "Standard e Premium",
   ],
   en: [
-    "Tracked shipping",
-    "Secure payments",
-    "Second life for parcels",
+    "Tracking included",
+    "Secure checkout",
+    "Parcels from real lots",
     "Shipping across Europe",
+    "Standard and Premium",
   ],
   es: [
-    "Envío con seguimiento",
-    "Pagos seguros",
-    "Segunda vida para los paquetes",
+    "Seguimiento incluido",
+    "Checkout seguro",
+    "Paquetes de lotes reales",
     "Envíos a toda Europa",
+    "Standard y Premium",
   ],
   fr: [
-    "Livraison suivie",
-    "Paiements sécurisés",
-    "Seconde vie pour les colis",
+    "Suivi inclus",
+    "Checkout sécurisé",
+    "Colis issus de lots réels",
     "Livraison dans toute l’Europe",
+    "Standard et Premium",
   ],
   de: [
-    "Versand mit Tracking",
-    "Sichere Zahlungen",
-    "Zweites Leben für Pakete",
+    "Tracking inklusive",
+    "Sicherer Checkout",
+    "Pakete aus echten Posten",
     "Versand in ganz Europa",
+    "Standard und Premium",
   ],
 };
 
@@ -42,22 +47,18 @@ export default function SectionMarquee({ lang = "it" as Lang }) {
     ? (normalized as Lang)
     : "it";
 
-  const items = LABELS[safeLang];
+  const items = ITEMS[safeLang];
 
   return (
     <div className="relative overflow-hidden border-b border-white/10 bg-[#09110f] text-white">
-      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-300/50 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-[#7A20FF]/40 to-transparent" />
-
       <div className="marquee-outer py-2">
         <div className="marquee-inner">
           {[...items, ...items].map((text, i) => (
             <span
               key={i}
-              className="mx-6 inline-flex items-center gap-6 whitespace-nowrap text-[11px] sm:text-xs md:text-sm font-medium text-white/85"
+              className="mx-6 whitespace-nowrap text-[11px] sm:text-xs md:text-sm font-medium text-white/80"
             >
-              <span>{text}</span>
-              <span className="h-1 w-1 rounded-full bg-emerald-300/70" />
+              {text} <span className="mx-6 text-white/40">•</span>
             </span>
           ))}
         </div>
@@ -67,15 +68,17 @@ export default function SectionMarquee({ lang = "it" as Lang }) {
         .marquee-outer {
           white-space: nowrap;
         }
+
         .marquee-inner {
           display: inline-flex;
           align-items: center;
-          animation: marquee 30s linear infinite;
-          will-change: transform;
+          animation: marquee 28s linear infinite;
         }
+
         .marquee-outer:hover .marquee-inner {
           animation-play-state: paused;
         }
+
         @keyframes marquee {
           0% {
             transform: translateX(0);
