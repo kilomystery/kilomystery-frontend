@@ -6,6 +6,7 @@ const ITEMS: Record<Lang, string[]> = {
   it: [
     "Tracking incluso",
     "Checkout sicuro",
+    "Klarna disponibile",
     "Pacchi da lotti reali",
     "Spediamo in tutta Europa",
     "Standard e Premium",
@@ -13,6 +14,7 @@ const ITEMS: Record<Lang, string[]> = {
   en: [
     "Tracking included",
     "Secure checkout",
+    "Klarna available",
     "Parcels from real lots",
     "Shipping across Europe",
     "Standard and Premium",
@@ -20,6 +22,7 @@ const ITEMS: Record<Lang, string[]> = {
   es: [
     "Seguimiento incluido",
     "Checkout seguro",
+    "Klarna disponible",
     "Paquetes de lotes reales",
     "Envíos a toda Europa",
     "Standard y Premium",
@@ -27,6 +30,7 @@ const ITEMS: Record<Lang, string[]> = {
   fr: [
     "Suivi inclus",
     "Checkout sécurisé",
+    "Klarna disponible",
     "Colis issus de lots réels",
     "Livraison dans toute l’Europe",
     "Standard et Premium",
@@ -34,6 +38,7 @@ const ITEMS: Record<Lang, string[]> = {
   de: [
     "Tracking inklusive",
     "Sicherer Checkout",
+    "Klarna verfügbar",
     "Pakete aus echten Posten",
     "Versand in ganz Europa",
     "Standard und Premium",

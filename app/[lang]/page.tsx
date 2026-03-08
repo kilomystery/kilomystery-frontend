@@ -9,7 +9,7 @@ import ProductsTabs from "../components/ProductsTabs";
 import ContactForm from "../components/ContactForm";
 import SectionMarquee from "../components/SectionMarquee";
 import LiveTikTok from "../components/livetiktok";
-
+import HowItWorksScroll from "../components/HowItWorksScroll";
 type CopyKey =
   | "heroTitle"
   | "heroSubtitle"
@@ -659,43 +659,8 @@ export default async function HomePage({
           <SectionMarquee lang={lang as any} />
         </section>
 
-        {/* COME FUNZIONA */}
-        <section id="come-funziona" className="space-y-6">
-          <h2 className="text-2xl md:text-3xl font-extrabold">{t.howTitle}</h2>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="card">
-              <div className="text-3xl">🧪</div>
-              <h3 className="mt-2 text-lg font-extrabold">{t.howCard1Title}</h3>
-              <p className="text-white/70">{t.howCard1Subtitle}</p>
-              <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
-                <li>{t.howCard1Bullet1}</li>
-                <li>{t.howCard1Bullet2}</li>
-              </ul>
-            </div>
-
-            <div className="card">
-              <div className="text-3xl">🔐</div>
-              <h3 className="mt-2 text-lg font-extrabold">{t.howCard2Title}</h3>
-              <p className="text-white/70">{t.howCard2Subtitle}</p>
-              <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
-                <li>{t.howCard2Bullet1}</li>
-                <li>{t.howCard2Bullet2}</li>
-              </ul>
-            </div>
-
-            <div className="card">
-              <div className="text-3xl">🚚</div>
-              <h3 className="mt-2 text-lg font-extrabold">{t.howCard3Title}</h3>
-              <p className="text-white/70">{t.howCard3Subtitle}</p>
-              <ul className="mt-2 text-white/70 text-sm list-disc ps-5 space-y-1">
-                <li>{t.howCard3Bullet1}</li>
-                <li>{t.howCard3Bullet2}</li>
-              </ul>
-            </div>
-          </div>
-        </section>
-
+        <HowItWorksScroll lang={lang} />
+        
         {/* SOSTENIBILITÀ */}
         <section className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
