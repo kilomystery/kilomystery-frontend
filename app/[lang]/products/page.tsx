@@ -116,21 +116,20 @@ function VideoFirstMedia({
 
 const PRICE_TABLE: Record<"Standard" | "Premium", Record<Kg, { total: number; compareTotal: number }>> = {
   Standard: {
-    1: { total: 25.9, compareTotal: 26.9 },
-    2: { total: 49.9, compareTotal: 53.8 },
-    3: { total: 70.9, compareTotal: 80.7 },
-    5: { total: 110.9, compareTotal: 134.5 },
-    10:{ total: 211.9, compareTotal: 269.0 },
+    1: { total: 22.9, compareTotal: 26.9 },
+    2: { total: 44.88, compareTotal: 53.8 },
+    3: { total: 65.28, compareTotal: 80.7 },
+    5: { total: 105.35, compareTotal: 134.5 },
+    10:{ total: 201.5, compareTotal: 269.0 },
   },
   Premium: {
-    1: { total: 28.9, compareTotal: 29.9 },
-    2: { total: 53.9, compareTotal: 59.8 },
-    3: { total: 77.9, compareTotal: 89.7 },
-    5: { total: 124.9, compareTotal: 149.5 },
-    10:{ total: 225.9, compareTotal: 299.0 },
+    1: { total: 26.9, compareTotal: 29.9 },
+    2: { total: 51.12, compareTotal: 59.8 },
+    3: { total: 74.25, compareTotal: 89.7 },
+    5: { total: 118.35, compareTotal: 149.5 },
+    10:{ total: 215.2, compareTotal: 299.0 },
   },
 };
-
 
 function prices(kind: "Standard" | "Premium", kg: Kg) {
   const { total, compareTotal } = PRICE_TABLE[kind][kg];

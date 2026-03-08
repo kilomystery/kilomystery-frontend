@@ -136,21 +136,20 @@ const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
-    1: { total: 25.9, compareAt: 26.9 },
-    2: { total: 49.9, compareAt: 53.8 },
-    3: { total: 70.9, compareAt: 80.7 },
-    5: { total: 110.9, compareAt: 134.5 },
-    10:{ total: 211.9, compareAt: 269.0 },
+    1: { total: 22.9, compareAt: 26.9 },
+    2: { total: 44.88, compareAt: 53.8 },
+    3: { total: 65.28, compareAt: 80.7 },
+    5: { total: 105.35, compareAt: 134.5 },
+    10:{ total: 201.5, compareAt: 269.0 },
   },
   prm: {
-    1: { total: 28.9, compareAt: 29.9 },
-    2: { total: 53.9, compareAt: 59.8 },
-    3: { total: 77.9, compareAt: 89.7 },
-    5: { total: 124.9, compareAt: 149.5 },
-    10:{ total: 225.9, compareAt: 299.0 },
+    1: { total: 26.9, compareAt: 29.9 },
+    2: { total: 51.12, compareAt: 59.8 },
+    3: { total: 74.25, compareAt: 89.7 },
+    5: { total: 118.35, compareAt: 149.5 },
+    10:{ total: 215.2, compareAt: 299.0 },
   },
 };
-
 
 const co2ByKg: Record<Lang, Record<Kg, string>> = {
   it: {
