@@ -300,38 +300,6 @@ const COPY: Record<
   },
 };
 
-function useScrollProgress(sectionRef: React.RefObject<HTMLElement | null>) {
-  const [progress, setProgress] = useState(0);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const el = sectionRef.current;
-      if (!el) return;
-
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-
-      const start = vh * 0.2;
-      const end = vh * 0.75;
-
-      const raw = (start - rect.top) / (rect.height - end);
-      const next = Math.max(0, Math.min(1, raw));
-      setProgress(next);
-    };
-
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-    };
-  }, [sectionRef]);
-
-  return progress;
-}
-
 function useActiveStep(total: number) {
   const refs = useRef<(HTMLElement | null)[]>([]);
   const [active, setActive] = useState(0);
@@ -365,6 +333,56 @@ function useActiveStep(total: number) {
   return { refs, active };
 }
 
+function useTimelineProgress(
+  containerRef: React.RefObject<HTMLElement | null>,
+  stepRefs: React.MutableRefObject<(HTMLElement | null)[]>
+) {
+  const [progressHeight, setProgressHeight] = useState(0);
+  const [timelineTop, setTimelineTop] = useState(0);
+  const [timelineHeight, setTimelineHeight] = useState(0);
+
+  useEffect(() => {
+    const calc = () => {
+      const container = containerRef.current;
+      const nodes = stepRefs.current.filter(Boolean) as HTMLElement[];
+      if (!container || nodes.length < 2) return;
+
+      const firstDot = nodes[0];
+      const lastDot = nodes[nodes.length - 1];
+
+      const containerRect = container.getBoundingClientRect();
+      const firstRect = firstDot.getBoundingClientRect();
+      const lastRect = lastDot.getBoundingClientRect();
+
+      const firstCenter = firstRect.top + firstRect.height / 2 - containerRect.top;
+      const lastCenter = lastRect.top + lastRect.height / 2 - containerRect.top;
+
+      setTimelineTop(firstCenter);
+      setTimelineHeight(Math.max(0, lastCenter - firstCenter));
+
+      const vh = window.innerHeight;
+      const triggerY = vh * 0.42;
+
+      const raw = triggerY - firstRect.top - firstRect.height / 2;
+      const max = Math.max(0, lastCenter - firstCenter);
+      const next = Math.max(0, Math.min(max, raw));
+
+      setProgressHeight(next);
+    };
+
+    calc();
+    window.addEventListener("scroll", calc, { passive: true });
+    window.addEventListener("resize", calc);
+
+    return () => {
+      window.removeEventListener("scroll", calc);
+      window.removeEventListener("resize", calc);
+    };
+  }, [containerRef, stepRefs]);
+
+  return { progressHeight, timelineTop, timelineHeight };
+}
+
 function StepVisual({ step, index }: { step: Step; index: number }) {
   const icons = ["◈", "◎", "◌", "✦", "◍"];
   const gradients = [
@@ -388,9 +406,7 @@ function StepVisual({ step, index }: { step: Step; index: number }) {
 
         <div className="space-y-4">
           <div className="text-xs uppercase tracking-[.2em] text-white/50">{step.kicker}</div>
-
           <h3 className="text-3xl md:text-4xl font-extrabold leading-tight">{step.visualTitle}</h3>
-
           <p className="text-white/75 max-w-lg">{step.visualText}</p>
 
           <div className="grid grid-cols-3 gap-3 pt-4">
@@ -436,11 +452,7 @@ function StepVisual({ step, index }: { step: Step; index: number }) {
 
 function MobileStepCard({ step, index, isActive }: { step: Step; index: number; isActive: boolean }) {
   return (
-    <article
-      className={`relative pl-10 transition-all duration-300 ${
-        isActive ? "opacity-100" : "opacity-75"
-      }`}
-    >
+    <article className={`relative pl-10 transition-all duration-300 ${isActive ? "opacity-100" : "opacity-75"}`}>
       <div
         className={`absolute left-0 top-6 h-4 w-4 rounded-full border transition-all duration-300 ${
           isActive
@@ -488,22 +500,35 @@ export default function HowItWorksScroll({ lang = "it" as Lang }: { lang?: Lang 
   const t = COPY[safeLang] ?? COPY.it;
   const steps = useMemo(() => t.steps, [t.steps]);
   const { refs, active } = useActiveStep(steps.length);
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const progress = useScrollProgress(sectionRef);
+
+  const mobileTimelineRef = useRef<HTMLDivElement | null>(null);
+  const desktopTimelineRef = useRef<HTMLDivElement | null>(null);
+
+  const mobileTimeline = useTimelineProgress(mobileTimelineRef, refs);
+  const desktopTimeline = useTimelineProgress(desktopTimelineRef, refs);
 
   return (
-    <section id="come-funziona" ref={sectionRef} className="space-y-6">
+    <section id="come-funziona" className="space-y-6">
       <div className="max-w-3xl">
         <h2 className="text-2xl md:text-4xl font-extrabold">{t.sectionTitle}</h2>
         <p className="mt-3 text-white/70 text-sm md:text-base">{t.sectionSubtitle}</p>
       </div>
 
       {/* MOBILE */}
-      <div className="lg:hidden relative">
-        <div className="absolute left-[7px] top-0 bottom-0 w-px bg-white/10" />
+      <div ref={mobileTimelineRef} className="lg:hidden relative">
         <div
-          className="absolute left-[7px] top-0 w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
-          style={{ height: `${progress * 100}%` }}
+          className="absolute left-[7px] w-px bg-white/10"
+          style={{
+            top: `${mobileTimeline.timelineTop}px`,
+            height: `${mobileTimeline.timelineHeight}px`,
+          }}
+        />
+        <div
+          className="absolute left-[7px] w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
+          style={{
+            top: `${mobileTimeline.timelineTop}px`,
+            height: `${mobileTimeline.progressHeight}px`,
+          }}
         />
 
         <div className="space-y-5">
@@ -545,11 +570,20 @@ export default function HowItWorksScroll({ lang = "it" as Lang }: { lang?: Lang 
           </div>
         </div>
 
-        <div className="relative">
-          <div className="absolute left-[15px] top-0 bottom-0 w-px bg-white/10" />
+        <div ref={desktopTimelineRef} className="relative">
           <div
-            className="absolute left-[15px] top-0 w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
-            style={{ height: `${progress * 100}%` }}
+            className="absolute left-[15px] w-px bg-white/10"
+            style={{
+              top: `${desktopTimeline.timelineTop}px`,
+              height: `${desktopTimeline.timelineHeight}px`,
+            }}
+          />
+          <div
+            className="absolute left-[15px] w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
+            style={{
+              top: `${desktopTimeline.timelineTop}px`,
+              height: `${desktopTimeline.progressHeight}px`,
+            }}
           />
 
           <div className="space-y-6">
