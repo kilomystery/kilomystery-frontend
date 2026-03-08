@@ -300,90 +300,46 @@ const COPY: Record<
   },
 };
 
-function useActiveStep(total: number) {
-  const refs = useRef<(HTMLElement | null)[]>([]);
-  const [active, setActive] = useState(0);
+function useSectionProgress(sectionRef: React.RefObject<HTMLElement | null>) {
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const nodes = refs.current.filter(Boolean) as HTMLElement[];
-    if (!nodes.length) return;
+    const update = () => {
+      const el = sectionRef.current;
+      if (!el) return;
 
-    const io = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .map((e) => ({
-            idx: Number((e.target as HTMLElement).dataset.stepIndex),
-            ratio: e.intersectionRatio,
-          }))
-          .sort((a, b) => b.ratio - a.ratio)[0];
-
-        if (visible && !Number.isNaN(visible.idx)) setActive(visible.idx);
-      },
-      {
-        threshold: [0.2, 0.35, 0.5, 0.65, 0.8],
-        rootMargin: "-10% 0px -45% 0px",
-      }
-    );
-
-    nodes.forEach((node) => io.observe(node));
-    return () => io.disconnect();
-  }, [total]);
-
-  return { refs, active };
-}
-
-function useTimelineProgress(
-  containerRef: React.RefObject<HTMLElement | null>,
-  stepRefs: React.MutableRefObject<(HTMLElement | null)[]>
-) {
-  const [progressHeight, setProgressHeight] = useState(0);
-  const [timelineTop, setTimelineTop] = useState(0);
-  const [timelineHeight, setTimelineHeight] = useState(0);
-
-  useEffect(() => {
-    const calc = () => {
-      const container = containerRef.current;
-      const nodes = stepRefs.current.filter(Boolean) as HTMLElement[];
-      if (!container || nodes.length < 2) return;
-
-      const firstDot = nodes[0];
-      const lastDot = nodes[nodes.length - 1];
-
-      const containerRect = container.getBoundingClientRect();
-      const firstRect = firstDot.getBoundingClientRect();
-      const lastRect = lastDot.getBoundingClientRect();
-
-      const firstCenter = firstRect.top + firstRect.height / 2 - containerRect.top;
-      const lastCenter = lastRect.top + lastRect.height / 2 - containerRect.top;
-
-      setTimelineTop(firstCenter);
-      setTimelineHeight(Math.max(0, lastCenter - firstCenter));
-
+      const rect = el.getBoundingClientRect();
       const vh = window.innerHeight;
-      const triggerY = vh * 0.42;
 
-      const raw = triggerY - firstRect.top - firstRect.height / 2;
-      const max = Math.max(0, lastCenter - firstCenter);
-      const next = Math.max(0, Math.min(max, raw));
+      const start = vh * 0.2;
+      const end = vh * 0.75;
+      const total = rect.height - end;
 
-      setProgressHeight(next);
+      const raw = (start - rect.top) / total;
+      const next = Math.max(0, Math.min(1, raw));
+      setProgress(next);
     };
 
-    calc();
-    window.addEventListener("scroll", calc, { passive: true });
-    window.addEventListener("resize", calc);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
 
     return () => {
-      window.removeEventListener("scroll", calc);
-      window.removeEventListener("resize", calc);
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
     };
-  }, [containerRef, stepRefs]);
+  }, [sectionRef]);
 
-  return { progressHeight, timelineTop, timelineHeight };
+  return progress;
 }
 
-function StepVisual({ step, index }: { step: Step; index: number }) {
+function AnimatedVisual({
+  step,
+  index,
+}: {
+  step: Step;
+  index: number;
+}) {
   const icons = ["◈", "◎", "◌", "✦", "◍"];
   const gradients = [
     "from-[#7A20FF]/35 via-white/5 to-[#20D27A]/20",
@@ -394,8 +350,12 @@ function StepVisual({ step, index }: { step: Step; index: number }) {
   ];
 
   return (
-    <div className={`card relative min-h-[420px] overflow-hidden bg-gradient-to-br ${gradients[index % gradients.length]}`}>
+    <div
+      key={index}
+      className={`card relative min-h-[420px] overflow-hidden bg-gradient-to-br ${gradients[index % gradients.length]} animate-[fadeSlideIn_.45s_ease]`}
+    >
       <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.15),transparent_55%)]" />
+
       <div className="relative h-full flex flex-col justify-between p-6 md:p-8">
         <div className="flex items-center justify-between gap-3">
           <span className="inline-flex items-center rounded-full border border-emerald-300/40 bg-emerald-500/10 px-3 py-1 text-[0.7rem] uppercase tracking-[.18em] text-emerald-200">
@@ -406,7 +366,11 @@ function StepVisual({ step, index }: { step: Step; index: number }) {
 
         <div className="space-y-4">
           <div className="text-xs uppercase tracking-[.2em] text-white/50">{step.kicker}</div>
-          <h3 className="text-3xl md:text-4xl font-extrabold leading-tight">{step.visualTitle}</h3>
+
+          <h3 className="text-3xl md:text-4xl font-extrabold leading-tight">
+            {step.visualTitle}
+          </h3>
+
           <p className="text-white/75 max-w-lg">{step.visualText}</p>
 
           <div className="grid grid-cols-3 gap-3 pt-4">
@@ -446,22 +410,51 @@ function StepVisual({ step, index }: { step: Step; index: number }) {
           />
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeSlideIn {
+          0% {
+            opacity: 0;
+            transform: translateY(18px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
 
-function MobileStepCard({ step, index, isActive }: { step: Step; index: number; isActive: boolean }) {
+function MobileStepCard({
+  step,
+  index,
+  isPassed,
+  isActive,
+}: {
+  step: Step;
+  index: number;
+  isPassed: boolean;
+  isActive: boolean;
+}) {
   return (
-    <article className={`relative pl-10 transition-all duration-300 ${isActive ? "opacity-100" : "opacity-75"}`}>
+    <article
+      className={`relative pl-10 transition-all duration-500 ${
+        isActive ? "opacity-100 translate-y-0" : isPassed ? "opacity-90 translate-y-0" : "opacity-45 translate-y-3"
+      }`}
+    >
       <div
         className={`absolute left-0 top-6 h-4 w-4 rounded-full border transition-all duration-300 ${
-          isActive
-            ? "border-emerald-300 bg-emerald-300 shadow-[0_0_16px_rgba(52,211,153,.4)]"
+          isPassed || isActive
+            ? "border-emerald-300 bg-emerald-300 shadow-[0_0_16px_rgba(52,211,153,.45)]"
             : "border-white/20 bg-[#0f1216]"
         }`}
       />
 
-      <div className={`card ${isActive ? "border-emerald-300/20 bg-white/[0.06]" : "border-white/10 bg-white/[0.03]"}`}>
+      <div className={`card transition-all duration-500 ${
+        isActive ? "border-emerald-300/20 bg-white/[0.06]" : "border-white/10 bg-white/[0.03]"
+      }`}>
         <div className="text-[11px] uppercase tracking-[.18em] text-emerald-300/80">{step.kicker}</div>
         <h3 className="mt-2 text-xl font-extrabold">{step.title}</h3>
         <p className="mt-2 text-sm text-white/70">{step.text}</p>
@@ -490,6 +483,47 @@ function MobileStepCard({ step, index, isActive }: { step: Step; index: number; 
   );
 }
 
+function DesktopStepCard({
+  step,
+  isPassed,
+  isActive,
+}: {
+  step: Step;
+  isPassed: boolean;
+  isActive: boolean;
+}) {
+  return (
+    <div
+      className={`card transition-all duration-500 ${
+        isActive
+          ? "border-emerald-300/25 bg-white/[0.06] shadow-[0_18px_40px_rgba(0,0,0,.22)] opacity-100 translate-x-0"
+          : isPassed
+          ? "border-white/10 bg-white/[0.04] opacity-85 translate-x-0"
+          : "border-white/10 bg-white/[0.03] opacity-45 translate-x-2"
+      }`}
+    >
+      <div className="text-xs uppercase tracking-[.18em] text-emerald-300/80">
+        {step.kicker}
+      </div>
+
+      <h3 className="mt-2 text-xl md:text-2xl font-extrabold">
+        {step.title}
+      </h3>
+
+      <p className="mt-2 text-white/70">{step.text}</p>
+
+      <ul className="mt-4 space-y-2 text-sm text-white/75">
+        {step.bullets.map((bullet, idx) => (
+          <li key={idx} className="flex items-start gap-2">
+            <span className="mt-[2px] text-emerald-300">•</span>
+            <span>{bullet}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export default function HowItWorksScroll({ lang = "it" as Lang }: { lang?: Lang }) {
   const supported = ["it", "en", "es", "fr", "de"] as const;
   const normalized = String(lang).toLowerCase();
@@ -499,13 +533,15 @@ export default function HowItWorksScroll({ lang = "it" as Lang }: { lang?: Lang 
 
   const t = COPY[safeLang] ?? COPY.it;
   const steps = useMemo(() => t.steps, [t.steps]);
-  const { refs, active } = useActiveStep(steps.length);
 
-  const mobileTimelineRef = useRef<HTMLDivElement | null>(null);
-  const desktopTimelineRef = useRef<HTMLDivElement | null>(null);
+  const mobileRef = useRef<HTMLDivElement | null>(null);
+  const desktopRef = useRef<HTMLDivElement | null>(null);
 
-  const mobileTimeline = useTimelineProgress(mobileTimelineRef, refs);
-  const desktopTimeline = useTimelineProgress(desktopTimelineRef, refs);
+  const mobileProgress = useSectionProgress(mobileRef);
+  const desktopProgress = useSectionProgress(desktopRef);
+
+  const mobileActive = Math.min(steps.length - 1, Math.floor(mobileProgress * steps.length));
+  const desktopActive = Math.min(steps.length - 1, Math.floor(desktopProgress * steps.length));
 
   return (
     <section id="come-funziona" className="space-y-6">
@@ -515,34 +551,29 @@ export default function HowItWorksScroll({ lang = "it" as Lang }: { lang?: Lang 
       </div>
 
       {/* MOBILE */}
-      <div ref={mobileTimelineRef} className="lg:hidden relative">
+      <div ref={mobileRef} className="lg:hidden relative">
+        <div className="absolute left-[7px] top-6 bottom-6 w-px bg-white/10" />
         <div
-          className="absolute left-[7px] w-px bg-white/10"
-          style={{
-            top: `${mobileTimeline.timelineTop}px`,
-            height: `${mobileTimeline.timelineHeight}px`,
-          }}
-        />
-        <div
-          className="absolute left-[7px] w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
-          style={{
-            top: `${mobileTimeline.timelineTop}px`,
-            height: `${mobileTimeline.progressHeight}px`,
-          }}
+          className="absolute left-[7px] top-6 w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
+          style={{ height: `calc((100% - 3rem) * ${mobileProgress})` }}
         />
 
-        <div className="space-y-5">
-          {steps.map((step, i) => (
-            <div
-              key={`${step.kicker}-${i}`}
-              ref={(el) => {
-                refs.current[i] = el;
-              }}
-              data-step-index={i}
-            >
-              <MobileStepCard step={step} index={i} isActive={i === active} />
-            </div>
-          ))}
+        <div className="space-y-6">
+          {steps.map((step, i) => {
+            const stepPoint = i / (steps.length - 1 || 1);
+            const isPassed = mobileProgress >= stepPoint - 0.02;
+            const isActive = i === mobileActive;
+
+            return (
+              <MobileStepCard
+                key={`${step.kicker}-${i}`}
+                step={step}
+                index={i}
+                isPassed={isPassed}
+                isActive={isActive}
+              />
+            );
+          })}
         </div>
 
         <div className="mt-6 flex flex-col gap-3">
@@ -556,9 +587,9 @@ export default function HowItWorksScroll({ lang = "it" as Lang }: { lang?: Lang 
       </div>
 
       {/* DESKTOP */}
-      <div className="hidden lg:grid gap-8 lg:grid-cols-[1fr,0.95fr] lg:items-start">
+      <div ref={desktopRef} className="hidden lg:grid gap-8 lg:grid-cols-[1fr,0.95fr] lg:items-start">
         <div className="lg:sticky lg:top-28">
-          <StepVisual step={steps[active]} index={active} />
+          <AnimatedVisual step={steps[desktopActive]} index={desktopActive} />
 
           <div className="mt-4 flex flex-wrap gap-2">
             <a href={`/${safeLang}/products`} className="btn btn-brand px-5 py-3">
@@ -570,71 +601,33 @@ export default function HowItWorksScroll({ lang = "it" as Lang }: { lang?: Lang 
           </div>
         </div>
 
-        <div ref={desktopTimelineRef} className="relative">
+        <div className="relative">
+          <div className="absolute left-[15px] top-6 bottom-6 w-px bg-white/10" />
           <div
-            className="absolute left-[15px] w-px bg-white/10"
-            style={{
-              top: `${desktopTimeline.timelineTop}px`,
-              height: `${desktopTimeline.timelineHeight}px`,
-            }}
-          />
-          <div
-            className="absolute left-[15px] w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
-            style={{
-              top: `${desktopTimeline.timelineTop}px`,
-              height: `${desktopTimeline.progressHeight}px`,
-            }}
+            className="absolute left-[15px] top-6 w-px bg-gradient-to-b from-[#7A20FF] to-[#20D27A] transition-[height] duration-75 ease-linear"
+            style={{ height: `calc((100% - 3rem) * ${desktopProgress})` }}
           />
 
           <div className="space-y-6">
             {steps.map((step, i) => {
-              const isActive = i === active;
+              const stepPoint = i / (steps.length - 1 || 1);
+              const isPassed = desktopProgress >= stepPoint - 0.02;
+              const isActive = i === desktopActive;
 
               return (
                 <article
                   key={`${step.kicker}-${i}`}
-                  ref={(el) => {
-                    refs.current[i] = el;
-                  }}
-                  data-step-index={i}
-                  className={`relative pl-12 transition-all duration-300 ${
-                    isActive ? "opacity-100 translate-x-0" : "opacity-55"
-                  }`}
+                  className="relative pl-12 transition-all duration-500"
                 >
                   <div
                     className={`absolute left-[7px] top-6 h-4 w-4 rounded-full border transition-all duration-300 ${
-                      isActive
+                      isPassed || isActive
                         ? "border-emerald-300 bg-emerald-300 shadow-[0_0_18px_rgba(52,211,153,.45)]"
                         : "border-white/20 bg-[#0f1216]"
                     }`}
                   />
 
-                  <div
-                    className={`card transition-all duration-300 ${
-                      isActive
-                        ? "border-emerald-300/25 bg-white/[0.06] shadow-[0_18px_40px_rgba(0,0,0,.22)]"
-                        : "border-white/10 bg-white/[0.03]"
-                    }`}
-                  >
-                    <div className="text-xs uppercase tracking-[.18em] text-emerald-300/80">
-                      {step.kicker}
-                    </div>
-
-                    <h3 className="mt-2 text-xl md:text-2xl font-extrabold">
-                      {step.title}
-                    </h3>
-
-                    <p className="mt-2 text-white/70">{step.text}</p>
-
-                    <ul className="mt-4 space-y-2 text-sm text-white/75">
-                      {step.bullets.map((bullet, idx) => (
-                        <li key={idx} className="flex items-start gap-2">
-                          <span className="mt-[2px] text-emerald-300">•</span>
-                          <span>{bullet}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  <DesktopStepCard step={step} isPassed={isPassed} isActive={isActive} />
                 </article>
               );
             })}
