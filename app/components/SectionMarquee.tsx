@@ -9,7 +9,7 @@ const ITEMS: Record<Lang, string[]> = {
     "Klarna disponibile",
     "Pacchi da lotti reali",
     "Spediamo in tutta Europa",
-    "Standard e Premium",
+    "Consegna in 24/48h",
   ],
   en: [
     "Tracking included",

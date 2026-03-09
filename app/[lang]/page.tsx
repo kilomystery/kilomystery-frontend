@@ -10,6 +10,7 @@ import ContactForm from "../components/ContactForm";
 import SectionMarquee from "../components/SectionMarquee";
 import LiveTikTok from "../components/livetiktok";
 import HowItWorksScroll from "../components/HowItWorksScroll";
+
 type CopyKey =
   | "heroTitle"
   | "heroSubtitle"
@@ -62,7 +63,6 @@ type CopyKey =
   | "eventsCard3Text"
   | "contactTitle"
   | "contactSubtitle"
-  // ✅ Unboxing preview
   | "reviewsTitle"
   | "reviewsSubtitle"
   | "reviewsCtaPrimary"
@@ -89,7 +89,6 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     ctaPrices: "Vedi prezzi",
     ctaHowItWorks: "Come funziona",
 
-    // ✅ Unboxing preview (customer-facing, no “scetticismo/traffico freddo”)
     reviewsTitle: "Guarda gli unboxing",
     reviewsSubtitle:
       "Prima di scegliere la tua box, scorri i video e vivi l’esperienza: aperture reali, momenti veri, sorprese diverse ogni volta.",
@@ -525,74 +524,94 @@ export default async function HomePage({
   const t = HOME_COPY[lang] ?? HOME_COPY.it;
 
   return (
-   <>
-  <div className="border-b border-white/10 bg-[#0d1714] py-2 text-center text-[11px] sm:text-xs font-medium text-white">
-    {lang === "it"
-      ? "Spedizione gratuita in Italia da 50€ · in Europa da 100€"
-      : lang === "en"
-      ? "Free shipping in Italy from €50 · in Europe from €100"
-      : lang === "es"
-      ? "Envío gratis en Italia desde 50€ · en Europa desde 100€"
-      : lang === "fr"
-      ? "Livraison gratuite en Italie dès 50€ · en Europe dès 100€"
-      : "Kostenloser Versand in Italien ab 50€ · in Europa ab 100€"}
-  </div>
+    <>
+      <div className="border-b border-white/10 bg-[#0d1714] py-2 text-center text-[11px] sm:text-xs font-medium text-white">
+        {lang === "it"
+          ? "Spedizione gratuita in Italia da 50€ · in Europa da 100€"
+          : lang === "en"
+          ? "Free shipping in Italy from €50 · in Europe from €100"
+          : lang === "es"
+          ? "Envío gratis en Italia desde 50€ · en Europa desde 100€"
+          : lang === "fr"
+          ? "Livraison gratuite en Italie dès 50€ · en Europe dès 100€"
+          : "Kostenloser Versand in Italien ab 50€ · in Europa ab 100€"}
+      </div>
 
-  <SectionMarquee lang={lang as any} />
-  <Header lang={lang as any} />
+      <SectionMarquee lang={lang as any} />
+      <Header lang={lang as any} />
 
       <main className="container space-y-16 py-10">
         {/* === HERO === */}
-        <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 pt-10 md:pt-12">
-          <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
-            <Image
-              src="/logo.svg"
-              alt="KiloMystery"
-              width={320}
-              height={180}
-              className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
-              priority
-            />
+        <section className="relative overflow-hidden rounded-2xl border border-white/10 min-h-[460px] md:min-h-[560px]">
+          <div className="absolute inset-0">
+            <video
+              className="h-full w-full object-cover"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              controls
+            >
+              <source src="hero/hero-bg.mov" type="video/quicktime" />
+            </video>
           </div>
 
-          <h1 className="text-center text-4xl md:text-6xl font-extrabold leading-tight">
-            <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
-              {t.heroTitle}
-            </span>
-          </h1>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#07110f]/45 via-[#07110f]/35 to-[#07110f]/75" />
+          <div className="absolute inset-0 bg-black/20" />
 
-          <p className="mx-auto mt-4 max-w-2xl text-center text-white/70">{t.heroSubtitle}</p>
+          <div className="relative z-10 flex min-h-[460px] md:min-h-[560px] items-center p-6 pt-10 md:p-10 md:pt-12">
+            <div className="w-full">
+              <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
+                <Image
+                  src="/logo.svg"
+                  alt="KiloMystery"
+                  width={320}
+                  height={180}
+                  className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+                  priority
+                />
+              </div>
 
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <a
-              href={`/${lang}/products`}
-              className="inline-flex items-center justify-center rounded-full px-5 py-3 font-extrabold text-[#0c0f10]
-                         bg-gradient-to-r from-[#7A20FF] to-[#20D27A]
-                         shadow-[0_14px_36px_rgba(122,32,255,.25),0_8px_24px_rgba(32,210,122,.25)]
-                         border border-white/70 transition-transform duration-150 hover:-translate-y-0.5"
-            >
-              {t.ctaPrices}
-            </a>
+              <h1 className="text-center text-4xl md:text-6xl font-extrabold leading-tight">
+                <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
+                  {t.heroTitle}
+                </span>
+              </h1>
 
-            <a
-              href="#come-funziona"
-              className="inline-flex items-center justify-center rounded-full px-5 py-3 font-bold
-                         text-white bg-white/10 border border-white/25
-                         shadow-[0_8px_22px_rgba(0,0,0,.25)]
-                         transition-transform duration-150 hover:bg-white/15 hover:-translate-y-0.5"
-            >
-              {t.ctaHowItWorks}
-            </a>
+              <p className="mx-auto mt-4 max-w-2xl text-center text-white/85">{t.heroSubtitle}</p>
+
+              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <a
+                  href={`/${lang}/products`}
+                  className="inline-flex items-center justify-center rounded-full px-5 py-3 font-extrabold text-[#0c0f10]
+                             bg-gradient-to-r from-[#7A20FF] to-[#20D27A]
+                             shadow-[0_14px_36px_rgba(122,32,255,.25),0_8px_24px_rgba(32,210,122,.25)]
+                             border border-white/70 transition-transform duration-150 hover:-translate-y-0.5"
+                >
+                  {t.ctaPrices}
+                </a>
+
+                <a
+                  href="#come-funziona"
+                  className="inline-flex items-center justify-center rounded-full px-5 py-3 font-bold
+                             text-white bg-white/10 border border-white/25
+                             shadow-[0_8px_22px_rgba(0,0,0,.25)]
+                             transition-transform duration-150 hover:bg-white/15 hover:-translate-y-0.5"
+                >
+                  {t.ctaHowItWorks}
+                </a>
+              </div>
+            </div>
           </div>
         </section>
-<HowItWorksScroll lang={lang} />
-        
-        {/* PRODOTTI */}
+
+        <HowItWorksScroll lang={lang} />
+
         <section id="prodotti">
           <ProductsTabs lang={lang as any} />
         </section>
 
-        {/* ✅ UNBOXING PREVIEW (fiducia: “guarda e scegli”) */}
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -650,18 +669,14 @@ export default async function HomePage({
           </div>
         </section>
 
-        {/* LIVE TIKTOK */}
         <section>
           <LiveTikTok lang={lang as any} href="/live-tiktok" tiktokUrl="https://www.tiktok.com/@kilomystery" />
         </section>
 
-        {/* MARQUEE */}
         <section>
           <SectionMarquee lang={lang as any} />
         </section>
 
-        
-        {/* SOSTENIBILITÀ */}
         <section className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-extrabold flex items-center gap-2">
             <span>{t.sustainTitle}</span>
@@ -679,7 +694,6 @@ export default async function HomePage({
           </div>
         </section>
 
-        {/* FAQ */}
         <section className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-extrabold">{t.faqTitle}</h2>
 
@@ -714,7 +728,6 @@ export default async function HomePage({
           </details>
         </section>
 
-        {/* EVENTI */}
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -751,7 +764,6 @@ export default async function HomePage({
           </div>
         </section>
 
-        {/* CONTATTACI */}
         <section className="space-y-4">
           <h2 className="text-2xl md:text-3xl font-extrabold">{t.contactTitle}</h2>
           <p className="text-white/70">{t.contactSubtitle}</p>

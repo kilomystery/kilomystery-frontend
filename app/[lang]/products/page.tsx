@@ -3,152 +3,18 @@
 
 /* eslint-disable react/no-unescaped-entities */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
+import ProductsTabs from "../../components/ProductsTabs";
 import { useCart } from "../../components/cart/CartProvider";
 import SectionInsideBox from "../../components/SectionInsideBox";
 
 import { Lang, normalizeLang } from "@/i18n/lang";
 
-import { trackAddToCart, trackViewContent, trackViewItemList } from "@/app/lib/tracking";
+import { trackAddToCart, trackViewItemList } from "@/app/lib/tracking";
 import type { KMCartItem } from "@/app/lib/ga";
-
-type Kg = 1 | 2 | 3 | 5 | 10;
-
-// ✅ SOLO JPG (HOTFIX iOS)
-const stdJ = (kg: Kg) => `/videos/packs/std-${kg}.jpg`;
-const prmJ = (kg: Kg) => `/videos/packs/prm-${kg}.jpg`;
-
-// ✅ VIDEO (prima cosa nella card) + fallback su JPG (iOS encode hotfix)
-const stdV = (kg: Kg) => `/videos/packs/std-${kg}.mp4`;
-const prmV = (kg: Kg) => `/videos/packs/prm-${kg}.mp4`;
-
-function isIOSDevice() {
-  if (typeof window === "undefined") return false;
-  const ua = window.navigator.userAgent || "";
-  const platform = (window.navigator as any).platform || "";
-  const maxTouchPoints = (window.navigator as any).maxTouchPoints || 0;
-
-  const iOS = /iPad|iPhone|iPod/.test(ua) || /iPad|iPhone|iPod/.test(platform);
-  const iPadOS13Plus = platform === "MacIntel" && maxTouchPoints > 1; // iPadOS
-  return iOS || iPadOS13Plus;
-}
-
-function VideoFirstMedia({
-  videoSrc,
-  posterSrc,
-  alt,
-  priority,
-}: {
-  videoSrc: string;
-  posterSrc: string;
-  alt: string;
-  priority?: boolean;
-}) {
-  const [useFallback, setUseFallback] = useState(false);
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    // manteniamo la funzione usata (evita warning/strict settings)
-    const _iOS = isIOSDevice();
-    void _iOS;
-
-    const v = videoRef.current;
-    if (!v) return;
-
-    const tryPlay = async () => {
-      try {
-        const p = v.play();
-        if (p && typeof (p as any).then === "function") {
-          await p;
-        }
-      } catch {
-        // Non forziamo fallback: fallback solo su errore reale (decode/network)
-      }
-    };
-
-    tryPlay();
-  }, [videoSrc]);
-
-  function handleVideoError() {
-    setUseFallback(true);
-  }
-
-  return (
-    <>
-      {!useFallback ? (
-        <video
-          ref={videoRef}
-          playsInline
-          muted
-          loop
-          autoPlay
-          preload="auto"
-          poster={posterSrc}
-          className="media rounded-[12px] object-cover"
-          onError={handleVideoError}
-        >
-          <source src={videoSrc} type="video/mp4" />
-        </video>
-      ) : null}
-
-      {useFallback ? (
-        <Image
-          src={posterSrc}
-          alt={alt}
-          fill
-          className="media rounded-[12px] object-cover"
-          sizes="(min-width: 1024px) 520px, (min-width: 768px) 50vw, 92vw"
-          priority={priority}
-        />
-      ) : null}
-    </>
-  );
-}
-
-/* =========================================================
-   ✅ PREZZI FRONTEND (REAL + COMPARE) — ALLINEATI A SHOPIFY
-========================================================= */
-
-const PRICE_TABLE: Record<"Standard" | "Premium", Record<Kg, { total: number; compareTotal: number }>> = {
-  Standard: {
-    1: { total: 22.9, compareTotal: 26.9 },
-    2: { total: 44.88, compareTotal: 53.8 },
-    3: { total: 65.28, compareTotal: 80.7 },
-    5: { total: 105.35, compareTotal: 134.5 },
-    10:{ total: 201.5, compareTotal: 269.0 },
-  },
-  Premium: {
-    1: { total: 26.9, compareTotal: 29.9 },
-    2: { total: 51.12, compareTotal: 59.8 },
-    3: { total: 74.25, compareTotal: 89.7 },
-    5: { total: 118.35, compareTotal: 149.5 },
-    10:{ total: 215.2, compareTotal: 299.0 },
-  },
-};
-
-function prices(kind: "Standard" | "Premium", kg: Kg) {
-  const { total, compareTotal } = PRICE_TABLE[kind][kg];
-  const ppk = +(total / kg).toFixed(2);
-  const comparePpk = +(compareTotal / kg).toFixed(2);
-  return { total, compareTotal, ppk, comparePpk };
-}
-
-const euro = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
-
-// === EXPLORER BOX (BUNDLE) — ALLINEATA A SHOPIFY ===
-const EXPLORER_SHOPIFY_ID = "52089141363026";
-const EXPLORER_TOTAL_KG = 16; // 15kg + 1kg omaggio
-const EXPLORER_PRICE_TOTAL = 329.9;  // prezzo reale (marketing)
-const EXPLORER_COMPARE_TOTAL = 454.4; // confronto: mix 50/50 (28,40€/kg * 16kg)
-
-
-const EXPLORER_PRICE_PER_KG = +(EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
-const EXPLORER_COMPARE_PER_KG = +(EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
 
 type CopyKey =
   | "heroTitleHighlight"
@@ -195,9 +61,6 @@ type CopyKey =
 
 type CopyPerLang = Record<CopyKey, string>;
 
-/* =========================
-   COPY (tuo + aggiunte)
-========================= */
 const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
   it: {
     heroTitleHighlight: "Pesa il mistero",
@@ -522,44 +385,13 @@ const PRODUCTS_COPY: Record<Lang, CopyPerLang> = {
   },
 };
 
-// CO₂ text per kg e per lingua
-const co2ByKg: Record<Kg, Partial<Record<Lang, string>>> = {
-  1: {
-    it: "≈0,25 kg di CO₂ evitati",
-    en: "≈0.25 kg of CO₂ saved",
-    es: "≈0,25 kg de CO₂ evitados",
-    fr: "≈0,25 kg de CO₂ évités",
-    de: "≈0,25 kg CO₂ eingespart",
-  },
-  2: {
-    it: "≈0,5 kg di CO₂ evitati",
-    en: "≈0.5 kg of CO₂ saved",
-    es: "≈0,5 kg de CO₂ evitados",
-    fr: "≈0,5 kg de CO₂ évités",
-    de: "≈0,5 kg CO₂ eingespart",
-  },
-  3: {
-    it: "≈0,75 kg di CO₂ evitati",
-    en: "≈0.75 kg of CO₂ saved",
-    es: "≈0,75 kg de CO₂ evitados",
-    fr: "≈0,75 kg de CO₂ évités",
-    de: "≈0,75 kg CO₂ eingespart",
-  },
-  5: {
-    it: "≈1,25 kg di CO₂ evitati",
-    en: "≈1.25 kg of CO₂ saved",
-    es: "≈1,25 kg de CO₂ evitados",
-    fr: "≈1,25 kg de CO₂ évités",
-    de: "≈1,25 kg CO₂ eingespart",
-  },
-  10: {
-    it: "≈2,5 kg di CO₂ evitati",
-    en: "≈2.5 kg of CO₂ saved",
-    es: "≈2,5 kg de CO₂ evitados",
-    fr: "≈2,5 kg de CO₂ évités",
-    de: "≈2,5 kg CO₂ eingespart",
-  },
-};
+const EXPLORER_SHOPIFY_ID = "52089141363026";
+const EXPLORER_TOTAL_KG = 16;
+const EXPLORER_PRICE_TOTAL = 329.9;
+const EXPLORER_COMPARE_TOTAL = 454.4;
+
+const EXPLORER_PRICE_PER_KG = +(EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
+const EXPLORER_COMPARE_PER_KG = +(EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
 
 function safeError(label: string, err: unknown) {
   const msg =
@@ -575,152 +407,6 @@ function safeError(label: string, err: unknown) {
   console.error(`${label}: ${msg}`);
 }
 
-const VARIANT_IDS: Record<"Standard" | "Premium", Record<Kg, string>> = {
-  Standard: {
-    1: "52045370360146",
-    2: "52045370392914",
-    3: "52045370425682",
-    5: "52045370458450",
-    10: "52045370491218",
-  },
-  Premium: {
-    1: "52045402571090",
-    2: "52045402603858",
-    3: "52045402636626",
-    5: "52045402669394",
-    10: "52045402702162",
-  },
-};
-
-function PackCard({
-  kind,
-  kg,
-  image,
-  video,
-  lang,
-  t,
-}: {
-  kind: "Standard" | "Premium";
-  kg: Kg;
-  image: string;
-  video: string;
-  lang: Lang;
-  t: CopyPerLang;
-}) {
-  const { addItem } = useCart();
-
-  const { total, compareTotal, ppk } = prices(kind, kg);
-  const isStd = kind === "Standard";
-  const anchorId = kg === 10 ? `buy-${kind.toLowerCase()}-10` : undefined;
-  const variantId = VARIANT_IDS[kind][kg];
-  const pricePerKgValue = +(total / kg).toFixed(2);
-
-  const buildCartItem = useCallback(
-    (): KMCartItem => ({
-      id: `${kind}-${kg}`,
-      shopifyId: variantId,
-      title: `${kind} · ${kg} kg`,
-      tier: kind,
-      weightKg: kg,
-      pricePerKg: pricePerKgValue,
-      qty: 1,
-      image, // ✅ JPG
-    }),
-    [kind, kg, pricePerKgValue, variantId, image]
-  );
-
-  const viewTrackedRef = useRef(false);
-  useEffect(() => {
-    if (viewTrackedRef.current) return;
-    if (typeof window === "undefined") return;
-
-    const el = document.getElementById(`${kind}-${kg}-card`);
-    if (!el) return;
-
-    const obs = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (!entry?.isIntersecting) return;
-
-        viewTrackedRef.current = true;
-        trackViewContent(buildCartItem());
-        obs.disconnect();
-      },
-      { threshold: 0.6 }
-    );
-
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [buildCartItem, kind, kg]);
-
-  function handleAddToCart() {
-    const cartItem = buildCartItem();
-    addItem(cartItem as any);
-    trackAddToCart(cartItem, 1);
-  }
-
-  const badgeTextTop = kind === "Standard" ? t.badgeStd : t.badgePrm;
-  const co2Text = co2ByKg[kg][lang] ?? co2ByKg[kg].it ?? "";
-
-  return (
-    <article
-      id={`${kind}-${kg}-card`}
-      className={`card ${isStd ? "card--standard" : "card--premium"}`}
-      data-anchor={anchorId}
-    >
-      {anchorId ? <div id={anchorId} /> : null}
-
-      <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
-        <span>{badgeTextTop}</span>
-        <span className={`pill ${isStd ? "pill--std" : "pill--prm"}`}>
-          {kg} kg · {isStd ? "Standard" : "Premium"}
-        </span>
-      </div>
-
-      <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
-        <div className="ratio-16-9">
-          <VideoFirstMedia videoSrc={video} posterSrc={image} alt={`${kind} ${kg} kg`} priority={kg === 1} />
-        </div>
-      </div>
-
-      <div className="mt-4 flex items-start justify-between gap-4">
-        <h4 className="product-title text-xl">
-          {kind} <span className="dot" /> {kg} kg
-        </h4>
-
-        <div className="text-right space-y-1">
-          <div className="text-sm line-through text-white/45">{euro(compareTotal)}</div>
-
-          <div className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}>
-            {euro(total)}
-          </div>
-
-          <div className="price-perkg">({ppk.toFixed(2)} €/kg)</div>
-
-          {co2Text && <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>}
-        </div>
-      </div>
-
-      <ul className="bullets mt-3 space-y-1">
-        <li>{t.bullets1}</li>
-        <li>{t.bullets2}</li>
-        <li>{t.bullets3}</li>
-        <li>{t.bullets4}</li>
-      </ul>
-
-      <div className="mt-4">
-        <button
-          type="button"
-          onClick={handleAddToCart}
-          className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}
-        >
-          {t.addToCart}
-        </button>
-      </div>
-    </article>
-  );
-}
-
 function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   const { addItem } = useCart();
 
@@ -733,7 +419,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
       weightKg: EXPLORER_TOTAL_KG,
       pricePerKg: EXPLORER_PRICE_PER_KG,
       qty: 1,
-      image: "/videos/packs/ExplorerBox.jpg", // ✅ JPG
+      image: "/videos/packs/ExplorerBox.jpg",
     };
 
     addItem(cartItem as any);
@@ -757,6 +443,7 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
       <div className="grid md:grid-cols-[1.4fr,1fr] gap-4 items-stretch">
         <div className="card relative overflow-hidden bg-gradient-to-br from-[#7A20FF]/40 via-[#111827] to-[#20D27A]/30">
           <div className="absolute inset-0 opacity-30 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.18),transparent_55%)]" />
+
           <div className="relative flex flex-col md:flex-row gap-4 items-center md:items-stretch">
             <div className="w-full md:w-1/2">
               <div className="relative aspect-video rounded-2xl bg-black/40 border border-white/10 overflow-hidden">
@@ -826,9 +513,19 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
                       : "Bundle-Gesamtpreis"}
                   </div>
 
-                  <div className="text-sm line-through text-white/45">{euro(EXPLORER_COMPARE_TOTAL)}</div>
+                  <div className="text-sm line-through text-white/45">
+                    {EXPLORER_COMPARE_TOTAL.toLocaleString("it-IT", {
+                      style: "currency",
+                      currency: "EUR",
+                    })}
+                  </div>
 
-                  <div className="text-3xl font-extrabold">{euro(EXPLORER_PRICE_TOTAL)}</div>
+                  <div className="text-3xl font-extrabold">
+                    {EXPLORER_PRICE_TOTAL.toLocaleString("it-IT", {
+                      style: "currency",
+                      currency: "EUR",
+                    })}
+                  </div>
 
                   <div className="text-xs text-white/60">
                     ≈ {EXPLORER_PRICE_PER_KG.toFixed(2)} €/kg{" "}
@@ -869,8 +566,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
   const animRef = useRef<HTMLDivElement>(null);
-
-  // ✅ GA4: view_item_list una volta (anti doppioni)
   const listTrackedRef = useRef<string>("");
 
   useEffect(() => {
@@ -878,37 +573,18 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
     if (listTrackedRef.current === key) return;
     listTrackedRef.current = key;
 
-    const items: any[] = [];
-
-    (["Standard", "Premium"] as const).forEach((kind) => {
-      ([1, 2, 3, 5, 10] as const).forEach((kg) => {
-        const variantId = VARIANT_IDS[kind][kg];
-        const { total } = prices(kind, kg);
-
-        items.push({
-          id: `${kind}-${kg}`,
-          shopifyId: variantId,
-          title: `${kind} · ${kg} kg`,
-          tier: kind,
-          weightKg: kg,
-          pricePerKg: +(total / kg).toFixed(2),
-          qty: 1,
-          image: undefined,
-        });
-      });
-    });
-
-    items.push({
-      id: "Explorer-16",
-      shopifyId: EXPLORER_SHOPIFY_ID,
-      title: t.explorerTitle,
-      tier: "Premium",
-      weightKg: EXPLORER_TOTAL_KG,
-      pricePerKg: EXPLORER_PRICE_PER_KG,
-      qty: 1,
-    });
-
-    trackViewItemList("Products", items as any);
+    trackViewItemList("ProductsPage", [
+      {
+        id: "Explorer-16",
+        shopifyId: EXPLORER_SHOPIFY_ID,
+        title: t.explorerTitle,
+        tier: "Premium",
+        weightKg: EXPLORER_TOTAL_KG,
+        pricePerKg: EXPLORER_PRICE_PER_KG,
+        qty: 1,
+        image: "/videos/packs/ExplorerBox.jpg",
+      },
+    ] as any);
   }, [lang, t]);
 
   useEffect(() => {
@@ -935,6 +611,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
             safeError("Lottie load error", `HTTP ${res.status}`);
             return;
           }
+
           const data = await res.json();
 
           if (!destroyed && animRef.current) {
@@ -964,9 +641,7 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
   const pageUrl = `${siteUrl}/${lang}/products`;
-
   const offerUrlStd10 = `${pageUrl}#buy-standard-10`;
-  const offerUrlPrm10 = `${pageUrl}#buy-premium-10`;
 
   const productJsonLd = useMemo(
     () => ({
@@ -987,8 +662,8 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       offers: {
         "@type": "AggregateOffer",
         priceCurrency: "EUR",
-        lowPrice: "25.90",   // ✅ aggiornato
-        highPrice: "225.90", // ✅ aggiornato
+        lowPrice: "25.90",
+        highPrice: "225.90",
         availability: "https://schema.org/InStock",
         url: offerUrlStd10,
       },
@@ -1047,71 +722,42 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
     [lang, pageUrl, siteUrl]
   );
 
-  const itemListJsonLd = useMemo(() => {
-    const baseName =
-      lang === "it"
-        ? "Mystery box al kg"
-        : lang === "en"
-        ? "Mystery boxes by the kilo"
-        : lang === "es"
-        ? "Mystery box al kilo"
-        : lang === "fr"
-        ? "Mystery box au kilo"
-        : "Mystery Box pro Kilo";
-
-    const items: any[] = [];
-
-    (["Standard", "Premium"] as const).forEach((kind, idxK) => {
-      ([1, 2, 3, 5, 10] as const).forEach((kg, idxW) => {
-        const { total } = prices(kind, kg);
-        const url = `${pageUrl}#buy-${kind.toLowerCase()}-10`;
-        const position = idxK * 10 + idxW + 1;
-
-        items.push({
+  const itemListJsonLd = useMemo(
+    () => ({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name:
+        lang === "it"
+          ? "Mystery box al kg — KiloMystery"
+          : lang === "en"
+          ? "Mystery boxes by the kilo — KiloMystery"
+          : lang === "es"
+          ? "Mystery box al kilo — KiloMystery"
+          : lang === "fr"
+          ? "Mystery box au kilo — KiloMystery"
+          : "Mystery Box pro Kilo — KiloMystery",
+      itemListElement: [
+        {
           "@type": "ListItem",
-          position,
-          url,
+          position: 99,
+          url: pageUrl,
           item: {
             "@type": "Product",
-            name: `${baseName} ${kind} ${kg} kg`,
+            name: t.explorerTitle,
             brand: { "@type": "Brand", name: "KiloMystery" },
             offers: {
               "@type": "Offer",
               priceCurrency: "EUR",
-              price: total.toFixed(2),
+              price: EXPLORER_PRICE_TOTAL.toFixed(2),
               availability: "https://schema.org/InStock",
-              url,
+              url: pageUrl,
             },
           },
-        });
-      });
-    });
-
-    items.push({
-      "@type": "ListItem",
-      position: 99,
-      url: pageUrl,
-      item: {
-        "@type": "Product",
-        name: t.explorerTitle,
-        brand: { "@type": "Brand", name: "KiloMystery" },
-        offers: {
-          "@type": "Offer",
-          priceCurrency: "EUR",
-          price: EXPLORER_PRICE_TOTAL.toFixed(2),
-          availability: "https://schema.org/InStock",
-          url: pageUrl,
         },
-      },
-    });
-
-    return {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      name: `${baseName} — KiloMystery`,
-      itemListElement: items,
-    };
-  }, [lang, pageUrl, t.explorerTitle]);
+      ],
+    }),
+    [lang, pageUrl, t.explorerTitle]
+  );
 
   return (
     <>
@@ -1210,7 +856,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        {/* ✅ WHEEL */}
         <section className="card flex flex-col md:flex-row items-center gap-5">
           <div className="shrink-0 rounded-xl overflow-hidden border border-white/15 bg-white/10">
             <Image
@@ -1222,10 +867,12 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
               sizes="(min-width: 768px) 500px, 100vw"
             />
           </div>
+
           <div className="flex-1">
             <h3 className="text-xl font-extrabold">{t.wheelTitle}</h3>
             <p className="text-white/70 text-sm md:text-base">{t.wheelText}</p>
           </div>
+
           <div className="flex flex-col gap-2 w-full md:w-auto">
             <a href="#buy-standard-10" className="btn btn-silver">
               {t.wheelCtaStd}
@@ -1236,51 +883,10 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-silver-soft">Standard</h2>
-            <p className="text-xs text-white/60 max-w-md">{t.standardDescription}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            {[1, 2, 3, 5, 10].map((kg) => (
-              <PackCard
-                key={`std-${kg}`}
-                kind="Standard"
-                kg={kg as Kg}
-                image={stdJ(kg as Kg)}
-                video={stdV(kg as Kg)}
-                lang={lang}
-                t={t}
-              />
-            ))}
-          </div>
-        </section>
-
-        <section className="space-y-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-2xl font-extrabold text-gold-soft">Premium</h2>
-            <p className="text-xs text-white/60 max-w-md">{t.premiumDescription}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            {[1, 2, 3, 5, 10].map((kg) => (
-              <PackCard
-                key={`prm-${kg}`}
-                kind="Premium"
-                kg={kg as Kg}
-                image={prmJ(kg as Kg)}
-                video={prmV(kg as Kg)}
-                lang={lang}
-                t={t}
-              />
-            ))}
-          </div>
-        </section>
+        <ProductsTabs lang={lang as any} />
 
         <ExplorerCard lang={lang} t={t} />
 
-        {/* ✅ NON TOCCATA (unboxing scroll etc.) */}
         <SectionInsideBox lang={lang} />
 
         <section id="policy" className="card">

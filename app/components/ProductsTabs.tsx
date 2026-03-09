@@ -1,8 +1,7 @@
-// ProductsTabs component
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCart } from "@/app/components/cart/CartProvider";
 import { SHOPIFY_VARIANTS, Kg, Tier } from "@/app/config/shopifyProducts";
 import { trackAddToCart, trackViewItemList } from "@/app/lib/tracking";
@@ -11,9 +10,9 @@ import type { KMCartItem } from "@/app/lib/ga";
 type Lang = "it" | "en" | "es" | "fr" | "de";
 type TabTier = "std" | "prm";
 
-/* =========================
-   LABELS
-========================= */
+type MediaSlide =
+  | { type: "video"; src: string; poster: string }
+  | { type: "image"; src: string };
 
 const LABELS: Record<Lang, any> = {
   it: {
@@ -32,7 +31,6 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Sigillo con ID lotto e data",
     badgeStd: "Perfetta per iniziare",
     badgePrm: "Per chi vuole il massimo",
-
     wheelTitle: "Ruota della fortuna",
     wheelText:
       "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine.",
@@ -54,7 +52,6 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Seal with batch ID and date",
     badgeStd: "Perfect to start",
     badgePrm: "For those who want more",
-
     wheelTitle: "Mystery Wheel",
     wheelText:
       "With an order of at least 10 kg you unlock 1 automatic spin when you go to the cart. Win up to +2 kg bonus that we add to your order.",
@@ -76,7 +73,6 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Precinto con ID de lote y fecha",
     badgeStd: "Perfecta para empezar",
     badgePrm: "Para quienes quieren más",
-
     wheelTitle: "Ruleta de la suerte",
     wheelText:
       "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos a tu pedido.",
@@ -98,7 +94,6 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Scellé avec ID de lot et date",
     badgeStd: "Parfait pour commencer",
     badgePrm: "Pour ceux qui en veulent plus",
-
     wheelTitle: "Roue mystère",
     wheelText:
       "Avec une commande d’au moins 10 kg, tu gagnes 1 tirage automatique en arrivant au panier. Jusqu’à +2 kg bonus ajoutés à ta commande.",
@@ -120,17 +115,12 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Siegel mit Posten-ID und Datum",
     badgeStd: "Perfekt zum Start",
     badgePrm: "Für alle, die mehr wollen",
-
     wheelTitle: "Glücksrad",
     wheelText:
       "Mit einer Bestellung von mindestens 10 kg bekommst du 1 Dreh automatisch im Warenkorb. Gewinne bis zu +2 kg Bonus, die wir deiner Bestellung hinzufügen.",
     wheelCta: "Zu den 10 kg",
   },
 };
-
-/* =========================
-   DATA
-========================= */
 
 const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
@@ -140,14 +130,14 @@ const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number
     2: { total: 44.88, compareAt: 53.8 },
     3: { total: 65.28, compareAt: 80.7 },
     5: { total: 105.35, compareAt: 134.5 },
-    10:{ total: 201.5, compareAt: 269.0 },
+    10: { total: 201.5, compareAt: 269.0 },
   },
   prm: {
     1: { total: 26.9, compareAt: 29.9 },
     2: { total: 51.12, compareAt: 59.8 },
     3: { total: 74.25, compareAt: 89.7 },
     5: { total: 118.35, compareAt: 149.5 },
-    10:{ total: 215.2, compareAt: 299.0 },
+    10: { total: 215.2, compareAt: 299.0 },
   },
 };
 
@@ -189,38 +179,55 @@ const co2ByKg: Record<Lang, Record<Kg, string>> = {
   },
 };
 
-const euro = (n: number) => n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+const euro = (n: number) =>
+  n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
 
-function isIOSDevice() {
-  if (typeof window === "undefined") return false;
-  const ua = window.navigator.userAgent || "";
-  const platform = (window.navigator as any).platform || "";
-  const maxTouchPoints = (window.navigator as any).maxTouchPoints || 0;
-
-  const iOS = /iPad|iPhone|iPod/.test(ua) || /iPad|iPhone|iPod/.test(platform);
-  const iPadOS13Plus = platform === "MacIntel" && maxTouchPoints > 1; // iPadOS
-  return iOS || iPadOS13Plus;
-}
-
-function VideoFirstMedia({
-  videoSrc,
-  posterSrc,
+function ProductMediaCarousel({
+  slides,
   alt,
   priority,
+  sizes = "(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw",
 }: {
-  videoSrc: string;
-  posterSrc: string;
+  slides: MediaSlide[];
   alt: string;
   priority?: boolean;
+  sizes?: string;
 }) {
-  const [useFallback, setUseFallback] = useState(false);
+  const cleanSlides = slides.filter(Boolean);
+  const [index, setIndex] = useState(0);
+  const [videoFailed, setVideoFailed] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
+  const visibleSlides = useMemo(() => {
+    if (!cleanSlides.length) return [];
 
-    const _iOS = isIOSDevice();
-    void _iOS;
+    if (!videoFailed) return cleanSlides;
+
+    return cleanSlides.map((slide, i) => {
+      if (i === 0 && slide.type === "video") {
+        return { type: "image" as const, src: slide.poster };
+      }
+      return slide;
+    });
+  }, [cleanSlides, videoFailed]);
+
+  useEffect(() => {
+    setIndex(0);
+  }, [slides]);
+
+  useEffect(() => {
+    if (visibleSlides.length <= 1) return;
+
+    const timer = window.setInterval(() => {
+      setIndex((prev) => (prev + 1) % visibleSlides.length);
+    }, 3200);
+
+    return () => window.clearInterval(timer);
+  }, [visibleSlides.length]);
+
+  useEffect(() => {
+    const current = visibleSlides[index];
+    if (!current || current.type !== "video") return;
 
     const v = videoRef.current;
     if (!v) return;
@@ -232,52 +239,58 @@ function VideoFirstMedia({
           await p;
         }
       } catch {
-        // Non forziamo fallback: fallback solo su errore reale (decode/network)
+        setVideoFailed(true);
       }
     };
 
     tryPlay();
-  }, [videoSrc]);
+  }, [index, visibleSlides]);
 
-  function handleVideoError() {
-    setUseFallback(true);
-  }
+  if (!visibleSlides.length) return null;
+
+  const current = visibleSlides[index];
 
   return (
-    <>
-      {!useFallback ? (
+    <div className="relative h-full w-full overflow-hidden rounded-[12px] bg-black/20">
+      {current.type === "video" ? (
         <video
           ref={videoRef}
+          src={current.src}
           playsInline
           muted
           loop
           autoPlay
-          preload="auto"
-          poster={posterSrc}
-          className="media rounded-[12px] object-cover"
-          onError={handleVideoError}
-        >
-          <source src={videoSrc} type="video/mp4" />
-        </video>
-      ) : null}
-
-      {useFallback ? (
+          preload="metadata"
+          poster={current.poster}
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => setVideoFailed(true)}
+        />
+      ) : (
         <Image
-          src={posterSrc}
+          src={current.src}
           alt={alt}
           fill
-          className="media rounded-[12px] object-cover"
-          sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
+          className="object-cover"
+          sizes={sizes}
           priority={priority}
         />
+      )}
+
+      {visibleSlides.length > 1 ? (
+        <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/35 px-2 py-1 backdrop-blur-sm">
+          {visibleSlides.map((_, i) => (
+            <span
+              key={i}
+              className={`h-1.5 w-1.5 rounded-full transition-all ${
+                i === index ? "bg-white" : "bg-white/35"
+              }`}
+            />
+          ))}
+        </div>
       ) : null}
-    </>
+    </div>
   );
 }
-
-/* =========================
-   COMPONENT
-========================= */
 
 export default function ProductsTabs({ lang = "it" as Lang }) {
   const [tab, setTab] = useState<TabTier>("std");
@@ -292,8 +305,8 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
   const L = LABELS[safeLang];
   const currentKind: "Standard" | "Premium" = tab === "std" ? "Standard" : "Premium";
 
-  // ✅ GA4: view_item_list una volta per tab+lingua
   const listRef = useRef<string>("");
+
   useEffect(() => {
     const key = `products-tabs:${safeLang}:${tab}`;
     if (listRef.current === key) return;
@@ -378,7 +391,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
         {WEIGHTS.map((w) => {
           const kg = w as Kg;
           const isStd = tab === "std";
@@ -386,11 +399,25 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const { total, compareAt } = PRICE_TABLE[tab][kg];
           const perKg = +(total / kg).toFixed(2);
 
-          // ✅ VIDEO prima, fallback su JPG (public/videos/packs)
-          const base = tab === "std" ? "std" : "prm";
+          const base = isStd ? "std" : "prm";
           const imgSrc = `/videos/packs/${base}-${w}.jpg`;
           const videoSrc = `/videos/packs/${base}-${w}.mp4`;
 
+          const standardSlides: MediaSlide[] = [
+            { type: "video", src: videoSrc, poster: imgSrc },
+            { type: "image", src: "/images/real/std-real-1.jpg" },
+            { type: "image", src: "/images/real/std-real-2.jpg" },
+            { type: "image", src: "/images/real/std-real-3.jpg" },
+          ];
+
+          const premiumSlides: MediaSlide[] = [
+            { type: "video", src: videoSrc, poster: imgSrc },
+            { type: "image", src: "/images/real/prm-real-1.jpg" },
+            { type: "image", src: "/images/real/prm-real-2.jpg" },
+            { type: "image", src: "/images/real/prm-real-3.jpg" },
+          ];
+
+          const slides = isStd ? standardSlides : premiumSlides;
           const co2Text = co2ByKg[safeLang][kg];
 
           return (
@@ -403,7 +430,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   ? "buy-premium-10"
                   : undefined
               }
-              className={`card ${isStd ? "card--standard" : "card--premium"}`}
+              className={`card ${isStd ? "card--standard" : "card--premium"} self-start`}
             >
               <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
                 <span>{isStd ? L.badgeStd : L.badgePrm}</span>
@@ -413,12 +440,12 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
               </div>
 
               <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
-                <div className="ratio-16-9">
-                  <VideoFirstMedia
-                    videoSrc={videoSrc}
-                    posterSrc={imgSrc}
+                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[12px] bg-black/20">
+                  <ProductMediaCarousel
+                    slides={slides}
                     alt={`${isStd ? L.standard : L.premium} ${w}${L.kg}`}
-                    priority={w === 1} // solo la prima più importante
+                    priority={w === 1}
+                    sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
                   />
                 </div>
               </div>
@@ -441,7 +468,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                     ({perKg.toFixed(2)} {L.perkg})
                   </div>
 
-                  {co2Text && <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div>}
+                  {co2Text ? <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div> : null}
                 </div>
               </div>
 
@@ -464,8 +491,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           );
         })}
 
-        {/* BONUS CARD */}
-        <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4">
+        <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4 self-start">
           <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">🎡 Bonus extra</p>
 
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
