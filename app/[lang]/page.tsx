@@ -551,7 +551,8 @@ export default async function HomePage({
               loop
               playsInline
               preload="auto"
-              controls
+              controls={false}
+              disablePictureInPicture
             >
               <source src="hero/hero-bg.mov" type="video/quicktime" />
             </video>
