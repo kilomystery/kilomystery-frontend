@@ -30,11 +30,14 @@ const LABELS: Record<Lang, any> = {
     bullet2: "Peso netto (toll. ±3%)",
     bullet3: "Sigillo con ID lotto e data",
     badgeStd: "Perfetta per iniziare",
-    badgePrm: "Per chi vuole il massimo",
+    badgePrm: "Contenuto più ricco",
     wheelTitle: "Ruota della fortuna",
     wheelText:
       "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine.",
     wheelCta: "Vai ai 10 kg",
+    bestSeller: "⭐ Più venduto",
+    bestValue: "🔥 Miglior valore",
+    premiumTop: "👑 Premium Box",
   },
   en: {
     standard: "Standard",
@@ -51,11 +54,14 @@ const LABELS: Record<Lang, any> = {
     bullet2: "Net weight (±3% tolerance)",
     bullet3: "Seal with batch ID and date",
     badgeStd: "Perfect to start",
-    badgePrm: "For those who want more",
+    badgePrm: "Richer content",
     wheelTitle: "Mystery Wheel",
     wheelText:
       "With an order of at least 10 kg you unlock 1 automatic spin when you go to the cart. Win up to +2 kg bonus that we add to your order.",
     wheelCta: "Go to 10 kg",
+    bestSeller: "⭐ Best seller",
+    bestValue: "🔥 Best value",
+    premiumTop: "👑 Premium Box",
   },
   es: {
     standard: "Standard",
@@ -72,11 +78,14 @@ const LABELS: Record<Lang, any> = {
     bullet2: "Peso neto (tolerancia ±3%)",
     bullet3: "Precinto con ID de lote y fecha",
     badgeStd: "Perfecta para empezar",
-    badgePrm: "Para quienes quieren más",
+    badgePrm: "Contenido más rico",
     wheelTitle: "Ruleta de la suerte",
     wheelText:
       "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos a tu pedido.",
     wheelCta: "Ir a los 10 kg",
+    bestSeller: "⭐ Más vendido",
+    bestValue: "🔥 Mejor valor",
+    premiumTop: "👑 Premium Box",
   },
   fr: {
     standard: "Standard",
@@ -93,11 +102,14 @@ const LABELS: Record<Lang, any> = {
     bullet2: "Poids net (tolérance ±3 %)",
     bullet3: "Scellé avec ID de lot et date",
     badgeStd: "Parfait pour commencer",
-    badgePrm: "Pour ceux qui en veulent plus",
+    badgePrm: "Contenu plus riche",
     wheelTitle: "Roue mystère",
     wheelText:
       "Avec une commande d’au moins 10 kg, tu gagnes 1 tirage automatique en arrivant au panier. Jusqu’à +2 kg bonus ajoutés à ta commande.",
     wheelCta: "Aller aux 10 kg",
+    bestSeller: "⭐ Le plus vendu",
+    bestValue: "🔥 Meilleur rapport",
+    premiumTop: "👑 Premium Box",
   },
   de: {
     standard: "Standard",
@@ -114,11 +126,14 @@ const LABELS: Record<Lang, any> = {
     bullet2: "Nettogewicht (Toleranz ±3 %)",
     bullet3: "Siegel mit Posten-ID und Datum",
     badgeStd: "Perfekt zum Start",
-    badgePrm: "Für alle, die mehr wollen",
+    badgePrm: "Mehr Inhalt",
     wheelTitle: "Glücksrad",
     wheelText:
       "Mit einer Bestellung von mindestens 10 kg bekommst du 1 Dreh automatisch im Warenkorb. Gewinne bis zu +2 kg Bonus, die wir deiner Bestellung hinzufügen.",
     wheelCta: "Zu den 10 kg",
+    bestSeller: "⭐ Bestseller",
+    bestValue: "🔥 Bestes Angebot",
+    premiumTop: "👑 Premium Box",
   },
 };
 
@@ -126,17 +141,17 @@ const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
 
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
-    1: { total: 22.9, compareAt: 26.9 },
-    2: { total: 44.88, compareAt: 53.8 },
-    3: { total: 65.28, compareAt: 80.7 },
-    5: { total: 105.35, compareAt: 134.5 },
+    1: { total: 24.9, compareAt: 26.9 },
+    2: { total: 47.9, compareAt: 53.8 },
+    3: { total: 69.9, compareAt: 80.7 },
+    5: { total: 109.9, compareAt: 134.5 },
     10: { total: 201.5, compareAt: 269.0 },
   },
   prm: {
-    1: { total: 26.9, compareAt: 29.9 },
-    2: { total: 51.12, compareAt: 59.8 },
-    3: { total: 74.25, compareAt: 89.7 },
-    5: { total: 118.35, compareAt: 149.5 },
+    1: { total: 28.9, compareAt: 29.9 },
+    2: { total: 54.9, compareAt: 59.8 },
+    3: { total: 79.9, compareAt: 89.7 },
+    5: { total: 124.9, compareAt: 149.5 },
     10: { total: 215.2, compareAt: 299.0 },
   },
 };
@@ -200,7 +215,6 @@ function ProductMediaCarousel({
 
   const visibleSlides = useMemo(() => {
     if (!cleanSlides.length) return [];
-
     if (!videoFailed) return cleanSlides;
 
     return cleanSlides.map((slide, i) => {
@@ -217,18 +231,15 @@ function ProductMediaCarousel({
 
   useEffect(() => {
     if (visibleSlides.length <= 1) return;
-
     const timer = window.setInterval(() => {
       setIndex((prev) => (prev + 1) % visibleSlides.length);
     }, 3200);
-
     return () => window.clearInterval(timer);
   }, [visibleSlides.length]);
 
   useEffect(() => {
     const current = visibleSlides[index];
     if (!current || current.type !== "video") return;
-
     const v = videoRef.current;
     if (!v) return;
 
@@ -247,11 +258,10 @@ function ProductMediaCarousel({
   }, [index, visibleSlides]);
 
   if (!visibleSlides.length) return null;
-
   const current = visibleSlides[index];
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-[12px] bg-black/20">
+    <div className="relative h-full w-full overflow-hidden rounded-[14px] bg-black/20">
       {current.type === "video" ? (
         <video
           ref={videoRef}
@@ -277,7 +287,7 @@ function ProductMediaCarousel({
       )}
 
       {visibleSlides.length > 1 ? (
-        <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/35 px-2 py-1 backdrop-blur-sm">
+        <div className="absolute bottom-2 left-1/2 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-black/40 px-2 py-1 backdrop-blur-sm">
           {visibleSlides.map((_, i) => (
             <span
               key={i}
@@ -366,10 +376,10 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
       <div className="flex items-center justify-center gap-3">
         <button
           className={[
-            "px-5 py-2 rounded-full font-semibold transition border",
+            "px-6 py-3 rounded-full font-bold transition border text-base",
             tab === "std"
-              ? "bg-gradient-to-b from-white/80 to-white/60 text-[#0f1216] border-white/70 shadow-[0_10px_30px_rgba(180,200,190,.25)]"
-              : "bg-white/5 text-white/80 border-white/15 hover:bg-white/10",
+              ? "bg-gradient-to-b from-white to-white/75 text-[#0f1216] border-white/80 shadow-[0_12px_35px_rgba(255,255,255,.28)] scale-105"
+              : "bg-white/8 text-white/90 border-white/15 hover:bg-white/14",
           ].join(" ")}
           onClick={() => setTab("std")}
           type="button"
@@ -379,19 +389,29 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
         <button
           className={[
-            "px-5 py-2 rounded-full font-semibold transition border",
+            "px-6 py-3 rounded-full font-bold transition border text-base",
             tab === "prm"
-              ? "bg-gradient-to-b from-[#f6e27a] to-[#d4af37] text-[#1a1a1a] border-yellow-100/70 shadow-[0_10px_30px_rgba(212,175,55,.35)]"
-              : "bg-white/5 text-white/80 border-white/15 hover:bg-white/10",
+              ? "bg-gradient-to-b from-[#fff2a8] via-[#f4cf57] to-[#d4af37] text-[#1a1a1a] border-yellow-100/90 shadow-[0_14px_40px_rgba(212,175,55,.45)] scale-105"
+              : "bg-gradient-to-b from-[#4b3a06]/70 to-[#2d2203]/70 text-yellow-100 border-yellow-300/35 hover:border-yellow-200/55 hover:bg-[#5b4709]/70 shadow-[0_8px_26px_rgba(212,175,55,.18)]",
           ].join(" ")}
           onClick={() => setTab("prm")}
           type="button"
         >
-          {L.premium}
+          👑 {L.premium}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 items-start">
+      {tab === "prm" ? (
+        <div className="mx-auto max-w-xl text-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-yellow-200/70 bg-gradient-to-r from-[#fff0a6]/25 via-[#f4cf57]/25 to-[#d4af37]/25 px-5 py-2.5 text-sm font-bold text-yellow-100 shadow-[0_14px_40px_rgba(212,175,55,.30)]">
+            <span>{L.premiumTop}</span>
+            <span className="text-yellow-200/80">•</span>
+            <span>{L.badgePrm}</span>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-start">
         {WEIGHTS.map((w) => {
           const kg = w as Kg;
           const isStd = tab === "std";
@@ -420,6 +440,9 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const slides = isStd ? standardSlides : premiumSlides;
           const co2Text = co2ByKg[safeLang][kg];
 
+          const showBestSeller = kg === 3;
+          const showBestValue = kg === 5;
+
           return (
             <article
               key={`${tab}-${w}`}
@@ -430,68 +453,129 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   ? "buy-premium-10"
                   : undefined
               }
-              className={`card ${isStd ? "card--standard" : "card--premium"} self-start`}
+              className={[
+                "card self-start relative rounded-[24px] border p-4 md:p-5 transition-all duration-300",
+                isStd
+                  ? "border-white/14 bg-[radial-gradient(circle_at_top,rgba(34,197,94,.10),rgba(9,12,18,.92)_55%)] shadow-[0_18px_50px_rgba(0,0,0,.30)]"
+                  : "border-yellow-300/35 bg-[radial-gradient(circle_at_top,rgba(212,175,55,.18),rgba(9,12,18,.94)_58%)] shadow-[0_22px_60px_rgba(212,175,55,.12)]",
+                showBestSeller ? "ring-1 ring-white/20" : "",
+                showBestValue ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.16)] scale-[1.01]" : "",
+              ].join(" ")}
             >
-              <div className="flex items-center justify-between mb-2 text-[0.7rem] uppercase tracking-[.15em] text-white/60">
-                <span>{isStd ? L.badgeStd : L.badgePrm}</span>
-                <span className={`pill ${isStd ? "pill--std" : "pill--prm"}`}>
+              <div className="flex items-center justify-between mb-3 pt-1 text-[0.72rem] uppercase tracking-[.18em] text-white/65">
+                <span className={!isStd ? "text-yellow-100/85 font-semibold" : ""}>
+                  {isStd ? L.badgeStd : L.badgePrm}
+                </span>
+
+                <span
+                  className={[
+                    "rounded-full px-4 py-2 text-[0.78rem] font-bold tracking-[.16em]",
+                    isStd
+                      ? "border border-white/20 bg-white/8 text-white/90"
+                      : "border border-yellow-200/50 bg-gradient-to-r from-[#4a3700]/70 to-[#6e5307]/70 text-yellow-100 shadow-[0_8px_24px_rgba(212,175,55,.18)]",
+                  ].join(" ")}
+                >
                   {w} {L.kg} · {isStd ? L.standard : L.premium}
                 </span>
               </div>
 
-              <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
-                <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[12px] bg-black/20">
-                  <ProductMediaCarousel
-                    slides={slides}
-                    alt={`${isStd ? L.standard : L.premium} ${w}${L.kg}`}
-                    priority={w === 1}
-                    sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
-                  />
+              <div className={isStd ? "" : "rounded-[18px] p-[2px] bg-gradient-to-r from-yellow-200/25 via-[#d4af37]/30 to-yellow-200/25"}>
+                <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
+                  <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[14px] bg-black/20">
+                    <ProductMediaCarousel
+                      slides={slides}
+                      alt={`${isStd ? L.standard : L.premium} ${w}${L.kg}`}
+                      priority={w === 1}
+                      sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
+                    />
+
+                    {showBestSeller ? (
+                      <div className="absolute top-3 right-3 z-30">
+                        <span className="rounded-full border border-[#ffe9a8] bg-gradient-to-r from-white via-[#fff6d8] to-[#ffe08a] px-4 py-2 text-[0.72rem] font-extrabold text-[#151515] shadow-[0_10px_28px_rgba(255,232,138,.45)]">
+                          {L.bestSeller}
+                        </span>
+                      </div>
+                    ) : null}
+
+                    {showBestValue ? (
+                      <div className="absolute top-3 right-3 z-30">
+                        <span className="rounded-full border border-emerald-200/70 bg-gradient-to-r from-emerald-300 via-green-300 to-lime-200 px-4 py-2 text-[0.72rem] font-extrabold text-[#0f1216] shadow-[0_12px_30px_rgba(52,211,153,.38)]">
+                          {L.bestValue}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 flex items-start justify-between gap-4">
-                <h3 className="product-title text-xl">
+              <div className="mt-5 flex items-start justify-between gap-4">
+                <h3 className={`product-title text-[1.55rem] leading-tight ${!isStd ? "text-yellow-50" : ""}`}>
                   {isStd ? L.standard : L.premium} <span className="dot" /> {w} {L.kg}
                 </h3>
 
                 <div className="text-right space-y-1">
-                  <div className="text-sm text-white/60 line-through">{euro(compareAt)}</div>
+                  <div className="text-sm text-white/50 line-through">{euro(compareAt)}</div>
 
                   <div
-                    className={`price-figure ${isStd ? "price-figure--std" : "price-figure--prm"} text-3xl`}
+                    className={`text-[2.35rem] font-extrabold leading-none ${
+                      isStd ? "text-white" : "text-yellow-100 drop-shadow-[0_0_18px_rgba(244,207,87,.20)]"
+                    }`}
                   >
                     {euro(total)}
                   </div>
 
-                  <div className="price-perkg">
+                  <div className={`text-sm ${isStd ? "text-white/75" : "text-yellow-100/80"} font-medium`}>
                     ({perKg.toFixed(2)} {L.perkg})
                   </div>
 
-                  {co2Text ? <div className="text-[0.7rem] text-emerald-200/90">♻ {co2Text}</div> : null}
+                  {co2Text ? (
+                    <div className="text-[0.72rem] text-emerald-200/95 font-medium">♻ {co2Text}</div>
+                  ) : null}
                 </div>
               </div>
 
-              <ul className="bullets mt-3 space-y-1">
-                <li>{L.bullet1}</li>
-                <li>{L.bullet2}</li>
-                <li>{L.bullet3}</li>
+              <ul className="mt-4 space-y-2 text-[1.03rem]">
+                <li className="flex items-start gap-2 text-white/92">
+                  <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,.5)]" />
+                  <span>{L.bullet1}</span>
+                </li>
+                <li className="flex items-start gap-2 text-white/92">
+                  <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,.5)]" />
+                  <span>{L.bullet2}</span>
+                </li>
+                <li className="flex items-start gap-2 text-white/92">
+                  <span className="mt-1 h-2.5 w-2.5 rounded-full bg-emerald-300 shadow-[0_0_12px_rgba(52,211,153,.5)]" />
+                  <span>{L.bullet3}</span>
+                </li>
               </ul>
 
-              <div className="mt-4">
+              {showBestValue ? (
+                <div className="mt-4 rounded-2xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-sm font-semibold text-emerald-100 shadow-[0_10px_30px_rgba(16,185,129,.10)]">
+                  ✔ Più varietà nel box <br />
+                  ✔ Scelta ideale per spingere il valore <br />
+                  ✔ Il formato che conviene di più
+                </div>
+              ) : null}
+
+              <div className="mt-5">
                 <button
-                  className={`btn w-full ${isStd ? "btn-silver" : "btn-gold"}`}
+                  className={[
+                    "w-full rounded-2xl px-5 py-4 text-[1.02rem] font-extrabold transition-all duration-200",
+                    isStd
+                      ? "bg-gradient-to-r from-white to-white/85 text-[#101318] shadow-[0_14px_34px_rgba(255,255,255,.12)] hover:scale-[1.02]"
+                      : "bg-gradient-to-r from-[#fff2a8] via-[#f4cf57] to-[#d4af37] text-[#1a1a1a] shadow-[0_16px_40px_rgba(212,175,55,.34)] hover:scale-[1.02]",
+                  ].join(" ")}
                   onClick={() => handleAddToCart(currentKind, kg, perKg)}
                   type="button"
                 >
-                  {L.add}
+                  {isStd ? L.add : `👑 ${L.add}`}
                 </button>
               </div>
             </article>
           );
         })}
 
-        <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4 self-start">
+        <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4 self-start rounded-[24px]">
           <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">🎡 Bonus extra</p>
 
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
