@@ -19,6 +19,8 @@ const LABELS: Record<Lang, any> = {
     standard: "Standard",
     premium: "Premium",
     add: "Aggiungi al carrello",
+    addFive: "Scegli il 5 kg",
+    addFivePremium: "👑 Scegli il 5 kg Premium",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Pesa il mistero,",
@@ -38,11 +40,16 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Più venduto",
     bestValue: "🔥 Miglior valore",
     premiumTop: "👑 Premium Box",
+    valueLine1: "Più varietà nel box",
+    valueLine2: "Il formato più conveniente",
+    valueLine3: "La scelta migliore per spingere il valore",
   },
   en: {
     standard: "Standard",
     premium: "Premium",
     add: "Add to cart",
+    addFive: "Choose 5 kg",
+    addFivePremium: "👑 Choose 5 kg Premium",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Weigh the mystery,",
@@ -62,11 +69,16 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Best seller",
     bestValue: "🔥 Best value",
     premiumTop: "👑 Premium Box",
+    valueLine1: "More variety in the box",
+    valueLine2: "Best value per kg",
+    valueLine3: "The smartest choice to maximize value",
   },
   es: {
     standard: "Standard",
     premium: "Premium",
     add: "Añadir al carrito",
+    addFive: "Elige 5 kg",
+    addFivePremium: "👑 Elige 5 kg Premium",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Pesa el misterio,",
@@ -86,11 +98,16 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Más vendido",
     bestValue: "🔥 Mejor valor",
     premiumTop: "👑 Premium Box",
+    valueLine1: "Más variedad en la caja",
+    valueLine2: "Mejor valor por kg",
+    valueLine3: "La mejor opción para aumentar el valor",
   },
   fr: {
     standard: "Standard",
     premium: "Premium",
     add: "Ajouter au panier",
+    addFive: "Choisir 5 kg",
+    addFivePremium: "👑 Choisir 5 kg Premium",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Pèse le mystère,",
@@ -110,11 +127,16 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Le plus vendu",
     bestValue: "🔥 Meilleur rapport",
     premiumTop: "👑 Premium Box",
+    valueLine1: "Plus de variété dans la box",
+    valueLine2: "Meilleur prix au kilo",
+    valueLine3: "Le meilleur choix pour maximiser la valeur",
   },
   de: {
     standard: "Standard",
     premium: "Premium",
     add: "In den Warenkorb",
+    addFive: "5 kg wählen",
+    addFivePremium: "👑 5 kg Premium wählen",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Wiege das Geheimnis,",
@@ -134,15 +156,18 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Bestseller",
     bestValue: "🔥 Bestes Angebot",
     premiumTop: "👑 Premium Box",
+    valueLine1: "Mehr Vielfalt in der Box",
+    valueLine2: "Bester Preis pro kg",
+    valueLine3: "Die beste Wahl für mehr Wert",
   },
 };
 
-const WEIGHTS: Kg[] = [1, 2, 3, 5, 10];
+const WEIGHTS: Kg[] = [5, 3, 10, 2, 1];
 
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
     1: { total: 23.9, compareAt: 26.9 },
-    2: { total: 45.88, compareAt: 53.8 },
+    2: { total: 46.88, compareAt: 53.8 },
     3: { total: 65.28, compareAt: 80.7 },
     5: { total: 105.35, compareAt: 134.5 },
     10: { total: 201.5, compareAt: 269.0 },
@@ -155,7 +180,6 @@ const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number
     10: { total: 215.2, compareAt: 299.0 },
   },
 };
-
 
 const co2ByKg: Record<Lang, Record<Kg, string>> = {
   it: {
@@ -443,6 +467,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
           const showBestSeller = kg === 3;
           const showBestValue = kg === 5;
+          const isFiveKg = kg === 5;
 
           return (
             <article
@@ -460,7 +485,10 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   ? "border-white/14 bg-[radial-gradient(circle_at_top,rgba(34,197,94,.10),rgba(9,12,18,.92)_55%)] shadow-[0_18px_50px_rgba(0,0,0,.30)]"
                   : "border-yellow-300/35 bg-[radial-gradient(circle_at_top,rgba(212,175,55,.18),rgba(9,12,18,.94)_58%)] shadow-[0_22px_60px_rgba(212,175,55,.12)]",
                 showBestSeller ? "ring-1 ring-white/20" : "",
-                showBestValue ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.16)] scale-[1.01]" : "",
+                showBestValue
+                  ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.20)] scale-[1.01]"
+                  : "",
+                isFiveKg ? "lg:col-span-2" : "",
               ].join(" ")}
             >
               <div className="flex items-center justify-between mb-3 pt-1 text-[0.72rem] uppercase tracking-[.18em] text-white/65">
@@ -480,14 +508,20 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 </span>
               </div>
 
-              <div className={isStd ? "" : "rounded-[18px] p-[2px] bg-gradient-to-r from-yellow-200/25 via-[#d4af37]/30 to-yellow-200/25"}>
+              <div
+                className={
+                  isStd
+                    ? ""
+                    : "rounded-[18px] p-[2px] bg-gradient-to-r from-yellow-200/25 via-[#d4af37]/30 to-yellow-200/25"
+                }
+              >
                 <div className={`media-wrap ${isStd ? "media-wrap--std" : "media-wrap--prm"}`}>
                   <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[14px] bg-black/20">
                     <ProductMediaCarousel
                       slides={slides}
                       alt={`${isStd ? L.standard : L.premium} ${w}${L.kg}`}
-                      priority={w === 1}
-                      sizes="(min-width: 1024px) 380px, (min-width: 640px) 45vw, 92vw"
+                      priority={w === 5}
+                      sizes="(min-width: 1024px) 60vw, (min-width: 640px) 45vw, 92vw"
                     />
 
                     {showBestSeller ? (
@@ -510,7 +544,11 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
               </div>
 
               <div className="mt-5 flex items-start justify-between gap-4">
-                <h3 className={`product-title text-[1.55rem] leading-tight ${!isStd ? "text-yellow-50" : ""}`}>
+                <h3
+                  className={`product-title text-[1.55rem] leading-tight ${
+                    !isStd ? "text-yellow-50" : ""
+                  }`}
+                >
                   {isStd ? L.standard : L.premium} <span className="dot" /> {w} {L.kg}
                 </h3>
 
@@ -519,18 +557,26 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
                   <div
                     className={`text-[2.35rem] font-extrabold leading-none ${
-                      isStd ? "text-white" : "text-yellow-100 drop-shadow-[0_0_18px_rgba(244,207,87,.20)]"
+                      isStd
+                        ? "text-white"
+                        : "text-yellow-100 drop-shadow-[0_0_18px_rgba(244,207,87,.20)]"
                     }`}
                   >
                     {euro(total)}
                   </div>
 
-                  <div className={`text-sm ${isStd ? "text-white/75" : "text-yellow-100/80"} font-medium`}>
+                  <div
+                    className={`text-sm ${
+                      isStd ? "text-white/75" : "text-yellow-100/80"
+                    } font-medium`}
+                  >
                     ({perKg.toFixed(2)} {L.perkg})
                   </div>
 
                   {co2Text ? (
-                    <div className="text-[0.72rem] text-emerald-200/95 font-medium">♻ {co2Text}</div>
+                    <div className="text-[0.72rem] text-emerald-200/95 font-medium">
+                      ♻ {co2Text}
+                    </div>
                   ) : null}
                 </div>
               </div>
@@ -552,9 +598,11 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
               {showBestValue ? (
                 <div className="mt-4 rounded-2xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-sm font-semibold text-emerald-100 shadow-[0_10px_30px_rgba(16,185,129,.10)]">
-                  ✔ Più varietà nel box <br />
-                  ✔ Scelta ideale per spingere il valore <br />
-                  ✔ Il formato che conviene di più
+                  ✔ {L.valueLine1}
+                  <br />
+                  ✔ {L.valueLine2}
+                  <br />
+                  ✔ {L.valueLine3}
                 </div>
               ) : null}
 
@@ -565,11 +613,18 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                     isStd
                       ? "bg-gradient-to-r from-white to-white/85 text-[#101318] shadow-[0_14px_34px_rgba(255,255,255,.12)] hover:scale-[1.02]"
                       : "bg-gradient-to-r from-[#fff2a8] via-[#f4cf57] to-[#d4af37] text-[#1a1a1a] shadow-[0_16px_40px_rgba(212,175,55,.34)] hover:scale-[1.02]",
+                    isFiveKg ? "text-[1.08rem]" : "",
                   ].join(" ")}
                   onClick={() => handleAddToCart(currentKind, kg, perKg)}
                   type="button"
                 >
-                  {isStd ? L.add : `👑 ${L.add}`}
+                  {isFiveKg
+                    ? isStd
+                      ? L.addFive
+                      : L.addFivePremium
+                    : isStd
+                    ? L.add
+                    : `👑 ${L.add}`}
                 </button>
               </div>
             </article>
@@ -577,7 +632,9 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
         })}
 
         <article className="card border border-emerald-300/60 bg-gradient-to-br from-emerald-500/15 via-purple-500/15 to-emerald-400/15 p-5 flex flex-col items-center text-center gap-4 self-start rounded-[24px]">
-          <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">🎡 Bonus extra</p>
+          <p className="text-[0.7rem] uppercase tracking-[.18em] text-emerald-200/80">
+            🎡 Bonus extra
+          </p>
 
           <div className="w-28 h-28 md:w-32 md:h-32 rounded-2xl overflow-hidden bg-black/60 border border-white/20 flex items-center justify-center">
             <Image
