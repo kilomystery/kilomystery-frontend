@@ -469,9 +469,8 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const showBestValue = kg === 5;
           const isFiveKg = kg === 5;
 
-          return (
+          const cardInner = (
             <article
-              key={`${tab}-${w}`}
               id={
                 tab === "std" && w === 10
                   ? "buy-standard-10"
@@ -485,9 +484,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   ? "border-white/14 bg-[radial-gradient(circle_at_top,rgba(34,197,94,.10),rgba(9,12,18,.92)_55%)] shadow-[0_18px_50px_rgba(0,0,0,.30)]"
                   : "border-yellow-300/35 bg-[radial-gradient(circle_at_top,rgba(212,175,55,.18),rgba(9,12,18,.94)_58%)] shadow-[0_22px_60px_rgba(212,175,55,.12)]",
                 showBestSeller ? "ring-1 ring-white/20" : "",
-                showBestValue
-                  ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.20)] scale-[1.01]"
-                  : "",
+                showBestValue ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.20)] scale-[1.01]" : "",
                 isFiveKg ? "lg:col-span-2" : "",
               ].join(" ")}
             >
@@ -628,6 +625,21 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 </button>
               </div>
             </article>
+          );
+
+          if (!isFiveKg) {
+            return <div key={`${tab}-${w}`}>{cardInner}</div>;
+          }
+
+          return (
+            <div
+              key={`${tab}-${w}`}
+              className="relative lg:col-span-2 rounded-[28px] p-[2px] bg-gradient-to-r from-emerald-300 via-green-400 to-lime-300 shadow-[0_0_0_1px_rgba(110,231,183,.22),0_0_26px_rgba(52,211,153,.16)] transition-all duration-300 hover:scale-[1.01]"
+            >
+              <div className="rounded-[26px] bg-[#0b1016]">
+                {cardInner}
+              </div>
+            </div>
           );
         })}
 
