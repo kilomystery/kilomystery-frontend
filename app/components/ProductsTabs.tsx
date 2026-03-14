@@ -33,6 +33,7 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Sigillo con ID lotto e data",
     badgeStd: "Perfetta per iniziare",
     badgePrm: "Contenuto più ricco",
+    badgeTen: "🎥 Unboxing lungo",
     wheelTitle: "Ruota della fortuna",
     wheelText:
       "Con un ordine da almeno 10 kg ottieni 1 giro automatico quando vai al carrello. Puoi vincere fino a +2 kg bonus che aggiungiamo al tuo ordine.",
@@ -40,9 +41,13 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Più venduto",
     bestValue: "🔥 Miglior valore",
     premiumTop: "👑 Premium Box",
-    valueLine1: "Più varietà nel box",
-    valueLine2: "Il formato più conveniente",
-    valueLine3: "La scelta migliore per spingere il valore",
+    fiveLine1:
+      "💰 Alcuni clienti affermano di aver trovato, nei box più fortunati, prodotti per un valore di centinaia di euro superiore al prezzo pagato.",
+    fiveLine2: "📦 In media 7-15 articoli per box",
+    tenLine1:
+      "💰 Alcuni clienti affermano di aver trovato, nei box più fortunati, prodotti per un valore di centinaia di euro superiore al prezzo pagato.",
+    tenLine2: "📦 In media 14-30 articoli per box",
+    randomLine: "🎁 Ogni box è diverso e completamente casuale",
   },
   en: {
     standard: "Standard",
@@ -62,6 +67,7 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Seal with batch ID and date",
     badgeStd: "Perfect to start",
     badgePrm: "Richer content",
+    badgeTen: "🎥 Long unboxing",
     wheelTitle: "Mystery Wheel",
     wheelText:
       "With an order of at least 10 kg you unlock 1 automatic spin when you go to the cart. Win up to +2 kg bonus that we add to your order.",
@@ -69,9 +75,13 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Best seller",
     bestValue: "🔥 Best value",
     premiumTop: "👑 Premium Box",
-    valueLine1: "More variety in the box",
-    valueLine2: "Best value per kg",
-    valueLine3: "The smartest choice to maximize value",
+    fiveLine1:
+      "💰 Some customers say they found, in the luckiest boxes, products worth hundreds of euros more than the price paid.",
+    fiveLine2: "📦 On average 7-15 items per box",
+    tenLine1:
+      "💰 Some customers say they found, in the luckiest boxes, products worth hundreds of euros more than the price paid.",
+    tenLine2: "📦 On average 14-30 items per box",
+    randomLine: "🎁 Every box is different and completely random",
   },
   es: {
     standard: "Standard",
@@ -91,6 +101,7 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Precinto con ID de lote y fecha",
     badgeStd: "Perfecta para empezar",
     badgePrm: "Contenido más rico",
+    badgeTen: "🎥 Unboxing largo",
     wheelTitle: "Ruleta de la suerte",
     wheelText:
       "Con un pedido de al menos 10 kg consigues 1 tirada automática al ir al carrito. Puedes ganar hasta +2 kg extra que añadimos a tu pedido.",
@@ -98,9 +109,13 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Más vendido",
     bestValue: "🔥 Mejor valor",
     premiumTop: "👑 Premium Box",
-    valueLine1: "Más variedad en la caja",
-    valueLine2: "Mejor valor por kg",
-    valueLine3: "La mejor opción para aumentar el valor",
+    fiveLine1:
+      "💰 Algunos clientes afirman haber encontrado, en las cajas más afortunadas, productos con un valor de cientos de euros superior al precio pagado.",
+    fiveLine2: "📦 En promedio 7-15 artículos por caja",
+    tenLine1:
+      "💰 Algunos clientes afirman haber encontrado, en las cajas más afortunadas, productos con un valor de cientos de euros superior al precio pagado.",
+    tenLine2: "📦 En promedio 14-30 artículos por caja",
+    randomLine: "🎁 Cada caja es diferente y completamente aleatoria",
   },
   fr: {
     standard: "Standard",
@@ -120,6 +135,7 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Scellé avec ID de lot et date",
     badgeStd: "Parfait pour commencer",
     badgePrm: "Contenu plus riche",
+    badgeTen: "🎥 Long unboxing",
     wheelTitle: "Roue mystère",
     wheelText:
       "Avec une commande d’au moins 10 kg, tu gagnes 1 tirage automatique en arrivant au panier. Jusqu’à +2 kg bonus ajoutés à ta commande.",
@@ -127,9 +143,13 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Le plus vendu",
     bestValue: "🔥 Meilleur rapport",
     premiumTop: "👑 Premium Box",
-    valueLine1: "Plus de variété dans la box",
-    valueLine2: "Meilleur prix au kilo",
-    valueLine3: "Le meilleur choix pour maximiser la valeur",
+    fiveLine1:
+      "💰 Certains clients affirment avoir trouvé, dans les box les plus chanceuses, des produits d’une valeur de plusieurs centaines d’euros supérieure au prix payé.",
+    fiveLine2: "📦 En moyenne 7-15 articles par box",
+    tenLine1:
+      "💰 Certains clients affirment avoir trouvé, dans les box les plus chanceuses, des produits d’une valeur de plusieurs centaines d’euros supérieure au prix payé.",
+    tenLine2: "📦 En moyenne 14-30 articles par box",
+    randomLine: "🎁 Chaque box est différente et complètement aléatoire",
   },
   de: {
     standard: "Standard",
@@ -149,6 +169,7 @@ const LABELS: Record<Lang, any> = {
     bullet3: "Siegel mit Posten-ID und Datum",
     badgeStd: "Perfekt zum Start",
     badgePrm: "Mehr Inhalt",
+    badgeTen: "🎥 Langes Unboxing",
     wheelTitle: "Glücksrad",
     wheelText:
       "Mit einer Bestellung von mindestens 10 kg bekommst du 1 Dreh automatisch im Warenkorb. Gewinne bis zu +2 kg Bonus, die wir deiner Bestellung hinzufügen.",
@@ -156,9 +177,13 @@ const LABELS: Record<Lang, any> = {
     bestSeller: "⭐ Bestseller",
     bestValue: "🔥 Bestes Angebot",
     premiumTop: "👑 Premium Box",
-    valueLine1: "Mehr Vielfalt in der Box",
-    valueLine2: "Bester Preis pro kg",
-    valueLine3: "Die beste Wahl für mehr Wert",
+    fiveLine1:
+      "💰 Einige Kunden berichten, in den besten Boxen Produkte gefunden zu haben, deren Wert um Hunderte Euro über dem bezahlten Preis lag.",
+    fiveLine2: "📦 Im Durchschnitt 7-15 Artikel pro Box",
+    tenLine1:
+      "💰 Einige Kunden berichten, in den besten Boxen Produkte gefunden zu haben, deren Wert um Hunderte Euro über dem bezahlten Preis lag.",
+    tenLine2: "📦 Im Durchschnitt 14-30 Artikel pro Box",
+    randomLine: "🎁 Jede Box ist anders und komplett zufällig",
   },
 };
 
@@ -468,6 +493,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const showBestSeller = kg === 3;
           const showBestValue = kg === 5;
           const isFiveKg = kg === 5;
+          const isTenKg = kg === 10;
 
           const cardInner = (
             <article
@@ -490,7 +516,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
             >
               <div className="flex items-center justify-between mb-3 pt-1 text-[0.72rem] uppercase tracking-[.18em] text-white/65">
                 <span className={!isStd ? "text-yellow-100/85 font-semibold" : ""}>
-                  {isStd ? L.badgeStd : L.badgePrm}
+                  {isTenKg ? L.badgeTen : isStd ? L.badgeStd : L.badgePrm}
                 </span>
 
                 <span
@@ -593,13 +619,21 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 </li>
               </ul>
 
+              <div className="mt-3 text-sm text-white/80 font-medium">{L.randomLine}</div>
+
               {showBestValue ? (
                 <div className="mt-4 rounded-2xl border border-emerald-200/30 bg-emerald-300/10 px-4 py-3 text-sm font-semibold text-emerald-100 shadow-[0_10px_30px_rgba(16,185,129,.10)]">
-                  ✔ {L.valueLine1}
+                  {L.fiveLine1}
                   <br />
-                  ✔ {L.valueLine2}
+                  {L.fiveLine2}
+                </div>
+              ) : null}
+
+              {isTenKg ? (
+                <div className="mt-4 rounded-2xl border border-yellow-200/30 bg-yellow-300/10 px-4 py-3 text-sm font-semibold text-yellow-100 shadow-[0_10px_30px_rgba(234,179,8,.12)]">
+                  {L.tenLine1}
                   <br />
-                  ✔ {L.valueLine3}
+                  {L.tenLine2}
                 </div>
               ) : null}
 
@@ -636,9 +670,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
               key={`${tab}-${w}`}
               className="relative lg:col-span-2 rounded-[28px] p-[2px] bg-gradient-to-r from-emerald-300 via-green-400 to-lime-300 shadow-[0_0_0_1px_rgba(110,231,183,.22),0_0_26px_rgba(52,211,153,.16)] transition-all duration-300 hover:scale-[1.01]"
             >
-              <div className="rounded-[26px] bg-[#0b1016]">
-                {cardInner}
-              </div>
+              <div className="rounded-[26px] bg-[#0b1016]">{cardInner}</div>
             </div>
           );
         })}
