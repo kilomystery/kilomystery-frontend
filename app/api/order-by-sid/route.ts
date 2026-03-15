@@ -1,4 +1,3 @@
-// app/api/order-by-sid/route.ts
 import { NextRequest, NextResponse } from "next/server";
 
 const SHOPIFY_STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
@@ -10,24 +9,7 @@ export async function GET(req: NextRequest) {
     const sid = req.nextUrl.searchParams.get("sid");
 
     if (!sid) {
-      return NextResponse.json(
-        { ok: false, error: "Missing sid" },
-        { status: 400 }
-      );
-    }
-
-    if (!SHOPIFY_STORE_DOMAIN || !SHOPIFY_ADMIN_ACCESS_TOKEN) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Missing Shopify admin configuration",
-          details: {
-            hasDomain: !!SHOPIFY_STORE_DOMAIN,
-            hasAdminToken: !!SHOPIFY_ADMIN_ACCESS_TOKEN,
-          },
-        },
-        { status: 500 }
-      );
+      return NextResponse.json({ ok: false, error: "Missing sid" }, { status: 400 });
     }
 
     const query = `
@@ -45,16 +27,11 @@ export async function GET(req: NextRequest) {
                   currencyCode
                 }
               }
-              displayFinancialStatus
-              displayFulfillmentStatus
               lineItems(first: 20) {
                 edges {
                   node {
                     title
                     quantity
-                    variant {
-                      id
-                    }
                   }
                 }
               }
@@ -70,7 +47,7 @@ export async function GET(req: NextRequest) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-Shopify-Access-Token": SHOPIFY_ADMIN_ACCESS_TOKEN,
+          "X-Shopify-Access-Token": SHOPIFY_ADMIN_ACCESS_TOKEN!,
         },
         body: JSON.stringify({ query }),
         cache: "no-store",
@@ -79,11 +56,12 @@ export async function GET(req: NextRequest) {
 
     const data = await response.json();
 
-    if (data?.errors?.length) {
-      return NextResponse.json(
-        { ok: false, error: "Shopify GraphQL error", details: data.errors },
-        { status: 500 }
-      );
+    if (data?.errors) {
+      return NextResponse.json({
+        ok: false,
+        error: "Shopify GraphQL error",
+        details: data.errors,
+      });
     }
 
     const edges = data?.data?.orders?.edges ?? [];
@@ -112,7 +90,6 @@ export async function GET(req: NextRequest) {
       order?.lineItems?.edges?.map((edge: any) => ({
         title: edge?.node?.title || "",
         quantity: Number(edge?.node?.quantity || 1),
-        variantId: edge?.node?.variant?.id || null,
       })) || [];
 
     return NextResponse.json({
@@ -123,8 +100,6 @@ export async function GET(req: NextRequest) {
         name: order.name,
         note: order.note,
         createdAt: order.createdAt,
-        financialStatus: order.displayFinancialStatus,
-        fulfillmentStatus: order.displayFulfillmentStatus,
         value: amount,
         currency,
         items,
