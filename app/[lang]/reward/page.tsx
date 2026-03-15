@@ -2,16 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import SpinWheel from "@/app/components/SpinWheel";
 import { Lang, normalizeLang } from "@/i18n/lang";
-
-const WHEEL_LOCK_KEY = "km_wheel_can_play";
 
 type RewardOrder = {
   id: string;
   name: string;
-  note?: string;
-  createdAt?: string;
   value: number;
   currency: string;
   items: Array<{
@@ -24,79 +19,70 @@ type RewardOrder = {
 export default function RewardPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const searchParams = useSearchParams();
+
   const [order, setOrder] = useState<RewardOrder | null>(null);
 
   const sid = useMemo(() => {
     return searchParams?.get("sid") || "";
   }, [searchParams]);
 
-  useEffect(() => {
-    try {
-      window.localStorage.removeItem(WHEEL_LOCK_KEY);
-    } catch {}
-  }, []);
-
+  // cerca ordine tramite sid
   useEffect(() => {
     if (!sid) return;
 
-    let cancelled = false;
-
-    const run = async () => {
+    const loadOrder = async () => {
       try {
-        const res = await fetch(`/api/order-by-sid?sid=${encodeURIComponent(sid)}`, {
-          method: "GET",
-          cache: "no-store",
-        });
-
+        const res = await fetch(`/api/order-by-sid?sid=${sid}`);
         const data = await res.json();
-        if (cancelled) return;
 
-        if (data?.ok && data?.found && data?.order) {
+        if (data?.ok && data?.found) {
           setOrder(data.order);
         }
       } catch (e) {
-        console.error("[KM_REWARD] order lookup failed", e);
+        console.error("order lookup error", e);
       }
     };
 
-    run();
-    const timer = window.setInterval(run, 3000);
-
-    return () => {
-      cancelled = true;
-      window.clearInterval(timer);
-    };
+    loadOrder();
   }, [sid]);
 
+  // invia purchase a Meta
   useEffect(() => {
-    if (!order?.id) return;
-    if (typeof window === "undefined") return;
+    if (!order) return;
     if (!window.fbq) return;
 
-    const purchaseKey = `km_purchase_sent_${order.id}`;
-    if (window.sessionStorage.getItem(purchaseKey)) return;
+    const key = `km_purchase_sent_${order.id}`;
 
-    const payload = {
-      value: Number(order.value || 0),
-      currency: order.currency || "EUR",
+    if (sessionStorage.getItem(key)) return;
+
+    window.fbq("track", "Purchase", {
+      value: order.value,
+      currency: order.currency,
       content_type: "product",
-      content_ids: order.items.map((item) => item.variantId || item.title),
-      contents: order.items.map((item) => ({
-        content_name: item.title,
-        content_id: item.variantId || item.title,
-        quantity: Number(item.quantity || 1),
-      })),
-      order_id: order.name,
-    };
+      content_ids: order.items.map((i) => i.variantId || i.title),
+    });
 
-    try {
-      window.fbq("track", "Purchase", payload);
-      window.sessionStorage.setItem(purchaseKey, "1");
-      console.log("[KM_REWARD] Purchase sent", payload);
-    } catch (e) {
-      console.error("[KM_REWARD] Purchase track failed", e);
-    }
+    sessionStorage.setItem(key, "1");
+
+    console.log("Purchase sent", order);
   }, [order]);
 
-  return <SpinWheel lang={lang} showBackToShopButton />;
+  return (
+    <div className="container py-20 text-center">
+      <h1 className="text-3xl font-bold mb-4">
+        🎉 Ordine confermato!
+      </h1>
+
+      <p className="text-white/70 mb-8">
+        Grazie per il tuo acquisto su KiloMystery.
+      </p>
+
+      <a
+        href={`/${lang}`}
+        className="px-6 py-3 rounded-xl bg-white text-black font-bold"
+      >
+        Torna allo shop
+      </a>
+    </div>
+  );
 }
