@@ -30,10 +30,9 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Cerchiamo ordini recenti con la nota che contiene SID:...
     const query = `
-      query OrdersBySid($query: String!) {
-        orders(first: 10, sortKey: CREATED_AT, reverse: true, query: $query) {
+      query OrdersRecent {
+        orders(first: 25, sortKey: CREATED_AT, reverse: true) {
           edges {
             node {
               id
@@ -65,10 +64,6 @@ export async function GET(req: NextRequest) {
       }
     `;
 
-    const variables = {
-      query: `note:SID:${sid}`,
-    };
-
     const response = await fetch(
       `https://${SHOPIFY_STORE_DOMAIN}/admin/api/${API_VERSION}/graphql.json`,
       {
@@ -77,7 +72,7 @@ export async function GET(req: NextRequest) {
           "Content-Type": "application/json",
           "X-Shopify-Access-Token": SHOPIFY_ADMIN_ACCESS_TOKEN,
         },
-        body: JSON.stringify({ query, variables }),
+        body: JSON.stringify({ query }),
         cache: "no-store",
       }
     );
@@ -92,7 +87,18 @@ export async function GET(req: NextRequest) {
     }
 
     const edges = data?.data?.orders?.edges ?? [];
-    const order = edges[0]?.node;
+
+    let order = null;
+
+    for (const edge of edges) {
+      const n = edge?.node;
+      if (!n?.note) continue;
+
+      if (n.note.includes(`SID:${sid}`)) {
+        order = n;
+        break;
+      }
+    }
 
     if (!order) {
       return NextResponse.json({ ok: true, found: false });
