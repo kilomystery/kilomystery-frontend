@@ -1,5 +1,6 @@
 // app/api/checkout/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 
 const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.myshopify.com
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_TOKEN;
@@ -37,6 +38,14 @@ type IncomingItem = {
   tier?: string;
 };
 
+function buildSid() {
+  try {
+    return randomUUID();
+  } catch {
+    return `km_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -58,6 +67,9 @@ export async function POST(req: NextRequest) {
 
     // ✅ LIVE REGISTRATION (oggetto con dati)
     const live = body?.liveRegistration;
+
+    // ✅ nuovo SID unico per collegare checkout -> ordine -> reward
+    const sid = buildSid();
 
     // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
@@ -144,6 +156,7 @@ export async function POST(req: NextRequest) {
       { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
       { key: "orderedKg", value: String(totalKg) },
       { key: "locale", value: shopifyLocale },
+      { key: "sid", value: sid }, // ✅ nuovo
     ];
 
     if (returnUrl) cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
@@ -194,12 +207,15 @@ export async function POST(req: NextRequest) {
      * ✅ IMPORTANTISSIMO PER MAKE:
      * Make (Watch Orders) legge quasi sempre SOLO Order.note.
      * Quindi scriviamo una nota "ufficiale" nel carrello/checkout.
+     * ✅ aggiungiamo anche SID nella note per poter ritrovare l'ordine dopo
      */
-    const finalOrderNote =
+    const baseOrderNote =
       (orderNote && orderNote.trim()) ||
       (live?.tiktokUsername
         ? `LIVE_TIKTOK_TICKET | ${String(live.tiktokUsername).trim()}`
         : "LIVE_TIKTOK_TICKET");
+
+    const finalOrderNote = `${baseOrderNote} | SID:${sid}`;
 
     const query = `
       mutation CartCreate($input: CartInput!) {
@@ -271,6 +287,18 @@ export async function POST(req: NextRequest) {
     // 🔗 checkoutUrl finale: locale + pass-through params (_gl/utm/gclid…)
     const url = new URL(cart.checkoutUrl as string);
     url.searchParams.set("locale", shopifyLocale);
+    url.searchParams.set("sid", sid); // ✅ nuovo
+
+    // ✅ aggiungiamo sid anche al returnUrl se presente
+    if (returnUrl) {
+      try {
+        const ret = new URL(String(returnUrl));
+        ret.searchParams.set("sid", sid);
+        url.searchParams.set("return_url", ret.toString());
+      } catch {
+        // se returnUrl non è parseabile lasciamo stare
+      }
+    }
 
     if (originQuery) {
       const qp = new URLSearchParams(
@@ -284,12 +312,14 @@ export async function POST(req: NextRequest) {
     }
 
     // ✅ fallback: forza la nota anche via query param (non fa male)
-    // Shopify accetta ?note=... e la porta nell'ordine (note) in molti casi.
     if (finalOrderNote) {
       url.searchParams.set("note", finalOrderNote);
     }
 
-    return NextResponse.json({ url: url.toString() });
+    return NextResponse.json({
+      url: url.toString(),
+      sid, // ✅ utile anche lato debug
+    });
   } catch (err: any) {
     return NextResponse.json(
       {
