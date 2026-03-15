@@ -14,6 +14,16 @@ type MediaSlide =
   | { type: "video"; src: string; poster: string }
   | { type: "image"; src: string };
 
+type SocialProofItem = {
+  addToCartsToday?: number;
+  availableNow?: number;
+};
+
+type SocialProofResponse = {
+  standard?: Partial<Record<Kg, SocialProofItem>>;
+  premium?: Partial<Record<Kg, SocialProofItem>>;
+};
+
 const LABELS: Record<Lang, any> = {
   it: {
     standard: "Standard",
@@ -48,6 +58,14 @@ const LABELS: Record<Lang, any> = {
       "💰 Alcuni clienti affermano di aver trovato, nei box più fortunati, prodotti per un valore di centinaia di euro superiore al prezzo pagato.",
     tenLine2: "📦 In media 14-30 articoli per box",
     randomLine: "🎁 Ogni box è diverso e completamente casuale",
+    klarnaPrefix: "oppure in 3 rate da",
+    klarnaSuffix: "con Klarna",
+    cartsPrefix: "🛒 Aggiunto a",
+    cartsSuffix: "carrelli oggi",
+    stockPrefix: "⚠️ Solo",
+    stockSuffix: "disponibili ora",
+    stockLowPrefix: "🔥 Lotto quasi finito:",
+    stockLowSuffix: "ancora disponibili",
   },
   en: {
     standard: "Standard",
@@ -82,6 +100,14 @@ const LABELS: Record<Lang, any> = {
       "💰 Some customers say they found, in the luckiest boxes, products worth hundreds of euros more than the price paid.",
     tenLine2: "📦 On average 14-30 items per box",
     randomLine: "🎁 Every box is different and completely random",
+    klarnaPrefix: "or in 3 payments of",
+    klarnaSuffix: "with Klarna",
+    cartsPrefix: "🛒 Added to",
+    cartsSuffix: "carts today",
+    stockPrefix: "⚠️ Only",
+    stockSuffix: "available now",
+    stockLowPrefix: "🔥 Nearly sold out:",
+    stockLowSuffix: "left",
   },
   es: {
     standard: "Standard",
@@ -116,6 +142,14 @@ const LABELS: Record<Lang, any> = {
       "💰 Algunos clientes afirman haber encontrado, en las cajas más afortunadas, productos con un valor de cientos de euros superior al precio pagado.",
     tenLine2: "📦 En promedio 14-30 artículos por caja",
     randomLine: "🎁 Cada caja es diferente y completamente aleatoria",
+    klarnaPrefix: "o en 3 pagos de",
+    klarnaSuffix: "con Klarna",
+    cartsPrefix: "🛒 Añadido a",
+    cartsSuffix: "carritos hoy",
+    stockPrefix: "⚠️ Solo",
+    stockSuffix: "disponibles ahora",
+    stockLowPrefix: "🔥 Lote casi agotado:",
+    stockLowSuffix: "disponibles",
   },
   fr: {
     standard: "Standard",
@@ -150,6 +184,14 @@ const LABELS: Record<Lang, any> = {
       "💰 Certains clients affirment avoir trouvé, dans les box les plus chanceuses, des produits d’une valeur de plusieurs centaines d’euros supérieure au prix payé.",
     tenLine2: "📦 En moyenne 14-30 articles par box",
     randomLine: "🎁 Chaque box est différente et complètement aléatoire",
+    klarnaPrefix: "ou en 3 fois de",
+    klarnaSuffix: "avec Klarna",
+    cartsPrefix: "🛒 Ajouté à",
+    cartsSuffix: "paniers aujourd’hui",
+    stockPrefix: "⚠️ Plus que",
+    stockSuffix: "disponibles maintenant",
+    stockLowPrefix: "🔥 Lot presque épuisé :",
+    stockLowSuffix: "restants",
   },
   de: {
     standard: "Standard",
@@ -184,6 +226,14 @@ const LABELS: Record<Lang, any> = {
       "💰 Einige Kunden berichten, in den besten Boxen Produkte gefunden zu haben, deren Wert um Hunderte Euro über dem bezahlten Preis lag.",
     tenLine2: "📦 Im Durchschnitt 14-30 Artikel pro Box",
     randomLine: "🎁 Jede Box ist anders und komplett zufällig",
+    klarnaPrefix: "oder in 3 Raten à",
+    klarnaSuffix: "mit Klarna",
+    cartsPrefix: "🛒 Heute in",
+    cartsSuffix: "Warenkörbe gelegt",
+    stockPrefix: "⚠️ Nur noch",
+    stockSuffix: "jetzt verfügbar",
+    stockLowPrefix: "🔥 Fast ausverkauft:",
+    stockLowSuffix: "übrig",
   },
 };
 
@@ -246,6 +296,21 @@ const co2ByKg: Record<Lang, Record<Kg, string>> = {
 
 const euro = (n: number) =>
   n.toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+
+const KLARNA_INSTALLMENTS: Record<TabTier, Partial<Record<Kg, number>>> = {
+  std: {
+    2: 15.63,
+    3: 21.76,
+    5: 35.12,
+    10: 67.17,
+  },
+  prm: {
+    2: 17.04,
+    3: 24.75,
+    5: 39.45,
+    10: 71.73,
+  },
+};
 
 function ProductMediaCarousel({
   slides,
@@ -354,6 +419,7 @@ function ProductMediaCarousel({
 
 export default function ProductsTabs({ lang = "it" as Lang }) {
   const [tab, setTab] = useState<TabTier>("std");
+  const [socialProof, setSocialProof] = useState<SocialProofResponse>({});
   const { addItem } = useCart();
 
   const supported = ["it", "en", "es", "fr", "de"] as const;
@@ -393,6 +459,34 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
     trackViewItemList(`ProductsTabs-${currentKind}`, items as any);
   }, [safeLang, tab, currentKind]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      try {
+        const res = await fetch("/api/products/social-proof", {
+          method: "GET",
+          cache: "no-store",
+        });
+
+        if (!res.ok) return;
+
+        const data = (await res.json()) as SocialProofResponse;
+        if (!cancelled) setSocialProof(data || {});
+      } catch {
+        // fallback silenzioso
+      }
+    };
+
+    run();
+    const interval = window.setInterval(run, 45000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   function handleAddToCart(kind: "Standard" | "Premium", kg: Kg, perKg: number) {
     const tierLookup = kind === "Standard" ? "standard" : "premium";
     const shopifyId = SHOPIFY_VARIANTS[tierLookup as Tier][kg];
@@ -410,6 +504,8 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
     addItem(cartItem as any);
     trackAddToCart(cartItem, 1);
   }
+
+  const proofMap = tab === "std" ? socialProof.standard : socialProof.premium;
 
   return (
     <section className="container py-10 space-y-6">
@@ -495,6 +591,11 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const isFiveKg = kg === 5;
           const isTenKg = kg === 10;
 
+          const klarnaRate = KLARNA_INSTALLMENTS[tab][kg];
+          const liveProof = proofMap?.[kg];
+          const addToCartsToday = liveProof?.addToCartsToday;
+          const availableNow = liveProof?.availableNow;
+
           const cardInner = (
             <article
               id={
@@ -510,7 +611,9 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   ? "border-white/14 bg-[radial-gradient(circle_at_top,rgba(34,197,94,.10),rgba(9,12,18,.92)_55%)] shadow-[0_18px_50px_rgba(0,0,0,.30)]"
                   : "border-yellow-300/35 bg-[radial-gradient(circle_at_top,rgba(212,175,55,.18),rgba(9,12,18,.94)_58%)] shadow-[0_22px_60px_rgba(212,175,55,.12)]",
                 showBestSeller ? "ring-1 ring-white/20" : "",
-                showBestValue ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.20)] scale-[1.01]" : "",
+                showBestValue
+                  ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.20)] scale-[1.01]"
+                  : "",
                 isFiveKg ? "lg:col-span-2" : "",
               ].join(" ")}
             >
@@ -596,6 +699,12 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                     ({perKg.toFixed(2)} {L.perkg})
                   </div>
 
+                  {klarnaRate ? (
+                    <div className="text-[0.8rem] font-semibold text-sky-200/95">
+                      💳 {L.klarnaPrefix} {euro(klarnaRate)} {L.klarnaSuffix}
+                    </div>
+                  ) : null}
+
                   {co2Text ? (
                     <div className="text-[0.72rem] text-emerald-200/95 font-medium">
                       ♻ {co2Text}
@@ -603,6 +712,30 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   ) : null}
                 </div>
               </div>
+
+              {(addToCartsToday || availableNow) && (
+                <div className="mt-4 space-y-2">
+                  {typeof addToCartsToday === "number" && addToCartsToday > 0 ? (
+                    <div className="rounded-xl border border-sky-300/20 bg-sky-300/10 px-3 py-2 text-[0.82rem] font-semibold text-sky-100">
+                      {L.cartsPrefix} {addToCartsToday} {L.cartsSuffix}
+                    </div>
+                  ) : null}
+
+                  {typeof availableNow === "number" && availableNow > 0 ? (
+                    <div
+                      className={`rounded-xl px-3 py-2 text-[0.82rem] font-semibold ${
+                        availableNow <= 5
+                          ? "border border-red-300/30 bg-red-400/10 text-red-100"
+                          : "border border-amber-300/25 bg-amber-300/10 text-amber-100"
+                      }`}
+                    >
+                      {availableNow <= 5
+                        ? `${L.stockLowPrefix} ${availableNow} ${L.stockLowSuffix}`
+                        : `${L.stockPrefix} ${availableNow} ${L.stockSuffix}`}
+                    </div>
+                  ) : null}
+                </div>
+              )}
 
               <ul className="mt-4 space-y-2 text-[1.03rem]">
                 <li className="flex items-start gap-2 text-white/92">
@@ -707,4 +840,4 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
       </div>
     </section>
   );
-}
+} 
