@@ -2,9 +2,9 @@
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
-import { HERO_IMAGE } from "@/lib/staticImages";
 import type { Metadata } from "next";
 import { getPageMetadata } from "@/src/seo/meta";
+import Image from "next/image";
 
 type Copy = {
   heroTitle: string;
@@ -337,35 +337,34 @@ export default async function ShippingPage({
 
       <main className="container py-10 space-y-10">
         {/* HERO */}
-        <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6">
-          <div className="mx-auto mb-6 grid place-items-center">
-            <picture className="w-[240px] h-[240px] object-contain drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]">
-              <source srcSet={HERO_IMAGE.webp} type="image/webp" />
-              <source srcSet={HERO_IMAGE.png} type="image/png" />
-              <img
-                src={HERO_IMAGE.png}
-                alt={HERO_IMAGE.alt}
-                width={320}
-                height={320}
-                className="w-full h-full object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
+        <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 md:p-8">
+          <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
+            <Image
+              src="/logo.svg"
+              alt="KiloMystery"
+              width={320}
+              height={180}
+              className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+              priority
+            />
           </div>
-          <h1 className="section-title text-center text-3xl md:text-4xl font-extrabold">
-            <span className="brand-text">{t.heroTitle}</span>
+
+          <h1 className="section-title text-center text-3xl md:text-4xl font-extrabold leading-tight">
+            <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
+              {t.heroTitle}
+            </span>
           </h1>
+
           <p className="text-center text-white/70 mt-3 text-sm">
             {t.lastUpdateLabel}: <b>{today}</b>
           </p>
-          <p className="text-center text-white/60 text-xs mt-1">
+
+          <p className="text-center text-white/60 text-xs mt-2 max-w-3xl mx-auto">
             {t.heroSubtitle}
           </p>
         </section>
 
         <section className="grid gap-5 md:grid-cols-2">
-          {/* TEMPI & TRACKING */}
           <article className="card space-y-3">
             <h2 className="text-xl font-extrabold flex items-center gap-2">
               <span>{t.timesTitle}</span>
@@ -379,7 +378,6 @@ export default async function ShippingPage({
             <p className="text-white/60 text-xs">{t.timesNote}</p>
           </article>
 
-          {/* COSTI & NOTE */}
           <article className="card space-y-3">
             <h2 className="text-xl font-extrabold flex items-center gap-2">
               <span>{t.costsTitle}</span>
@@ -437,7 +435,6 @@ export default async function ShippingPage({
           </article>
         </section>
 
-        {/* COVERAGE */}
         <section className="card space-y-3">
           <h2 className="text-xl font-extrabold flex items-center gap-2">
             <span>{t.coverageTitle}</span>
@@ -446,7 +443,6 @@ export default async function ShippingPage({
           <p className="text-white/70 text-sm">{t.coverageText}</p>
         </section>
 
-        {/* PROBLEMS */}
         <section className="card space-y-3">
           <h2 className="text-xl font-extrabold flex items-center gap-2">
             <span>{t.problemsTitle}</span>
@@ -460,7 +456,6 @@ export default async function ShippingPage({
           </ul>
         </section>
 
-        {/* LINKS */}
         <section className="card space-y-3">
           <h2 className="text-xl font-extrabold flex items-center gap-2">
             <span>{t.linksTitle}</span>
@@ -485,7 +480,6 @@ export default async function ShippingPage({
           </ul>
         </section>
 
-        {/* COMPANY DETAILS */}
         <section className="card space-y-2">
           <h2 className="text-xl font-extrabold">{t.legalTitle}</h2>
           <p className="text-white/70 text-sm">{t.legalIntro}</p>

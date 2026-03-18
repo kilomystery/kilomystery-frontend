@@ -2,7 +2,7 @@
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
-import { HERO_IMAGE } from "@/lib/staticImages";
+import Image from "next/image";
 
 export const metadata = {
   title: "Termini e Condizioni",
@@ -59,8 +59,7 @@ const TERMS_COPY: Record<Lang, Copy> = {
       "Le presenti condizioni disciplinano l’accesso e l’uso del sito KiloMystery e la vendita di prodotti sotto forma di mystery box. Effettuando un ordine accetti che le box siano vendute come “mystery”: il contenuto non è visibile in anticipo e non è selezionabile nel dettaglio, salvo diversa indicazione nella pagina prodotto.",
 
     companyTitle: "Informazioni sul venditore",
-    companyIntro:
-      "Il sito è gestito da:",
+    companyIntro: "Il sito è gestito da:",
     companyItems: [
       "Ragione sociale: KILO MYSTERY SRLS",
       "Partita IVA: 02794550745",
@@ -409,29 +408,29 @@ export default async function TermsPage({
 
       <main className="container py-10 space-y-10">
         {/* HERO */}
-        <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6">
-          <div className="mx-auto mb-6 grid place-items-center">
-            <picture className="w-[240px] h-[240px] object-contain drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]">
-              <source srcSet={HERO_IMAGE.webp} type="image/webp" />
-              <source srcSet={HERO_IMAGE.png} type="image/png" />
-              <img
-                src={HERO_IMAGE.png}
-                alt={HERO_IMAGE.alt}
-                width={320}
-                height={320}
-                className="w-full h-full object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
+        <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 md:p-8">
+          <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
+            <Image
+              src="/logo.svg"
+              alt="KiloMystery"
+              width={320}
+              height={180}
+              className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+              priority
+            />
           </div>
-          <h1 className="section-title text-center text-3xl md:text-4xl font-extrabold">
-            <span className="brand-text">{t.heroTitle}</span>
+
+          <h1 className="section-title text-center text-3xl md:text-4xl font-extrabold leading-tight">
+            <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
+              {t.heroTitle}
+            </span>
           </h1>
+
           <p className="text-center text-white/70 mt-3 text-sm">
             {t.lastUpdateLabel}: <b>{today}</b>
           </p>
-          <p className="text-center text-white/60 text-xs mt-1">
+
+          <p className="text-center text-white/60 text-xs mt-2 max-w-3xl mx-auto">
             {t.heroSubtitle}
           </p>
         </section>

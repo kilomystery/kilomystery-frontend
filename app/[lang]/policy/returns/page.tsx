@@ -1,10 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
+import type { Metadata } from "next";
+import Image from "next/image";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
-import { HERO_IMAGE } from "@/lib/staticImages";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Politica Resi",
 };
 
@@ -13,35 +14,25 @@ type Copy = {
   heroSubtitle: string;
   lastUpdateLabel: string;
 
-  // NEW: Recesso
-  withdrawalTitle: string;
-  withdrawalIntro: string;
-  withdrawalItems: string[];
+  introTitle: string;
+  introText: string;
 
-  // Resi / condizioni
-  returnsTitle: string;
-  returnsIntro: string;
+  noReturnTitle: string;
+  noReturnIntro: string;
+  noReturnItems: string[];
 
-  conditionsTitle: string;
-  conditionsIntro: string;
-  conditionsItems: string[];
+  allowedTitle: string;
+  allowedIntro: string;
+  allowedItems: string[];
 
-  // Problemi / difetti
-  issuesTitle: string;
-  issuesIntro: string;
-  issuesItems: string[];
-
-  // Come fare il reso
   processTitle: string;
   processIntro: string;
   processItems: string[];
   processOutro: string;
 
-  // Rimborsi
   refundsTitle: string;
   refundsText: string;
 
-  // Dati aziendali
   legalTitle: string;
   legalIntro: string;
   legalName: string;
@@ -54,60 +45,56 @@ type Copy = {
 
 const RETURNS_COPY: Record<Lang, Copy> = {
   it: {
-    heroTitle: "Politica resi e rimborsi",
+    heroTitle: "Politica resi e segnalazioni",
     heroSubtitle:
-      "Le mystery box sono per definizione sorprendenti. Qui trovi regole chiare su recesso, resi e rimborsi. 📦",
+      "Le nostre mystery box contengono pacchi smarriti, resi e stock non reclamati: il contenuto è casuale, non testato e venduto come esperienza di acquisto sorpresa. 📦",
     lastUpdateLabel: "Ultimo aggiornamento",
 
-    withdrawalTitle: "Diritto di recesso (14 giorni)",
-    withdrawalIntro:
-      "Se acquisti come consumatore, puoi esercitare il diritto di recesso entro 14 giorni dalla consegna, senza dover fornire motivazioni.",
-    withdrawalItems: [
-      "Il prodotto deve essere restituito integro, non usato e con sigilli/chiusure non manomessi (se presenti).",
-      "Se la box o i sigilli risultano aperti/manomessi, potremmo applicare una riduzione del rimborso per perdita di valore.",
-      "Le spese di spedizione per la restituzione sono a carico del cliente, salvo diversa indicazione o casi di difetto/non conformità.",
+    introTitle: "Natura del prodotto",
+    introText:
+      "KiloMystery vende mystery box composte da pacchi smarriti postali, resi non reclamati e stock logistici. Il contenuto non è noto in anticipo, non è selezionabile dal cliente e non viene testato singolarmente prima della vendita. Acquistando una mystery box, il cliente accetta la natura casuale del contenuto e la possibilità che gli articoli possano presentare confezioni non perfette, segni di usura, componenti mancanti o non risultare funzionanti.",
+
+    noReturnTitle: "Casi in cui non accettiamo resi o richieste di rimborso",
+    noReturnIntro:
+      "Proprio per la natura del prodotto venduto, non accettiamo resi, rimborsi o contestazioni basati su elementi soggettivi o legati ai singoli articoli contenuti nella box. In particolare, non accettiamo richieste motivate da:",
+    noReturnItems: [
+      "mancato funzionamento di uno o più articoli contenuti nella mystery box;",
+      "presenza di articoli usati, incompleti, con scatola rovinata o packaging non perfetto;",
+      "contenuto ritenuto di valore inferiore alle aspettative personali;",
+      "assenza di una categoria specifica di prodotto desiderata;",
+      "difetti estetici, accessori mancanti o condizioni del singolo articolo non note prima dell'apertura;",
+      "valutazioni basate sul valore percepito del singolo prodotto invece che sull'esperienza complessiva della box.",
     ],
 
-    returnsTitle: "Resi delle mystery box",
-    returnsIntro:
-      "Le nostre box sono sigillate e vendute come mystery: il contenuto non è noto in anticipo e non è personalizzabile. Questo significa che non possiamo accettare contestazioni basate sul valore percepito dei prodotti. Restano comunque validi i diritti di recesso e le tutele per difetti/non conformità.",
-
-    conditionsTitle: "Condizioni per accettare un reso",
-    conditionsIntro: "Per accettare la richiesta di reso, chiediamo che:",
-    conditionsItems: [
-      "la box sia integra e restituita completa di tutti i componenti ricevuti;",
-      "sigilli e chiusure siano intatti (se presenti);",
-      "l’imballo esterno sia adeguato per il trasporto (per evitare danni ulteriori);",
-      "la richiesta venga inviata entro i termini previsti (recesso: 14 giorni).",
+    allowedTitle: "Casi in cui è possibile aprire una segnalazione",
+    allowedIntro:
+      "Restano salve le tutele previste dalla legge nei casi effettivamente imputabili alla spedizione o a un errore materiale. Possiamo quindi valutare una segnalazione nei seguenti casi:",
+    allowedItems: [
+      "pacco non consegnato o consegna anomala risultante dal tracking;",
+      "box ricevuta visibilmente manomessa o aperta prima della consegna;",
+      "imballo esterno gravemente danneggiato al momento dell'arrivo;",
+      "errore evidente nell'ordine spedito (ad esempio peso o tipologia acquistata completamente diversa da quella ricevuta);",
+      "anomalia documentabile relativa al trasporto o al lotto ricevuto.",
     ],
 
-    issuesTitle: "Problemi alla consegna o difetti",
-    issuesIntro:
-      "Se riscontri problemi (danni, manomissioni, errori evidenti di spedizione o non conformità), li gestiamo con priorità. Esempi:",
-    issuesItems: [
-      "imballo gravemente danneggiato all’arrivo;",
-      "box visibilmente manomessa o sigilli rotti;",
-      "errore di spedizione evidente (es. peso completamente diverso rispetto a quanto acquistato);",
-      "prodotti difettosi/non conformi (ove applicabile).",
-    ],
-
-    processTitle: "Come richiedere un reso o aprire una segnalazione",
-    processIntro: "Per avviare la procedura, ti chiediamo di:",
+    processTitle: "Come aprire una segnalazione",
+    processIntro: "Per consentirci di verificare correttamente il caso, ti chiediamo di:",
     processItems: [
-      "contattarci entro 48 ore dalla consegna in caso di danni/manomissioni, oppure entro 14 giorni se vuoi esercitare il recesso;",
-      "indicare numero ordine e motivo della richiesta (recesso / problema alla consegna / altro);",
-      "allegare foto chiare di: imballo esterno, sigilli/chiusure, etichetta di spedizione e contenuto (se pertinente).",
+      "contattarci entro 48 ore dalla consegna in caso di danni, manomissioni o anomalie evidenti;",
+      "indicare numero ordine e descrizione chiara del problema riscontrato;",
+      "allegare foto nitide dell'imballo esterno, dell'etichetta di spedizione, della box e dell'eventuale anomalia;",
+      "attendere le istruzioni del nostro servizio clienti prima di spedire qualsiasi reso.",
     ],
     processOutro:
-      "Ti risponderemo con le istruzioni e, se necessario, un codice/ID pratica. L’indirizzo di restituzione viene fornito via email dopo l’apertura della pratica.",
+      "Le richieste incomplete, prive di documentazione fotografica o riferite al semplice funzionamento/valore dei singoli prodotti contenuti nella mystery box potrebbero non essere accettate. L’eventuale indirizzo di rientro viene fornito esclusivamente via email dopo apertura e valutazione della pratica.",
 
     refundsTitle: "Rimborsi",
     refundsText:
-      "Se la richiesta viene approvata, il rimborso viene effettuato sullo stesso metodo di pagamento usato in fase di acquisto. Di norma, elaboriamo il rimborso entro 5–10 giorni lavorativi dalla ricezione e verifica del reso (le tempistiche finali dipendono dai circuiti di pagamento).",
+      "Eventuali rimborsi, sostituzioni o buoni acquisto vengono valutati esclusivamente dopo verifica del caso da parte del nostro team. Non è previsto alcun rimborso automatico per articoli singoli non funzionanti, per contenuto non gradito o per differenze rispetto alle aspettative personali. Qualora una segnalazione venga accolta, la soluzione verrà definita caso per caso.",
 
     legalTitle: "Dati aziendali e contatti",
     legalIntro:
-      "Trasparenza prima di tutto: qui trovi i dati ufficiali del venditore e i canali di contatto.",
+      "Per qualsiasi segnalazione relativa a spedizione, consegna o anomalie documentabili, puoi contattarci ai seguenti recapiti.",
     legalName: "Ragione sociale: KILO MYSTERY SRLS",
     legalVat: "Partita IVA: 02794550745",
     legalAddress:
@@ -118,60 +105,56 @@ const RETURNS_COPY: Record<Lang, Copy> = {
   },
 
   en: {
-    heroTitle: "Returns & refunds policy",
+    heroTitle: "Returns & claims policy",
     heroSubtitle:
-      "Mystery boxes are meant to be surprising. Here you’ll find clear rules for withdrawal, returns and refunds. 📦",
+      "Our mystery boxes contain lost parcels, unclaimed returns and logistics stock: contents are random, untested and sold as a surprise buying experience. 📦",
     lastUpdateLabel: "Last update",
 
-    withdrawalTitle: "Right of withdrawal (14 days)",
-    withdrawalIntro:
-      "If you purchase as a consumer, you can withdraw from the purchase within 14 days from delivery, without giving any reason.",
-    withdrawalItems: [
-      "Items must be returned unused, intact and with seals/closures not tampered with (if present).",
-      "If the box or seals are opened/tampered with, we may reduce the refund due to loss of value.",
-      "Return shipping costs are borne by the customer, unless otherwise stated or in case of defects/non-conformity.",
+    introTitle: "Product nature",
+    introText:
+      "KiloMystery sells mystery boxes made up of lost postal parcels, unclaimed returns and logistics stock. Contents are unknown in advance, cannot be selected by the customer and are not individually tested before sale. By purchasing a mystery box, the customer accepts the random nature of the contents and the possibility that items may have imperfect packaging, signs of use, missing components or may not be working.",
+
+    noReturnTitle: "Cases where we do not accept returns or refunds",
+    noReturnIntro:
+      "Due to the nature of the product sold, we do not accept returns, refunds or disputes based on subjective expectations or on individual items inside the box. In particular, we do not accept claims based on:",
+    noReturnItems: [
+      "one or more items inside the mystery box not working;",
+      "used items, incomplete items, damaged retail boxes or imperfect packaging;",
+      "contents considered lower in value than personal expectations;",
+      "absence of a specific desired product category;",
+      "cosmetic defects, missing accessories or unknown condition of individual items after opening;",
+      "evaluations based on the perceived value of a single item rather than the overall mystery box experience.",
     ],
 
-    returnsTitle: "Returns for mystery boxes",
-    returnsIntro:
-      "Our boxes are sealed and sold as mystery: contents are not known in advance and cannot be customized. We cannot accept claims based on the perceived value of items. Your withdrawal rights and legal protections for defects/non-conformity still apply.",
-
-    conditionsTitle: "Return conditions",
-    conditionsIntro: "To accept a return request, we ask that:",
-    conditionsItems: [
-      "the box is intact and returned with all received components;",
-      "seals/closures are intact (if present);",
-      "outer packaging is suitable for shipping (to avoid further damage);",
-      "the request is submitted within the applicable deadlines (withdrawal: 14 days).",
+    allowedTitle: "Cases where a claim can be opened",
+    allowedIntro:
+      "Legal protections remain in place for issues actually caused by shipping or material order errors. We may therefore review claims in the following cases:",
+    allowedItems: [
+      "parcel not delivered or anomalous delivery shown by tracking;",
+      "box visibly tampered with or opened before delivery;",
+      "outer packaging severely damaged on arrival;",
+      "clear shipping error (for example, completely different purchased weight or type than received);",
+      "documentable anomaly related to shipping or the received batch.",
     ],
 
-    issuesTitle: "Delivery issues or defects",
-    issuesIntro:
-      "If you experience issues (damage, tampering, clear shipping errors, or non-conformity), we prioritize your case. Examples:",
-    issuesItems: [
-      "package severely damaged upon arrival;",
-      "box visibly tampered with or broken seals;",
-      "clear shipping mistake (e.g., completely different weight than purchased);",
-      "defective/non-conforming items (where applicable).",
-    ],
-
-    processTitle: "How to request a return or report an issue",
-    processIntro: "To start the process, please:",
+    processTitle: "How to open a claim",
+    processIntro: "To allow us to review the case properly, please:",
     processItems: [
-      "contact us within 48 hours from delivery for damage/tampering, or within 14 days to exercise withdrawal;",
-      "include your order number and the reason (withdrawal / delivery issue / other);",
-      "attach clear photos of: outer packaging, seals/closures, shipping label, and contents (if relevant).",
+      "contact us within 48 hours of delivery in case of damage, tampering or clear anomalies;",
+      "provide your order number and a clear description of the issue;",
+      "attach clear photos of the outer packaging, shipping label, box and the reported anomaly;",
+      "wait for our customer service instructions before sending any return.",
     ],
     processOutro:
-      "We will reply with instructions and, if needed, a case ID. The return address is provided by email after the case is opened.",
+      "Requests that are incomplete, lack photo documentation, or are based solely on the functioning/value of individual products inside the mystery box may not be accepted. Any return address is provided by email only after the case has been opened and reviewed.",
 
     refundsTitle: "Refunds",
     refundsText:
-      "If approved, the refund is issued to the same payment method used at checkout. We usually process refunds within 5–10 business days after receiving and inspecting the return (final timing depends on payment networks).",
+      "Any refund, replacement or store credit is assessed only after case review by our team. No automatic refund is provided for single non-working items, unwanted contents or differences from personal expectations. If a claim is accepted, the solution is determined case by case.",
 
     legalTitle: "Company details & contacts",
     legalIntro:
-      "Transparency first: here are the official seller details and contact channels.",
+      "For any claim relating to shipping, delivery or documentable anomalies, you can contact us using the details below.",
     legalName: "Legal name: KILO MYSTERY SRLS",
     legalVat: "VAT number: 02794550745",
     legalAddress:
@@ -182,60 +165,56 @@ const RETURNS_COPY: Record<Lang, Copy> = {
   },
 
   es: {
-    heroTitle: "Política de devoluciones y reembolsos",
+    heroTitle: "Política de devoluciones y reclamaciones",
     heroSubtitle:
-      "Las mystery box son sorprendentes por naturaleza. Aquí encontrarás reglas claras sobre desistimiento, devoluciones y reembolsos. 📦",
+      "Nuestras mystery box contienen paquetes perdidos, devoluciones no reclamadas y stock logístico: el contenido es aleatorio, no probado y se vende como una experiencia sorpresa. 📦",
     lastUpdateLabel: "Última actualización",
 
-    withdrawalTitle: "Derecho de desistimiento (14 días)",
-    withdrawalIntro:
-      "Si compras como consumidor, puedes desistir de la compra dentro de los 14 días posteriores a la entrega, sin necesidad de indicar un motivo.",
-    withdrawalItems: [
-      "El producto debe devolverse intacto, sin usar y con los precintos/cierres sin manipular (si existen).",
-      "Si la caja o los precintos están abiertos/manipulados, podemos aplicar una reducción del reembolso por pérdida de valor.",
-      "Los gastos de envío de la devolución corren a cargo del cliente, salvo indicación contraria o casos de defecto/no conformidad.",
+    introTitle: "Naturaleza del producto",
+    introText:
+      "KiloMystery vende mystery box compuestas por paquetes postales perdidos, devoluciones no reclamadas y stock logístico. El contenido no se conoce de antemano, no puede seleccionarse por el cliente y no se prueba individualmente antes de la venta. Al comprar una mystery box, el cliente acepta la naturaleza aleatoria del contenido y la posibilidad de que los artículos tengan embalaje imperfecto, signos de uso, componentes faltantes o no funcionen.",
+
+    noReturnTitle: "Casos en los que no aceptamos devoluciones ni reembolsos",
+    noReturnIntro:
+      "Debido a la naturaleza del producto vendido, no aceptamos devoluciones, reembolsos ni reclamaciones basadas en expectativas subjetivas o en artículos individuales dentro de la caja. En particular, no aceptamos reclamaciones por:",
+    noReturnItems: [
+      "uno o más artículos de la mystery box que no funcionen;",
+      "artículos usados, incompletos, con caja dañada o embalaje imperfecto;",
+      "contenido considerado de menor valor que las expectativas personales;",
+      "ausencia de una categoría de producto específica deseada;",
+      "defectos estéticos, accesorios faltantes o estado desconocido de artículos individuales tras la apertura;",
+      "valoraciones basadas en el valor percibido de un solo artículo en vez de la experiencia global de la box.",
     ],
 
-    returnsTitle: "Devoluciones de mystery box",
-    returnsIntro:
-      "Nuestras cajas están precintadas y se venden como mystery: el contenido no se conoce de antemano y no es personalizable. No aceptamos reclamaciones basadas en el valor percibido de los productos. Siguen vigentes el derecho de desistimiento y las protecciones legales por defectos/no conformidad.",
-
-    conditionsTitle: "Condiciones para aceptar una devolución",
-    conditionsIntro: "Para aceptar la devolución, solicitamos que:",
-    conditionsItems: [
-      "la caja esté intacta y se devuelva con todos los componentes recibidos;",
-      "los precintos/cierres estén intactos (si existen);",
-      "el embalaje exterior sea adecuado para el transporte (para evitar daños adicionales);",
-      "la solicitud se envíe dentro de los plazos aplicables (desistimiento: 14 días).",
+    allowedTitle: "Casos en los que sí puede abrirse una reclamación",
+    allowedIntro:
+      "Se mantienen las protecciones legales en casos realmente imputables al envío o a un error material del pedido. Por tanto, podremos valorar reclamaciones en los siguientes casos:",
+    allowedItems: [
+      "paquete no entregado o entrega anómala según el tracking;",
+      "box visiblemente manipulada o abierta antes de la entrega;",
+      "embalaje exterior gravemente dañado al llegar;",
+      "error evidente en el pedido enviado (por ejemplo, peso o tipo completamente distinto al comprado);",
+      "anomalía documentable relacionada con el transporte o el lote recibido.",
     ],
 
-    issuesTitle: "Problemas en la entrega o defectos",
-    issuesIntro:
-      "Si detectas problemas (daños, manipulación, errores evidentes de envío o no conformidad), lo gestionamos con prioridad. Ejemplos:",
-    issuesItems: [
-      "embalaje gravemente dañado al llegar;",
-      "caja visiblemente manipulada o precintos rotos;",
-      "error evidente de envío (p. ej., peso completamente diferente al comprado);",
-      "productos defectuosos/no conformes (cuando corresponda).",
-    ],
-
-    processTitle: "Cómo solicitar una devolución o comunicar un problema",
-    processIntro: "Para iniciar el proceso, por favor:",
+    processTitle: "Cómo abrir una reclamación",
+    processIntro: "Para que podamos revisar correctamente el caso, le pedimos que:",
     processItems: [
-      "contáctanos dentro de las 48 horas desde la entrega en caso de daños/manipulación, o dentro de 14 días para ejercer el desistimiento;",
-      "indica el número de pedido y el motivo (desistimiento / problema de entrega / otro);",
-      "adjunta fotos claras del embalaje externo, precintos/cierres, etiqueta de envío y contenido (si corresponde).",
+      "nos contacte dentro de las 48 horas posteriores a la entrega en caso de daños, manipulación o anomalías evidentes;",
+      "indique el número de pedido y una descripción clara del problema;",
+      "adjunte fotos claras del embalaje exterior, la etiqueta de envío, la box y la anomalía reportada;",
+      "espere las instrucciones de nuestro servicio de atención al cliente antes de enviar cualquier devolución.",
     ],
     processOutro:
-      "Responderemos con instrucciones y, si es necesario, un ID de incidencia. La dirección de devolución se facilita por email tras abrir la incidencia.",
+      "Las solicitudes incompletas, sin documentación fotográfica o referidas únicamente al funcionamiento/valor de productos individuales dentro de la mystery box pueden no ser aceptadas. La dirección de devolución solo se facilita por email tras abrir y revisar la incidencia.",
 
     refundsTitle: "Reembolsos",
     refundsText:
-      "Si se aprueba la solicitud, el reembolso se realiza en el mismo método de pago utilizado en la compra. Normalmente procesamos el reembolso en 5–10 días laborables tras recibir y verificar la devolución (el tiempo final depende de los proveedores de pago).",
+      "Cualquier reembolso, sustitución o saldo en tienda se valora únicamente tras la revisión del caso por nuestro equipo. No se prevé ningún reembolso automático por artículos individuales que no funcionen, contenido no deseado o diferencias respecto a expectativas personales. Si una reclamación es aceptada, la solución se definirá caso por caso.",
 
     legalTitle: "Datos de la empresa y contacto",
     legalIntro:
-      "Transparencia ante todo: aquí tienes los datos oficiales del vendedor y los canales de contacto.",
+      "Para cualquier reclamación relacionada con envío, entrega o anomalías documentables, puede contactarnos en los siguientes canales.",
     legalName: "Razón social: KILO MYSTERY SRLS",
     legalVat: "Número de IVA: 02794550745",
     legalAddress:
@@ -246,60 +225,56 @@ const RETURNS_COPY: Record<Lang, Copy> = {
   },
 
   fr: {
-    heroTitle: "Politique de retours et remboursements",
+    heroTitle: "Politique de retours et réclamations",
     heroSubtitle:
-      "Les mystery box sont par nature surprenantes. Voici des règles claires sur la rétractation, les retours et les remboursements. 📦",
+      "Nos mystery box contiennent des colis perdus, des retours non réclamés et des stocks logistiques : le contenu est aléatoire, non testé et vendu comme une expérience surprise. 📦",
     lastUpdateLabel: "Dernière mise à jour",
 
-    withdrawalTitle: "Droit de rétractation (14 jours)",
-    withdrawalIntro:
-      "Si tu achètes en tant que consommateur, tu peux exercer ton droit de rétractation dans les 14 jours suivant la livraison, sans avoir à te justifier.",
-    withdrawalItems: [
-      "Le produit doit être retourné intact, non utilisé et avec les scellés/fermetures non altérés (si présents).",
-      "Si la box ou les scellés sont ouverts/altérés, nous pouvons appliquer une réduction du remboursement en raison de la perte de valeur.",
-      "Les frais de retour sont à la charge du client, sauf indication contraire ou en cas de défaut/non-conformité.",
+    introTitle: "Nature du produit",
+    introText:
+      "KiloMystery vend des mystery box composées de colis postaux perdus, de retours non réclamés et de stocks logistiques. Le contenu n’est pas connu à l’avance, n’est pas sélectionnable par le client et n’est pas testé individuellement avant la vente. En achetant une mystery box, le client accepte la nature aléatoire du contenu et la possibilité que les articles présentent un emballage imparfait, des traces d’usage, des composants manquants ou ne fonctionnent pas.",
+
+    noReturnTitle: "Cas dans lesquels nous n’acceptons pas les retours ni remboursements",
+    noReturnIntro:
+      "En raison de la nature du produit vendu, nous n’acceptons pas les retours, remboursements ou contestations fondés sur des attentes subjectives ou sur des articles individuels présents dans la box. En particulier, nous n’acceptons pas les demandes liées à :",
+    noReturnItems: [
+      "un ou plusieurs articles de la mystery box non fonctionnels ;",
+      "des articles usagés, incomplets, avec boîte abîmée ou emballage imparfait ;",
+      "un contenu jugé d’une valeur inférieure aux attentes personnelles ;",
+      "l’absence d’une catégorie de produit spécifique souhaitée ;",
+      "des défauts esthétiques, accessoires manquants ou état inconnu d’articles individuels après ouverture ;",
+      "des évaluations fondées sur la valeur perçue d’un seul article plutôt que sur l’expérience globale de la box.",
     ],
 
-    returnsTitle: "Retours des mystery box",
-    returnsIntro:
-      "Nos box sont scellées et vendues comme mystery : le contenu n’est pas connu à l’avance et n’est pas personnalisable. Nous n’acceptons pas de réclamations basées sur la valeur perçue. Les droits de rétractation et les protections légales pour défaut/non-conformité s’appliquent toutefois.",
-
-    conditionsTitle: "Conditions de retour",
-    conditionsIntro: "Pour accepter un retour, nous demandons que :",
-    conditionsItems: [
-      "la box soit intacte et retournée avec tous les éléments reçus ;",
-      "les scellés/fermetures soient intacts (si présents) ;",
-      "l’emballage extérieur soit adapté au transport (pour éviter tout dommage supplémentaire) ;",
-      "la demande soit effectuée dans les délais applicables (rétractation : 14 jours).",
+    allowedTitle: "Cas dans lesquels une réclamation peut être ouverte",
+    allowedIntro:
+      "Les protections légales restent applicables dans les cas réellement imputables à la livraison ou à une erreur matérielle de commande. Nous pouvons donc examiner une réclamation dans les cas suivants :",
+    allowedItems: [
+      "colis non livré ou livraison anormale selon le suivi ;",
+      "box visiblement ouverte ou altérée avant la livraison ;",
+      "emballage extérieur gravement endommagé à l’arrivée ;",
+      "erreur manifeste dans la commande expédiée (par exemple poids ou type totalement différent de celui acheté) ;",
+      "anomalie documentable liée au transport ou au lot reçu.",
     ],
 
-    issuesTitle: "Problèmes à la livraison ou défauts",
-    issuesIntro:
-      "En cas de problème (dommages, altération, erreur manifeste d’expédition ou non-conformité), nous traitons ta demande en priorité. Exemples :",
-    issuesItems: [
-      "emballage fortement endommagé à la réception ;",
-      "box visiblement ouverte/altérée ou scellés cassés ;",
-      "erreur manifeste d’expédition (par exemple un poids totalement différent) ;",
-      "produits défectueux/non conformes (le cas échéant).",
-    ],
-
-    processTitle: "Comment demander un retour ou signaler un problème",
-    processIntro: "Pour démarrer la procédure :",
+    processTitle: "Comment ouvrir une réclamation",
+    processIntro: "Pour nous permettre de vérifier correctement le dossier, merci de :",
     processItems: [
-      "contacte-nous dans les 48 h suivant la livraison en cas de dommages/altération, ou dans les 14 jours pour exercer la rétractation ;",
-      "indique ton numéro de commande et le motif (rétractation / problème à la livraison / autre) ;",
-      "joins des photos claires : emballage externe, scellés/fermetures, étiquette d’expédition, contenu (si pertinent).",
+      "nous contacter dans les 48 heures suivant la livraison en cas de dommage, altération ou anomalie évidente ;",
+      "indiquer le numéro de commande et une description claire du problème ;",
+      "joindre des photos nettes de l’emballage extérieur, de l’étiquette d’expédition, de la box et de l’anomalie signalée ;",
+      "attendre les instructions de notre service client avant tout renvoi.",
     ],
     processOutro:
-      "Nous te répondrons avec les instructions et, si nécessaire, un ID de dossier. L’adresse de retour est fournie par email après ouverture du dossier.",
+      "Les demandes incomplètes, sans preuve photo, ou fondées uniquement sur le fonctionnement/la valeur des produits individuels contenus dans la mystery box peuvent ne pas être acceptées. L’adresse de retour est communiquée uniquement par email après ouverture et examen du dossier.",
 
     refundsTitle: "Remboursements",
     refundsText:
-      "Si la demande est approuvée, le remboursement est effectué via le même moyen de paiement utilisé lors de l’achat. Nous traitons généralement le remboursement sous 5 à 10 jours ouvrés après réception et contrôle du retour (délais finaux selon les réseaux de paiement).",
+      "Tout remboursement, remplacement ou avoir est évalué uniquement après examen du dossier par notre équipe. Aucun remboursement automatique n’est prévu pour des articles individuels non fonctionnels, un contenu non apprécié ou des différences par rapport aux attentes personnelles. Si une réclamation est acceptée, la solution sera définie au cas par cas.",
 
     legalTitle: "Informations légales et contacts",
     legalIntro:
-      "Transparence avant tout : voici les informations officielles du vendeur et les moyens de contact.",
+      "Pour toute réclamation relative à l’expédition, à la livraison ou à une anomalie documentable, vous pouvez nous contacter via les coordonnées ci-dessous.",
     legalName: "Raison sociale : KILO MYSTERY SRLS",
     legalVat: "Numéro de TVA : 02794550745",
     legalAddress:
@@ -310,60 +285,56 @@ const RETURNS_COPY: Record<Lang, Copy> = {
   },
 
   de: {
-    heroTitle: "Rückgabe- und Erstattungsrichtlinie",
+    heroTitle: "Rückgabe- und Reklamationsrichtlinie",
     heroSubtitle:
-      "Mystery-Boxen leben von der Überraschung. Hier findest du klare Regeln zu Widerruf, Rückgabe und Erstattung. 📦",
+      "Unsere Mystery Boxen enthalten verlorene Pakete, nicht abgeholte Retouren und Logistikbestände: der Inhalt ist zufällig, ungetestet und wird als Überraschungserlebnis verkauft. 📦",
     lastUpdateLabel: "Letzte Aktualisierung",
 
-    withdrawalTitle: "Widerrufsrecht (14 Tage)",
-    withdrawalIntro:
-      "Wenn du als Verbraucher kaufst, kannst du innerhalb von 14 Tagen nach Lieferung ohne Angabe von Gründen widerrufen.",
-    withdrawalItems: [
-      "Die Ware muss unbenutzt, vollständig und mit unversehrten Siegeln/Verschlüssen (falls vorhanden) zurückgesendet werden.",
-      "Wenn die Box oder Siegel geöffnet/manipuliert sind, können wir den Erstattungsbetrag wegen Wertverlusts reduzieren.",
-      "Die Rücksendekosten trägt der Kunde, sofern nicht anders angegeben oder bei Mängeln/Nichtkonformität.",
+    introTitle: "Produktcharakter",
+    introText:
+      "KiloMystery verkauft Mystery Boxen aus verlorenen Postpaketen, nicht abgeholten Retouren und Logistikbeständen. Der Inhalt ist vorab nicht bekannt, nicht auswählbar und wird vor dem Verkauf nicht einzeln getestet. Mit dem Kauf einer Mystery Box akzeptiert der Kunde den zufälligen Charakter des Inhalts und die Möglichkeit, dass Artikel beschädigte Verpackungen, Gebrauchsspuren, fehlende Teile haben oder nicht funktionieren.",
+
+    noReturnTitle: "Fälle, in denen wir keine Rückgabe oder Erstattung akzeptieren",
+    noReturnIntro:
+      "Aufgrund der Art des verkauften Produkts akzeptieren wir keine Rückgaben, Erstattungen oder Beanstandungen, die auf subjektiven Erwartungen oder einzelnen Artikeln innerhalb der Box beruhen. Insbesondere akzeptieren wir keine Ansprüche wegen:",
+    noReturnItems: [
+      "eines oder mehrerer nicht funktionierender Artikel in der Mystery Box;",
+      "gebrauchter, unvollständiger Artikel, beschädigter Verkaufsverpackungen oder unperfekter Verpackung;",
+      "eines Inhalts, der als weniger wertvoll als erwartet angesehen wird;",
+      "des Fehlens einer bestimmten gewünschten Produktkategorie;",
+      "optischer Mängel, fehlender Zubehörteile oder unbekanntem Zustand einzelner Artikel nach dem Öffnen;",
+      "Bewertungen auf Basis des wahrgenommenen Werts eines einzelnen Artikels statt des gesamten Mystery-Box-Erlebnisses.",
     ],
 
-    returnsTitle: "Rückgabe von Mystery-Boxen",
-    returnsIntro:
-      "Unsere Boxen sind versiegelt und werden als Mystery verkauft: Der Inhalt ist im Voraus nicht bekannt und nicht personalisierbar. Reklamationen aufgrund des subjektiv wahrgenommenen Wertes können wir nicht akzeptieren. Widerrufsrechte und gesetzliche Gewährleistung bei Mängeln/Nichtkonformität bleiben unberührt.",
-
-    conditionsTitle: "Voraussetzungen für eine Rückgabe",
-    conditionsIntro: "Damit wir eine Rückgabe annehmen können, gilt:",
-    conditionsItems: [
-      "Die Box muss intakt sein und mit allen erhaltenen Bestandteilen zurückgesendet werden.",
-      "Siegel/Verschlüsse müssen unversehrt sein (falls vorhanden).",
-      "Die Außenverpackung muss für den Versand geeignet sein (um weitere Schäden zu vermeiden).",
-      "Die Anfrage muss innerhalb der Fristen erfolgen (Widerruf: 14 Tage).",
+    allowedTitle: "Fälle, in denen eine Reklamation eröffnet werden kann",
+    allowedIntro:
+      "Gesetzliche Schutzrechte bleiben in Fällen bestehen, die tatsächlich durch Versand oder einen materiellen Bestellfehler verursacht wurden. Wir können daher Reklamationen in folgenden Fällen prüfen:",
+    allowedItems: [
+      "Paket nicht zugestellt oder auffällige Zustellung laut Tracking;",
+      "sichtbar manipulierte oder bereits geöffnete Box vor Zustellung;",
+      "äußere Verpackung bei Ankunft stark beschädigt;",
+      "offensichtlicher Versandfehler (z. B. völlig anderes Gewicht oder andere Variante als bestellt);",
+      "nachweisbare Auffälligkeit im Zusammenhang mit dem Transport oder dem erhaltenen Posten.",
     ],
 
-    issuesTitle: "Lieferprobleme oder Mängel",
-    issuesIntro:
-      "Bei Problemen (Schäden, Manipulation, offensichtliche Versandfehler oder Nichtkonformität) behandeln wir deinen Fall vorrangig. Beispiele:",
-    issuesItems: [
-      "stark beschädigte Verpackung bei Ankunft;",
-      "sichtbar geöffnete/manipulierte Box oder gebrochene Siegel;",
-      "offensichtlicher Versandfehler (z. B. völlig abweichendes Gewicht);",
-      "defekte/nicht konforme Artikel (falls zutreffend).",
-    ],
-
-    processTitle: "So meldest du eine Rückgabe oder ein Problem",
-    processIntro: "Um den Prozess zu starten, bitte:",
+    processTitle: "So eröffnest du eine Reklamation",
+    processIntro: "Damit wir den Fall korrekt prüfen können, bitten wir dich:",
     processItems: [
-      "kontaktiere uns innerhalb von 48 Stunden nach Zustellung bei Schäden/Manipulation oder innerhalb von 14 Tagen für den Widerruf;",
-      "nenne Bestellnummer und Grund (Widerruf / Lieferproblem / anderes);",
-      "füge klare Fotos bei: Außenverpackung, Siegel/Verschlüsse, Versandlabel und Inhalt (falls relevant).",
+      "uns innerhalb von 48 Stunden nach Zustellung bei Schäden, Manipulation oder klaren Auffälligkeiten zu kontaktieren;",
+      "Bestellnummer und eine klare Problembeschreibung anzugeben;",
+      "deutliche Fotos von Außenverpackung, Versandetikett, Box und gemeldeter Auffälligkeit beizufügen;",
+      "vor einer Rücksendung auf die Anweisungen unseres Kundenservice zu warten.",
     ],
     processOutro:
-      "Wir antworten mit den nächsten Schritten und ggf. einer Vorgangs-ID. Die Rücksendeadresse erhältst du per E-Mail nach Eröffnung des Vorgangs.",
+      "Unvollständige Anfragen, Anfragen ohne Fotodokumentation oder Anfragen, die sich nur auf Funktion/Wert einzelner Produkte in der Mystery Box beziehen, können abgelehnt werden. Eine Rücksendeadresse wird ausschließlich per E-Mail nach Eröffnung und Prüfung des Vorgangs mitgeteilt.",
 
     refundsTitle: "Erstattungen",
     refundsText:
-      "Bei Genehmigung erfolgt die Erstattung über dieselbe Zahlungsmethode wie beim Kauf. In der Regel bearbeiten wir Erstattungen innerhalb von 5–10 Werktagen nach Erhalt und Prüfung der Rücksendung (endgültige Dauer abhängig von Zahlungsanbietern).",
+      "Erstattungen, Ersatz oder Guthaben werden ausschließlich nach Prüfung des Falls durch unser Team bewertet. Für einzelne nicht funktionierende Artikel, unerwünschten Inhalt oder Abweichungen von persönlichen Erwartungen erfolgt keine automatische Erstattung. Wird eine Reklamation anerkannt, wird die Lösung im Einzelfall festgelegt.",
 
     legalTitle: "Unternehmensdaten und Kontakt",
     legalIntro:
-      "Transparenz steht an erster Stelle: Hier findest du die offiziellen Unternehmensdaten und Kontaktmöglichkeiten.",
+      "Bei Reklamationen zu Versand, Lieferung oder dokumentierbaren Auffälligkeiten kannst du uns über die folgenden Kontaktdaten erreichen.",
     legalName: "Firmenname: KILO MYSTERY SRLS",
     legalVat: "USt-IdNr.: 02794550745",
     legalAddress:
@@ -385,6 +356,7 @@ function formatLastUpdate(lang: Lang) {
       : lang === "fr"
       ? "fr-FR"
       : "de-DE";
+
   return new Date().toLocaleDateString(locale);
 }
 
@@ -403,64 +375,59 @@ export default async function ReturnsPage({
       <Header lang={lang} />
 
       <main className="container py-10 space-y-10">
-        {/* HERO */}
-        <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6">
-          <div className="mx-auto mb-6 grid place-items-center">
-            <picture className="w-[240px] h-[240px] object-contain drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]">
-              <source srcSet={HERO_IMAGE.webp} type="image/webp" />
-              <source srcSet={HERO_IMAGE.png} type="image/png" />
-              <img
-                src={HERO_IMAGE.png}
-                alt={HERO_IMAGE.alt}
-                width={320}
-                height={320}
-                className="w-full h-full object-contain"
-                loading="lazy"
-                decoding="async"
-              />
-            </picture>
+        {/* HERO - uguale stile home con logo */}
+        <section className="rounded-2xl border border-white/10 bg-gradient-to-b from-white/5 to-transparent p-6 md:p-8">
+          <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
+            <Image
+              src="/logo.svg"
+              alt="KiloMystery"
+              width={320}
+              height={180}
+              className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
+              priority
+            />
           </div>
-          <h1 className="section-title text-center text-3xl md:text-4xl font-extrabold">
-            <span className="brand-text">{t.heroTitle}</span>
+
+          <h1 className="section-title text-center text-3xl md:text-4xl font-extrabold leading-tight">
+            <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
+              {t.heroTitle}
+            </span>
           </h1>
+
           <p className="text-center text-white/70 mt-3 text-sm">
             {t.lastUpdateLabel}: <b>{today}</b>
           </p>
-          <p className="text-center text-white/60 text-xs mt-1">{t.heroSubtitle}</p>
+
+          <p className="text-center text-white/60 text-xs mt-2 max-w-3xl mx-auto">
+            {t.heroSubtitle}
+          </p>
         </section>
 
         <section className="grid gap-5 md:grid-cols-2">
-          {/* RECESSO + CONDIZIONI */}
           <article className="card space-y-3">
             <h2 className="text-xl font-extrabold flex items-center gap-2">
-              <span>{t.withdrawalTitle}</span>
-              <span>🧾</span>
+              <span>{t.introTitle}</span>
+              <span>📦</span>
             </h2>
-            <p className="text-white/70 text-sm">{t.withdrawalIntro}</p>
-            <ul className="bullets space-y-1 text-sm text-white/70">
-              {t.withdrawalItems.map((item, idx) => (
-                <li key={idx}>{item}</li>
-              ))}
-            </ul>
+            <p className="text-white/70 text-sm">{t.introText}</p>
 
-            <h3 className="font-bold mt-4 text-sm">{t.conditionsTitle}</h3>
-            <p className="text-white/70 text-sm">{t.conditionsIntro}</p>
+            <h3 className="font-bold mt-4 text-sm">{t.noReturnTitle}</h3>
+            <p className="text-white/70 text-sm">{t.noReturnIntro}</p>
             <ul className="bullets space-y-1 text-sm text-white/70">
-              {t.conditionsItems.map((item, idx) => (
+              {t.noReturnItems.map((item, idx) => (
                 <li key={idx}>{item}</li>
               ))}
             </ul>
           </article>
 
-          {/* PROBLEMI + PROCESSO + RIMBORSI */}
           <article className="card space-y-3">
             <h2 className="text-xl font-extrabold flex items-center gap-2">
-              <span>{t.issuesTitle}</span>
-              <span>🛠️</span>
+              <span>{t.allowedTitle}</span>
+              <span>🛡️</span>
             </h2>
-            <p className="text-white/70 text-sm">{t.issuesIntro}</p>
+            <p className="text-white/70 text-sm">{t.allowedIntro}</p>
             <ul className="bullets space-y-1 text-sm text-white/70">
-              {t.issuesItems.map((item, idx) => (
+              {t.allowedItems.map((item, idx) => (
                 <li key={idx}>{item}</li>
               ))}
             </ul>
@@ -494,16 +461,6 @@ export default async function ReturnsPage({
           </article>
         </section>
 
-        {/* MYSTERY BOX INFO (mantengo il messaggio ma “safe”) */}
-        <section className="card space-y-3">
-          <h2 className="text-xl font-extrabold flex items-center gap-2">
-            <span>{t.returnsTitle}</span>
-            <span>🎁</span>
-          </h2>
-          <p className="text-white/70 text-sm">{t.returnsIntro}</p>
-        </section>
-
-        {/* DATI AZIENDALI */}
         <section className="card space-y-2">
           <h2 className="text-xl font-extrabold">{t.legalTitle}</h2>
           <p className="text-white/70 text-sm">{t.legalIntro}</p>
