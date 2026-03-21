@@ -10,6 +10,7 @@ const ITEMS: Record<Lang, string[]> = {
     "Pacchi da lotti reali",
     "Spediamo in tutta Europa",
     "Consegna in 24/48h",
+    "🔥 Alta Richiesta - Quantità Limitate",
   ],
   en: [
     "Tracking included",
