@@ -241,18 +241,18 @@ const WEIGHTS: Kg[] = [5, 3, 10, 2, 1];
 
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
-    1: { total: 23.9, compareAt: 26.9 },
-    2: { total: 46.88, compareAt: 53.8 },
-    3: { total: 65.28, compareAt: 80.7 },
-    5: { total: 105.35, compareAt: 134.5 },
-    10: { total: 201.5, compareAt: 269.0 },
+    1: { total: 25.9, compareAt: 26.9 },
+    2: { total: 49.2, compareAt: 53.8 },
+    3: { total: 69.9, compareAt: 80.7 },
+    5: { total: 110.0, compareAt: 134.5 },
+    10: { total: 219.0, compareAt: 269.0 },
   },
   prm: {
-    1: { total: 26.9, compareAt: 29.9 },
-    2: { total: 51.12, compareAt: 59.8 },
-    3: { total: 74.25, compareAt: 89.7 },
-    5: { total: 118.35, compareAt: 149.5 },
-    10: { total: 215.2, compareAt: 299.0 },
+    1: { total: 28.9, compareAt: 29.9 },
+    2: { total: 54.8, compareAt: 59.8 },
+    3: { total: 78.0, compareAt: 89.7 },
+    5: { total: 122.5, compareAt: 149.5 },
+    10: { total: 239.0, compareAt: 299.0 },
   },
 };
 
