@@ -189,7 +189,7 @@ export async function POST(req: Request) {
         item_price: Number(item?.price || 0),
       }));
 
-      const contentIds = contents.map((c) => c.id).filter(Boolean);
+      const contentIds = contents.map((c: { id: string }) => c.id).filter(Boolean);
 
       const fbp =
         getOrderAttribute(order, "_fbp") ||
