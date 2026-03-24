@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 
 function verifyShopifyHmac(rawBody: string, hmacHeader: string | null) {
   const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
+
   if (!secret || !hmacHeader) {
     console.error("[ORDER-PAID] missing HMAC inputs", {
       hasSecret: !!secret,
@@ -136,8 +137,12 @@ export async function POST(req: Request) {
         orderGid,
         orderNumber,
       });
+
       return NextResponse.json(
-        { error: "Missing orderGid/orderNumber" },
+        {
+          ok: false,
+          error: "Missing orderGid/orderNumber",
+        },
         { status: 400 }
       );
     }
@@ -147,11 +152,22 @@ export async function POST(req: Request) {
     const orderSeq = String(orderNumber);
 
     const lineItems = Array.isArray(order?.line_items) ? order.line_items : [];
+
     if (!lineItems.length) {
       console.error("[ORDER-PAID] no line_items");
-      return NextResponse.json({ error: "No line_items" }, { status: 400 });
+
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "No line_items",
+        },
+        { status: 400 }
+      );
     }
 
+    // -----------------------------
+    // 1) COSTRUZIONE LOTS
+    // -----------------------------
     const lots: Array<{
       lotId: string;
       title: string;
@@ -163,7 +179,6 @@ export async function POST(req: Request) {
       const title = String(li?.title || "").trim();
       const skuRaw = String(li?.sku || "").trim();
       const qty = Math.max(1, Number(li?.quantity || 1));
-
       const code = parseSkuToCode(skuRaw) || "UNKNOWN";
 
       for (let i = 1; i <= qty; i++) {
@@ -178,6 +193,10 @@ export async function POST(req: Request) {
       }
     }
 
+    // -----------------------------
+    // 2) SALVATAGGIO LOTS SU ORDER METAFIELD
+    //    NON DEVE ROMPERE IL WEBHOOK
+    // -----------------------------
     const mutation = `
       mutation SetMetafield($metafields: [MetafieldsSetInput!]!) {
         metafieldsSet(metafields: $metafields) {
@@ -203,17 +222,29 @@ export async function POST(req: Request) {
       ],
     };
 
-    const data = await shopifyGraphQL(mutation, variables);
-    const errors = data?.metafieldsSet?.userErrors || [];
+    let metafieldErrors: any[] = [];
 
-    if (errors.length) {
-      console.error("[ORDER-PAID] metafieldsSet userErrors", errors);
-      return NextResponse.json(
-        { error: "Metafield error", details: errors },
-        { status: 500 }
-      );
+    try {
+      const data = await shopifyGraphQL(mutation, variables);
+      metafieldErrors = data?.metafieldsSet?.userErrors || [];
+
+      if (metafieldErrors.length) {
+        console.error("[ORDER-PAID] metafieldsSet userErrors", metafieldErrors);
+      } else {
+        console.log("[ORDER-PAID] lots metafield saved", {
+          orderNumber,
+          lotsCount: lots.length,
+        });
+      }
+    } catch (err: any) {
+      console.error("[ORDER-PAID] metafieldsSet failed but continuing", {
+        message: err?.message || "Unknown error",
+      });
     }
 
+    // -----------------------------
+    // 3) META CAPI PURCHASE
+    // -----------------------------
     const sid = extractSidFromNote(order?.note) || getOrderAttribute(order, "sid");
 
     let metaResult: any = null;
@@ -242,16 +273,21 @@ export async function POST(req: Request) {
         .map((c) => c.id)
         .filter((id): id is string => Boolean(id));
 
-      const fbp = getOrderAttribute(order, "_fbp") || getOrderAttribute(order, "fbp");
+      const fbp =
+        getOrderAttribute(order, "_fbp") ||
+        getOrderAttribute(order, "fbp");
 
-      const fbc = getOrderAttribute(order, "_fbc") || getOrderAttribute(order, "fbc");
+      const fbc =
+        getOrderAttribute(order, "_fbc") ||
+        getOrderAttribute(order, "fbc");
 
       const eventSourceUrl =
         getOrderAttribute(order, "returnUrl") ||
         process.env.SITE_URL ||
         "https://www.kilomystery.com";
 
-      const userAgent = getOrderAttribute(order, "clientUserAgent") || "";
+      const userAgent =
+        getOrderAttribute(order, "clientUserAgent") || "";
 
       try {
         metaResult = await sendMetaPurchase({
@@ -302,6 +338,10 @@ export async function POST(req: Request) {
       orderNumber,
       lotsCount: lots.length,
       lots,
+      lotsMeta: {
+        saved: metafieldErrors.length === 0,
+        errors: metafieldErrors,
+      },
       meta: {
         sent: !!metaResult,
         skippedReason: metaSkippedReason || null,
@@ -317,6 +357,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
+        ok: false,
         error: "Webhook processing failed",
         message: err?.message || "Unknown error",
       },
