@@ -14,7 +14,6 @@ import {
   trackViewCart,
 } from "@/app/lib/tracking";
 
-// === UPSSELL: COSTANTI CON ID REALI ===
 const UPSELL_STD_1KG_SHOPIFY_ID = "52089042567506";
 const UPSELL_PRM_1KG_SHOPIFY_ID = "52089042993490";
 
@@ -24,7 +23,6 @@ const UPSELL_PRM_1KG_TOTAL = 16.9;
 const UPSELL_STD_WEIGHT_KG = 1;
 const UPSELL_PRM_WEIGHT_KG = 1;
 
-// LOCK ruota – vale finché non passiamo dalla pagina di success
 const WHEEL_LOCK_KEY = "km_wheel_can_play";
 
 type CartCopyKey =
@@ -186,12 +184,19 @@ function safeNumber(n: any, fallback = 0) {
   return Number.isFinite(x) ? x : fallback;
 }
 
+function getCookie(name: string) {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split("=")[1] || "") : "";
+}
+
 export default function CartPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const { items, setQty, removeItem, subtotal, addItem } = useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
-  // Item principali: escludiamo gli upsell (id che iniziano con "upsell-")
   const mainItems = useMemo(
     () => items.filter((i: any) => !String(i.id || "").startsWith("upsell-")),
     [items]
@@ -213,7 +218,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
   const showPrmUpsell =
     hasPrmMain && !hasPrmUpsell && !!UPSELL_PRM_1KG_SHOPIFY_ID;
 
-  // === LOGICA RUOTA ===
   const [hasPlayedWheel, setHasPlayedWheel] = useState(false);
   const [showWheel, setShowWheel] = useState(false);
   const [wheelBonusKg, setWheelBonusKg] = useState(0);
@@ -226,7 +230,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     }, 0);
   }, [mainItems]);
 
-  // lock wheel
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
@@ -237,7 +240,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     }
   }, []);
 
-  // auto open wheel
   useEffect(() => {
     if (hasPlayedWheel) return;
     if (totalEligibleKg < 10) return;
@@ -260,15 +262,11 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     }
   };
 
-  /* =========================
-     GA4: view_cart (una volta per contenuto carrello)
-  ========================= */
   const lastCartSigRef = useRef<string>("");
 
   useEffect(() => {
     if (!items?.length) return;
 
-    // firma stabile
     const sig = items
       .map((i: any) => `${i.id}:${i.qty}:${i.pricePerKg}:${i.weightKg}`)
       .sort()
@@ -280,9 +278,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     trackViewCart(items as any);
   }, [items]);
 
-  /* =========================
-     Helpers: qty +/- e remove
-  ========================= */
   function incQty(item: any) {
     const next = safeNumber(item.qty, 0) + 1;
     setQty(item.id, next);
@@ -330,16 +325,10 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     trackAddToCart(item as any, 1);
   }
 
-  /* =========================
-     Checkout: versione robusta via API
-     - manda originQuery (utm/_gl/gclid)
-     - manda orderNote (bonus ruota)
-  ========================= */
   const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   async function goToCheckout() {
-    if (!items?.length) return;
-    if (checkoutLoading) return;
+    if (!items?.length || checkoutLoading) return;
 
     setCheckoutLoading(true);
 
@@ -349,19 +338,21 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       wheel_bonus_kg: wheelBonusKg > 0 ? Number(wheelBonusKg.toFixed(2)) : 0,
     });
 
-    // ✅ order note bonus ruota
     const orderNote =
       wheelBonusKg > 0 ? `🎁 Bonus ruota: ${wheelBonusKg.toFixed(2)} kg` : "";
 
-    // ✅ query corrente per attribution passthrough
     const originQuery =
       typeof window !== "undefined" ? window.location.search : "";
 
-    // return url (opzionale, se ti serve)
     const returnUrl =
       typeof window !== "undefined"
         ? `${window.location.origin}/${lang}/reward`
         : "";
+
+    const fbp = getCookie("_fbp");
+    const fbc = getCookie("_fbc");
+    const clientUserAgent =
+      typeof navigator !== "undefined" ? navigator.userAgent : "";
 
     try {
       const totalKg = items.reduce((s: number, i: any) => {
@@ -379,15 +370,16 @@ export default function CartPage({ params }: { params: { lang: string } }) {
           lang,
           returnUrl,
           originQuery,
-          orderNote, // ✅ IMPORTANTISSIMO
+          orderNote,
+          fbp,
+          fbc,
+          clientUserAgent,
         }),
       });
 
       const data = await res.json();
 
       if (data?.url) {
-        // 👇 opzionale: aggiungo anche note in URL (compatibilità)
-        // ma la vera “nota” ce l’hai già come cart attribute orderNote
         const u = new URL(data.url);
         if (orderNote) u.searchParams.set("note", orderNote);
 
@@ -416,7 +408,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
           <p className="text-white/70">{t.empty}</p>
         ) : (
           <>
-            {/* Banner ruota */}
             {totalEligibleKg >= 10 && (
               <section className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
@@ -439,7 +430,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </section>
             )}
 
-            {/* Lista items */}
             <div className="space-y-4">
               {items.map((item: any) => {
                 const pricePerKg =
@@ -520,7 +510,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               })}
             </div>
 
-            {/* Upsell */}
             {(showStdUpsell || showPrmUpsell) && (
               <section className="mt-4 space-y-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4">
                 <h2 className="text-xs font-bold uppercase tracking-[.15em] text-emerald-300">
@@ -584,7 +573,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </section>
             )}
 
-            {/* Totale */}
             <div className="border-t border-white/10 pt-4 flex justify-between items-center gap-3">
               <div className="flex flex-col text-xs text-white/60">
                 <span>{t.total}</span>
@@ -599,7 +587,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
               </div>
             </div>
 
-            {/* CTA Checkout */}
             <button
               className="btn btn-brand px-6 py-3"
               onClick={goToCheckout}
@@ -611,7 +598,6 @@ export default function CartPage({ params }: { params: { lang: string } }) {
         )}
       </main>
 
-      {/* Modale ruota */}
       {showWheel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-3 py-6">
           <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl border border-white/15 bg-[#020617] shadow-[0_24px_80px_rgba(0,0,0,0.85)]">

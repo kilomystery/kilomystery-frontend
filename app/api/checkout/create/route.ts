@@ -1,8 +1,7 @@
-// app/api/checkout/create/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "crypto";
 
-const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN; // es: kilomystery.myshopify.com
+const STOREFRONT_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN;
 const STOREFRONT_TOKEN = process.env.SHOPIFY_STOREFRONT_TOKEN;
 const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-01";
 
@@ -14,12 +13,14 @@ const LOCALE_MAP: Record<string, string> = {
   de: "de",
 };
 
-// ✅ whitelist parametri da propagare al checkout
 const PASS_THROUGH_KEYS = [
   "_gl",
   "gclid",
   "gbraid",
   "wbraid",
+  "fbclid",
+  "_fbp",
+  "_fbc",
   "utm_source",
   "utm_medium",
   "utm_campaign",
@@ -46,6 +47,11 @@ function buildSid() {
   }
 }
 
+function getClientIp(req: NextRequest) {
+  const forwarded = req.headers.get("x-forwarded-for");
+  return forwarded?.split(",")[0]?.trim() || "";
+}
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -54,24 +60,33 @@ export async function POST(req: NextRequest) {
     const clientTotalKg = body?.totalKg;
     const returnUrl = body?.returnUrl;
 
-    // ✅ lingua dal client
     const bodyLang = typeof body?.lang === "string" ? body.lang : "it";
     const shopifyLocale = LOCALE_MAP[bodyLang] ?? "it";
 
-    // ✅ query string del browser passata dal client
     const originQuery =
       typeof body?.originQuery === "string" ? body.originQuery : "";
 
-    // ✅ nota ordine opzionale (es: live ticket / bonus ruota ecc.)
-    const orderNote = typeof body?.orderNote === "string" ? body.orderNote : "";
+    const orderNote =
+      typeof body?.orderNote === "string" ? body.orderNote : "";
 
-    // ✅ LIVE REGISTRATION (oggetto con dati)
     const live = body?.liveRegistration;
 
-    // ✅ nuovo SID unico per collegare checkout -> ordine -> reward
+    const clientFbp =
+      typeof body?.fbp === "string" ? body.fbp.trim() : "";
+    const clientFbc =
+      typeof body?.fbc === "string" ? body.fbc.trim() : "";
+    const clientUserAgent =
+      typeof body?.clientUserAgent === "string"
+        ? body.clientUserAgent.trim()
+        : req.headers.get("user-agent") || "";
+
+    const clientIp =
+      typeof body?.clientIp === "string"
+        ? body.clientIp.trim()
+        : getClientIp(req);
+
     const sid = buildSid();
 
-    // 🔐 Controllo env
     if (!STOREFRONT_DOMAIN || !STOREFRONT_TOKEN) {
       return NextResponse.json(
         {
@@ -93,7 +108,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ normalizzazione + validazione items
     const items: IncomingItem[] = itemsRaw
       .map((i: any) => {
         const shopifyId = i?.shopifyId;
@@ -122,7 +136,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 🧮 totale kg ricalcolato lato server (fallback se clientTotalKg non valido)
     const totalKg =
       typeof clientTotalKg === "number" && !Number.isNaN(clientTotalKg)
         ? clientTotalKg
@@ -132,7 +145,6 @@ export async function POST(req: NextRequest) {
             return sum + w * q;
           }, 0);
 
-    // 🧱 linee carrello per Storefront API
     const lines = items.map((i: IncomingItem) => {
       const qty = Number(i.qty ?? 1) || 1;
       const weight = Number(i.weightKg ?? 0) || 0;
@@ -151,20 +163,37 @@ export async function POST(req: NextRequest) {
       return line;
     });
 
-    // ✅ attributi sul carrello (visibili in Shopify come cart attributes)
     const cartAttributes: { key: string; value: string }[] = [
       { key: "spinEligible", value: totalKg >= 10 ? "true" : "false" },
       { key: "orderedKg", value: String(totalKg) },
       { key: "locale", value: shopifyLocale },
-      { key: "sid", value: sid }, // ✅ nuovo
+      { key: "sid", value: sid },
     ];
 
-    if (returnUrl) cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
+    if (returnUrl) {
+      cartAttributes.push({ key: "returnUrl", value: String(returnUrl) });
+    }
 
-    // ✅ salva anche orderNote tra gli attributes (utile per debug/backoffice)
-    if (orderNote) cartAttributes.push({ key: "orderNote", value: orderNote });
+    if (orderNote) {
+      cartAttributes.push({ key: "orderNote", value: orderNote });
+    }
 
-    // ✅ LIVE REGISTRATION (aggiunta: non rompe nulla se assente)
+    if (clientFbp) {
+      cartAttributes.push({ key: "_fbp", value: clientFbp });
+    }
+
+    if (clientFbc) {
+      cartAttributes.push({ key: "_fbc", value: clientFbc });
+    }
+
+    if (clientUserAgent) {
+      cartAttributes.push({ key: "clientUserAgent", value: clientUserAgent });
+    }
+
+    if (clientIp) {
+      cartAttributes.push({ key: "clientIp", value: clientIp });
+    }
+
     if (live && typeof live === "object") {
       const map: Record<string, any> = {
         liveType: "tiktok_live_mystery_weight",
@@ -192,23 +221,19 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // (debug utile: salva anche i params marketing dentro Shopify come attributes)
     if (originQuery) {
       const qp = new URLSearchParams(
         originQuery.startsWith("?") ? originQuery : `?${originQuery}`
       );
+
       for (const key of PASS_THROUGH_KEYS) {
         const v = qp.get(key as PassKey);
-        if (v) cartAttributes.push({ key: String(key), value: v });
+        if (v) {
+          cartAttributes.push({ key: String(key), value: v });
+        }
       }
     }
 
-    /**
-     * ✅ IMPORTANTISSIMO PER MAKE:
-     * Make (Watch Orders) legge quasi sempre SOLO Order.note.
-     * Quindi scriviamo una nota "ufficiale" nel carrello/checkout.
-     * ✅ aggiungiamo anche SID nella note per poter ritrovare l'ordine dopo
-     */
     const baseOrderNote =
       (orderNote && orderNote.trim()) ||
       (live?.tiktokUsername
@@ -236,7 +261,7 @@ export async function POST(req: NextRequest) {
       input: {
         lines,
         attributes: cartAttributes,
-        note: finalOrderNote, // ✅ qui!
+        note: finalOrderNote,
       },
     };
 
@@ -284,20 +309,16 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 🔗 checkoutUrl finale: locale + pass-through params (_gl/utm/gclid…)
     const url = new URL(cart.checkoutUrl as string);
     url.searchParams.set("locale", shopifyLocale);
-    url.searchParams.set("sid", sid); // ✅ nuovo
+    url.searchParams.set("sid", sid);
 
-    // ✅ aggiungiamo sid anche al returnUrl se presente
     if (returnUrl) {
       try {
         const ret = new URL(String(returnUrl));
         ret.searchParams.set("sid", sid);
         url.searchParams.set("return_url", ret.toString());
-      } catch {
-        // se returnUrl non è parseabile lasciamo stare
-      }
+      } catch {}
     }
 
     if (originQuery) {
@@ -307,18 +328,19 @@ export async function POST(req: NextRequest) {
 
       for (const key of PASS_THROUGH_KEYS) {
         const v = qp.get(key as PassKey);
-        if (v) url.searchParams.set(String(key), v);
+        if (v) {
+          url.searchParams.set(String(key), v);
+        }
       }
     }
 
-    // ✅ fallback: forza la nota anche via query param (non fa male)
     if (finalOrderNote) {
       url.searchParams.set("note", finalOrderNote);
     }
 
     return NextResponse.json({
       url: url.toString(),
-      sid, // ✅ utile anche lato debug
+      sid,
     });
   } catch (err: any) {
     return NextResponse.json(

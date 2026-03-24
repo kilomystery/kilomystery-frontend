@@ -9,6 +9,14 @@ type Props = {
   wheelBonusKg?: number;
 };
 
+function getCookie(name: string) {
+  if (typeof document === "undefined") return "";
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split("=")[1] || "") : "";
+}
+
 export default function CheckoutButton({ lang = "it", wheelBonusKg = 0 }: Props) {
   const { items } = useCart();
   const [loading, setLoading] = useState(false);
@@ -30,14 +38,17 @@ export default function CheckoutButton({ lang = "it", wheelBonusKg = 0 }: Props)
       const bonus = Number(wheelBonusKg || 0);
       const orderNote = bonus > 0 ? `🎁 Bonus ruota: ${bonus.toFixed(2)} kg` : "";
 
+      const fbp = getCookie("_fbp");
+      const fbc = getCookie("_fbc");
+      const clientUserAgent =
+        typeof navigator !== "undefined" ? navigator.userAgent : "";
+
       trackInitiateCheckout(items as any, {
         checkout_flow: "storefront_api",
         locale: lang,
         wheel_bonus_kg: bonus > 0 ? Number(bonus.toFixed(2)) : 0,
       });
-      // Nota: il tracking sul dominio Shopify (shop.kilomystery.com) va gestito tramite Shopify Customer Events / app pixels.
 
-      // ✅ crea checkout
       const res = await fetch("/api/checkout/create", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -48,11 +59,15 @@ export default function CheckoutButton({ lang = "it", wheelBonusKg = 0 }: Props)
           lang,
           originQuery,
           orderNote,
+          fbp,
+          fbc,
+          clientUserAgent,
         }),
       });
 
       const text = await res.text();
       let data: any = null;
+
       try {
         data = JSON.parse(text);
       } catch {
@@ -60,7 +75,11 @@ export default function CheckoutButton({ lang = "it", wheelBonusKg = 0 }: Props)
       }
 
       if (!res.ok || !data?.url) {
-        console.error("❌ Checkout create failed", { status: res.status, data, items });
+        console.error("❌ Checkout create failed", {
+          status: res.status,
+          data,
+          items,
+        });
         alert(
           `Checkout error\nHTTP: ${res.status}\n` +
             `${data?.code ? `code: ${data.code}\n` : ""}` +
