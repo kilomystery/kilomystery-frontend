@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { sendMetaPurchase } from "@/lib/meta-capi";
+import { sendMetaPurchase } from "@/app/lib/meta-capi";
 
 export const runtime = "nodejs";
 
