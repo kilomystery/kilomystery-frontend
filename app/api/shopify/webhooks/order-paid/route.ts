@@ -6,7 +6,13 @@ export const runtime = "nodejs";
 
 function verifyShopifyHmac(rawBody: string, hmacHeader: string | null) {
   const secret = process.env.SHOPIFY_WEBHOOK_SECRET;
-  if (!secret || !hmacHeader) return false;
+  if (!secret || !hmacHeader) {
+    console.error("[ORDER-PAID] missing HMAC inputs", {
+      hasSecret: !!secret,
+      hasHeader: !!hmacHeader,
+    });
+    return false;
+  }
 
   const digest = crypto
     .createHmac("sha256", secret)
@@ -14,8 +20,22 @@ function verifyShopifyHmac(rawBody: string, hmacHeader: string | null) {
     .digest("base64");
 
   try {
-    return crypto.timingSafeEqual(Buffer.from(digest), Buffer.from(hmacHeader));
-  } catch {
+    const isValid = crypto.timingSafeEqual(
+      Buffer.from(digest),
+      Buffer.from(hmacHeader)
+    );
+
+    if (!isValid) {
+      console.error("[ORDER-PAID] invalid HMAC", {
+        expectedPrefix: digest.slice(0, 8),
+        receivedPrefix: hmacHeader.slice(0, 8),
+        sameLength: digest.length === hmacHeader.length,
+      });
+    }
+
+    return isValid;
+  } catch (err) {
+    console.error("[ORDER-PAID] HMAC compare failed", err);
     return false;
   }
 }
@@ -27,12 +47,6 @@ function todayYMD(d = new Date()) {
   return `${yyyy}${mm}${dd}`;
 }
 
-/**
- * STD-1KG -> STD1KG
- * PRM-5KG -> PRM5KG
- * EXP-15KG -> EXP15KG
- * UP-PRM-1KG -> UPPRM1KG
- */
 function parseSkuToCode(skuRaw: string) {
   const sku = (skuRaw || "").trim().toUpperCase();
   if (!sku) return null;
@@ -61,6 +75,10 @@ async function shopifyGraphQL(query: string, variables: any) {
   const token = process.env.SHOPIFY_ADMIN_ACCESS_TOKEN;
 
   if (!domain || !token) {
+    console.error("[ORDER-PAID] missing Shopify admin env", {
+      hasDomain: !!domain,
+      hasToken: !!token,
+    });
     throw new Error("Missing SHOPIFY_STORE_DOMAIN / SHOPIFY_ADMIN_ACCESS_TOKEN");
   }
 
@@ -75,9 +93,15 @@ async function shopifyGraphQL(query: string, variables: any) {
   });
 
   const json = await res.json();
+
   if (!res.ok || json.errors) {
+    console.error("[ORDER-PAID] shopifyGraphQL error", {
+      status: res.status,
+      json,
+    });
     throw new Error(JSON.stringify(json.errors || json));
   }
+
   return json.data;
 }
 
@@ -92,12 +116,30 @@ export async function POST(req: Request) {
   try {
     const order = JSON.parse(rawBody);
 
+    console.log("[ORDER-PAID] webhook received", {
+      id: order?.id,
+      admin_graphql_api_id: order?.admin_graphql_api_id,
+      order_number: order?.order_number,
+      name: order?.name,
+      line_items_count: Array.isArray(order?.line_items)
+        ? order.line_items.length
+        : 0,
+      note: order?.note || null,
+    });
+
     const orderGid: string | undefined = order?.admin_graphql_api_id;
     const orderNumber: number | undefined = order?.order_number;
     const createdAtRaw: string | undefined = order?.created_at;
 
     if (!orderGid || !orderNumber) {
-      return NextResponse.json({ error: "Missing orderGid/orderNumber" }, { status: 400 });
+      console.error("[ORDER-PAID] missing order identifiers", {
+        orderGid,
+        orderNumber,
+      });
+      return NextResponse.json(
+        { error: "Missing orderGid/orderNumber" },
+        { status: 400 }
+      );
     }
 
     const createdAt = createdAtRaw ? new Date(createdAtRaw) : new Date();
@@ -106,13 +148,16 @@ export async function POST(req: Request) {
 
     const lineItems = Array.isArray(order?.line_items) ? order.line_items : [];
     if (!lineItems.length) {
+      console.error("[ORDER-PAID] no line_items");
       return NextResponse.json({ error: "No line_items" }, { status: 400 });
     }
 
-    // --------------------------------------------------
-    // 1) LOGICA LOTS ESISTENTE
-    // --------------------------------------------------
-    const lots: Array<{ lotId: string; title: string; sku: string; qtyIndex: number }> = [];
+    const lots: Array<{
+      lotId: string;
+      title: string;
+      sku: string;
+      qtyIndex: number;
+    }> = [];
 
     for (const li of lineItems) {
       const title = String(li?.title || "").trim();
@@ -160,52 +205,53 @@ export async function POST(req: Request) {
 
     const data = await shopifyGraphQL(mutation, variables);
     const errors = data?.metafieldsSet?.userErrors || [];
+
     if (errors.length) {
+      console.error("[ORDER-PAID] metafieldsSet userErrors", errors);
       return NextResponse.json(
         { error: "Metafield error", details: errors },
         { status: 500 }
       );
     }
 
-    // --------------------------------------------------
-    // 2) META CAPI PURCHASE
-    // --------------------------------------------------
-    const sid =
-      extractSidFromNote(order?.note) ||
-      getOrderAttribute(order, "sid");
+    const sid = extractSidFromNote(order?.note) || getOrderAttribute(order, "sid");
 
     let metaResult: any = null;
     let metaSkippedReason = "";
 
     if (!sid) {
       metaSkippedReason = "Missing SID";
+      console.warn("[ORDER-PAID] Meta skipped: missing SID");
     } else {
       const currency = order?.currency || "EUR";
       const value = Number(order?.total_price || 0);
 
-      const contents = lineItems.map((item: any) => ({
-        id: String(item?.variant_id || item?.product_id || item?.sku || item?.title || ""),
+      const contents: Array<{
+        id: string;
+        quantity: number;
+        item_price: number;
+      }> = lineItems.map((item: any) => ({
+        id: String(
+          item?.variant_id || item?.product_id || item?.sku || item?.title || ""
+        ),
         quantity: Number(item?.quantity || 1),
         item_price: Number(item?.price || 0),
       }));
 
-      const contentIds = contents.map((c: { id: string }) => c.id).filter(Boolean);
+      const contentIds: string[] = contents
+        .map((c) => c.id)
+        .filter((id): id is string => Boolean(id));
 
-      const fbp =
-        getOrderAttribute(order, "_fbp") ||
-        getOrderAttribute(order, "fbp");
+      const fbp = getOrderAttribute(order, "_fbp") || getOrderAttribute(order, "fbp");
 
-      const fbc =
-        getOrderAttribute(order, "_fbc") ||
-        getOrderAttribute(order, "fbc");
+      const fbc = getOrderAttribute(order, "_fbc") || getOrderAttribute(order, "fbc");
 
       const eventSourceUrl =
         getOrderAttribute(order, "returnUrl") ||
         process.env.SITE_URL ||
         "https://www.kilomystery.com";
 
-      const userAgent =
-        getOrderAttribute(order, "clientUserAgent") || "";
+      const userAgent = getOrderAttribute(order, "clientUserAgent") || "";
 
       try {
         metaResult = await sendMetaPurchase({
@@ -225,17 +271,29 @@ export async function POST(req: Request) {
             fn: order?.customer?.first_name || order?.billing_address?.first_name,
             ln: order?.customer?.last_name || order?.billing_address?.last_name,
             ct: order?.billing_address?.city,
-            st: order?.billing_address?.province_code || order?.billing_address?.province,
+            st:
+              order?.billing_address?.province_code ||
+              order?.billing_address?.province,
             zp: order?.billing_address?.zip,
-            country: order?.billing_address?.country_code || order?.billing_address?.country,
+            country:
+              order?.billing_address?.country_code ||
+              order?.billing_address?.country,
             external_id: String(order?.customer?.id || order?.id || sid),
             client_user_agent: userAgent,
             fbp,
             fbc,
           },
         });
+
+        console.log("[ORDER-PAID] Meta purchase sent", {
+          sid,
+          orderId: order?.name || String(order?.id || ""),
+        });
       } catch (err: any) {
         metaSkippedReason = err?.message || "Meta send failed";
+        console.error("[ORDER-PAID] Meta send failed", {
+          message: err?.message || "Unknown error",
+        });
       }
     }
 
@@ -252,6 +310,11 @@ export async function POST(req: Request) {
       },
     });
   } catch (err: any) {
+    console.error("[ORDER-PAID] webhook processing failed", {
+      message: err?.message || "Unknown error",
+      stack: err?.stack || null,
+    });
+
     return NextResponse.json(
       {
         error: "Webhook processing failed",
