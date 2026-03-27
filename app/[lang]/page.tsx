@@ -14,6 +14,7 @@ import HowItWorksScroll from "../components/HowItWorksScroll";
 type CopyKey =
   | "heroTitle"
   | "heroSubtitle"
+  | "heroAsteriskNote"
   | "ctaPrices"
   | "ctaHowItWorks"
   | "howTitle"
@@ -83,9 +84,11 @@ type CopyPerLang = Record<CopyKey, string>;
 
 const HOME_COPY: Record<Lang, CopyPerLang> = {
   it: {
-    heroTitle: "Mystery box di Pacchi Smarriti al Kg",
+    heroTitle: "Mystery box di Pacchi Smarriti* al Kg",
     heroSubtitle:
       "Scegli Standard o Premium, seleziona il peso e aggiungi al carrello. Trasparenza, tracciabilità, sorpresa vera.",
+    heroAsteriskNote:
+      "* Le nostre mystery box possono contenere prodotti provenienti da resi e-commerce, stock invenduti, giacenze di magazzino, pacchi non reclamati e pacchi smarriti.",
     ctaPrices: "Vedi prezzi",
     ctaHowItWorks: "Come funziona",
 
@@ -153,7 +156,8 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     eventsCta: "Vedi calendario eventi",
     eventsCard1Kicker: "Pop-up in città",
     eventsCard1Title: "Tappe nelle principali città italiane 🇮🇹",
-    eventsCard1Text: "Scopri quando saremo vicino a te, passa al corner e scopri da vicino il mondo KiloMystery.",
+    eventsCard1Text:
+      "Scopri quando saremo vicino a te, passa al corner e scopri da vicino il mondo KiloMystery.",
     eventsCard2Kicker: "Area sostenibilità",
     eventsCard2Title: "Scopri come recuperiamo pacchi e stock ♻️",
     eventsCard2Text:
@@ -168,13 +172,17 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
   },
 
   en: {
-    heroTitle: "Mystery boxes by the kilo",
-    heroSubtitle: "Choose Standard or Premium, select the weight and add to cart. Transparency, traceability, real surprise.",
+    heroTitle: "Mystery boxes from Lost Parcels* by the kilo",
+    heroSubtitle:
+      "Choose Standard or Premium, select the weight and add to cart. Transparency, traceability, real surprise.",
+    heroAsteriskNote:
+      "* Our mystery boxes may contain products coming from e-commerce returns, unsold stock, warehouse leftovers, unclaimed parcels and lost parcels.",
     ctaPrices: "View prices",
     ctaHowItWorks: "How it works",
 
     reviewsTitle: "Watch the unboxings",
-    reviewsSubtitle: "Before you choose, scroll the videos and feel the experience: real openings, real reactions, different surprises every time.",
+    reviewsSubtitle:
+      "Before you choose, scroll the videos and feel the experience: real openings, real reactions, different surprises every time.",
     reviewsCtaPrimary: "Open Unboxing Experience",
     reviewsCtaSecondary: "Watch all videos",
     reviewsCard1Kicker: "Real unboxing",
@@ -236,7 +244,8 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
     eventsCta: "View events calendar",
     eventsCard1Kicker: "City pop-ups",
     eventsCard1Title: "Stops in major Italian cities 🇮🇹",
-    eventsCard1Text: "Find out when we’ll be near you, drop by the corner and discover the KiloMystery world up close.",
+    eventsCard1Text:
+      "Find out when we’ll be near you, drop by the corner and discover the KiloMystery world up close.",
     eventsCard2Kicker: "Sustainability area",
     eventsCard2Title: "See how we recover parcels and stock ♻️",
     eventsCard2Text:
@@ -251,13 +260,17 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
   },
 
   es: {
-    heroTitle: "Cajas mystery al kilo",
-    heroSubtitle: "Elige Standard o Premium, selecciona el peso y añádelo al carrito. Transparencia, trazabilidad y una sorpresa real.",
+    heroTitle: "Cajas mystery de paquetes perdidos* al kilo",
+    heroSubtitle:
+      "Elige Standard o Premium, selecciona el peso y añádelo al carrito. Transparencia, trazabilidad y una sorpresa real.",
+    heroAsteriskNote:
+      "* Nuestras mystery box pueden contener productos procedentes de devoluciones e-commerce, stock no vendido, excedentes de almacén, paquetes no reclamados y paquetes perdidos.",
     ctaPrices: "Ver precios",
     ctaHowItWorks: "Cómo funciona",
 
     reviewsTitle: "Mira los unboxings",
-    reviewsSubtitle: "Antes de elegir, desliza los vídeos y vive la experiencia: aperturas reales, reacciones reales, sorpresas diferentes cada vez.",
+    reviewsSubtitle:
+      "Antes de elegir, desliza los vídeos y vive la experiencia: aperturas reales, reacciones reales, sorpresas diferentes cada vez.",
     reviewsCtaPrimary: "Abrir Unboxing Experience",
     reviewsCtaSecondary: "Ver todos los vídeos",
     reviewsCard1Kicker: "Unboxing real",
@@ -335,13 +348,17 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
   },
 
   fr: {
-    heroTitle: "Mystery box au kilo",
-    heroSubtitle: "Choisis Standard ou Premium, sélectionne le poids et ajoute au panier. Transparence, traçabilité, vraie surprise.",
+    heroTitle: "Mystery box de colis perdus* au kilo",
+    heroSubtitle:
+      "Choisis Standard ou Premium, sélectionne le poids et ajoute au panier. Transparence, traçabilité, vraie surprise.",
+    heroAsteriskNote:
+      "* Nos mystery box peuvent contenir des produits issus de retours e-commerce, de stocks invendus, de surplus d’entrepôt, de colis non réclamés et de colis perdus.",
     ctaPrices: "Voir les prix",
     ctaHowItWorks: "Comment ça marche",
 
     reviewsTitle: "Regarde les unboxings",
-    reviewsSubtitle: "Avant de choisir, fais défiler les vidéos : ouvertures réelles, réactions réelles, surprises différentes à chaque fois.",
+    reviewsSubtitle:
+      "Avant de choisir, fais défiler les vidéos : ouvertures réelles, réactions réelles, surprises différentes à chaque fois.",
     reviewsCtaPrimary: "Ouvrir Unboxing Experience",
     reviewsCtaSecondary: "Voir toutes les vidéos",
     reviewsCard1Kicker: "Unboxing réel",
@@ -419,14 +436,17 @@ const HOME_COPY: Record<Lang, CopyPerLang> = {
   },
 
   de: {
-    heroTitle: "Mystery Box zum Kilo-Preis",
+    heroTitle: "Mystery Boxen aus verlorenen Paketen* nach Kilo",
     heroSubtitle:
       "Wähle Standard oder Premium, bestimme das Gewicht und lege in den Warenkorb. Transparenz, Nachverfolgbarkeit, echte Überraschung.",
+    heroAsteriskNote:
+      "* Unsere Mystery Boxen können Produkte aus E-Commerce-Retouren, unverkauften Beständen, Lagerüberhängen, nicht abgeholten Paketen und verlorenen Paketen enthalten.",
     ctaPrices: "Preise ansehen",
     ctaHowItWorks: "So funktioniert’s",
 
     reviewsTitle: "Unboxings ansehen",
-    reviewsSubtitle: "Bevor du wählst: scrolle durch die Videos – echte Öffnungen, echte Reaktionen, jedes Mal anders.",
+    reviewsSubtitle:
+      "Bevor du wählst: scrolle durch die Videos – echte Öffnungen, echte Reaktionen, jedes Mal anders.",
     reviewsCtaPrimary: "Unboxing Experience öffnen",
     reviewsCtaSecondary: "Alle Videos ansehen",
     reviewsCard1Kicker: "Echtes Unboxing",
@@ -541,7 +561,6 @@ export default async function HomePage({
       <Header lang={lang as any} />
 
       <main className="container space-y-16 py-10">
-        {/* === HERO === */}
         <section className="relative overflow-hidden rounded-2xl border border-white/10 min-h-[460px] md:min-h-[560px]">
           <div className="absolute inset-0">
             <video
@@ -554,7 +573,7 @@ export default async function HomePage({
               controls={false}
               disablePictureInPicture
             >
-              <source src="hero/hero-bg.mov" type="video/quicktime" />
+              <source src="/hero/hero-bg.mov" type="video/quicktime" />
             </video>
           </div>
 
@@ -580,7 +599,13 @@ export default async function HomePage({
                 </span>
               </h1>
 
-              <p className="mx-auto mt-4 max-w-2xl text-center text-white/85">{t.heroSubtitle}</p>
+              <p className="mx-auto mt-4 max-w-2xl text-center text-white/85">
+                {t.heroSubtitle}
+              </p>
+
+              <p className="mx-auto mt-3 max-w-3xl text-center text-[11px] md:text-xs text-white/55 leading-relaxed">
+                {t.heroAsteriskNote}
+              </p>
 
               <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                 <a
@@ -617,7 +642,9 @@ export default async function HomePage({
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl md:text-3xl font-extrabold">{t.reviewsTitle}</h2>
-              <p className="text-white/70 text-sm md:text-base mt-1 max-w-2xl">{t.reviewsSubtitle}</p>
+              <p className="text-white/70 text-sm md:text-base mt-1 max-w-2xl">
+                {t.reviewsSubtitle}
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
