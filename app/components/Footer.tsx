@@ -1,4 +1,3 @@
-// app/components/Footer.tsx
 "use client";
 
 import Link from "next/link";
@@ -40,10 +39,6 @@ const COMPANY_INFO = {
   vat: "P.IVA / C.F. 027945505745",
   address: "Sede legale: Piazza Alessandro Romano 11, 72023 Mesagne (BR) – Italia",
 };
-
-/* =========================
-   LABELS
-========================= */
 
 const FOOTER_LABELS: Record<Lang, Labels> = {
   it: {
@@ -188,10 +183,6 @@ function safePath(lang: Lang, slug: string) {
   return `/${lang}${clean}`.replace(/\/{2,}/g, "/");
 }
 
-/* =========================
-   COMPONENT
-========================= */
-
 export default function Footer({
   lang = "it" as Lang,
   labels,
@@ -206,18 +197,12 @@ export default function Footer({
 
   return (
     <footer className="relative mt-20 border-t border-white/10 bg-gradient-to-b from-[#05070b] via-[#05070b] to-[#020308]">
-
-      {/* TOP GLOW */}
       <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#7A20FF] via-emerald-300/80 to-[#20D27A]" />
 
       <div className="container py-12 relative z-10">
-
-        {/* BRAND */}
         <div className="flex items-center gap-3 mb-8">
           <Link href={base} prefetch={false} className="inline-flex items-center group">
-
             <div className="relative h-10 w-10 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_30px_rgba(122,32,255,0.5)]">
-
               <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
                 <Image
                   src="/logo.svg"
@@ -228,19 +213,15 @@ export default function Footer({
                   priority
                 />
               </div>
-
             </div>
 
             <span className="ml-2 text-sm font-semibold tracking-[0.22em] uppercase text-white/60 group-hover:text-white transition">
               KILOMYSTERY
             </span>
-
           </Link>
         </div>
 
-        {/* NEWSLETTER */}
         <section className="mb-12 rounded-2xl border border-white/10 bg-gradient-to-tr from-white/[0.04] via-[#111827]/70 to-white/[0.06] p-6 shadow-[0_25px_60px_rgba(0,0,0,0.8)]">
-
           <h3 className="text-xl md:text-2xl font-extrabold tracking-tight">
             <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
               {L.newsletterTitle}
@@ -250,13 +231,9 @@ export default function Footer({
           <div className="mt-4">
             <NewsletterForm lang={lang} />
           </div>
-
         </section>
 
-        {/* LINKS GRID */}
         <div className="grid gap-10 md:grid-cols-3">
-
-          {/* MENU */}
           <nav aria-label="Menu">
             <h4 className="footer-heading">{L.menu}</h4>
 
@@ -280,12 +257,10 @@ export default function Footer({
             </ul>
           </nav>
 
-          {/* SEO HUB */}
           <nav aria-label="SEO hub">
             <h4 className="footer-heading">{L.seoHub}</h4>
 
             <ul className="space-y-2">
-
               <li>
                 <Link href={safePath(lang, "/mystery-box")} className="footer-link">
                   {L.mysteryBox}
@@ -306,7 +281,48 @@ export default function Footer({
                 </li>
               )}
 
-              {/* POSTE */}
+              <li>
+                <Link href={safePath(lang, "/pacchi-non-reclamati")} className="footer-link">
+                  {lang === "it"
+                    ? "Pacchi Non Reclamati"
+                    : lang === "en"
+                    ? "Unclaimed Parcels"
+                    : lang === "es"
+                    ? "Paquetes no reclamados"
+                    : lang === "fr"
+                    ? "Colis non réclamés"
+                    : "Nicht abgeholte Pakete"}
+                </Link>
+              </li>
+
+              <li>
+                <Link href={safePath(lang, "/resi-ecommerce")} className="footer-link">
+                  {lang === "it"
+                    ? "Resi Ecommerce"
+                    : lang === "en"
+                    ? "Ecommerce Returns"
+                    : lang === "es"
+                    ? "Devoluciones ecommerce"
+                    : lang === "fr"
+                    ? "Retours ecommerce"
+                    : "E-Commerce-Retouren"}
+                </Link>
+              </li>
+
+              <li>
+                <Link href={safePath(lang, "/giacenze-ecommerce")} className="footer-link">
+                  {lang === "it"
+                    ? "Giacenze Ecommerce"
+                    : lang === "en"
+                    ? "Ecommerce Overstock"
+                    : lang === "es"
+                    ? "Stock ecommerce"
+                    : lang === "fr"
+                    ? "Stocks ecommerce"
+                    : "E-Commerce-Lagerbestände"}
+                </Link>
+              </li>
+
               <li>
                 <Link href={safePath(lang, "/pacchi-smarriti-poste")} className="footer-link">
                   {lang === "it"
@@ -321,7 +337,6 @@ export default function Footer({
                 </Link>
               </li>
 
-              {/* AMAZON */}
               <li>
                 <Link href={safePath(lang, "/pacchi-smarriti-amazon")} className="footer-link">
                   {lang === "it"
@@ -347,11 +362,9 @@ export default function Footer({
                   Premium 10 kg
                 </Link>
               </li>
-
             </ul>
           </nav>
 
-          {/* LEGAL */}
           <nav aria-label="Legal">
             <h4 className="footer-heading">{L.legal}</h4>
 
@@ -370,10 +383,8 @@ export default function Footer({
               ))}
             </ul>
           </nav>
-
         </div>
 
-        {/* FOOTER BOTTOM */}
         <div className="mt-12 border-t border-white/10 pt-6 text-sm text-white/60">
           <p>{L.rights(year)}</p>
 
@@ -383,10 +394,8 @@ export default function Footer({
             <p>{COMPANY_INFO.address}</p>
           </div>
         </div>
-
       </div>
 
-      {/* STYLES */}
       <style jsx>{`
         .footer-heading {
           font-size: 1.1rem;
@@ -411,7 +420,7 @@ export default function Footer({
           color: rgba(255,255,255,0.78);
           font-size: 0.9rem;
           position: relative;
-          transition: all .18s ease;
+          transition: all 0.18s ease;
         }
 
         .footer-link:hover {
@@ -420,7 +429,6 @@ export default function Footer({
           text-shadow: 0 0 14px rgba(255,255,255,0.2);
         }
       `}</style>
-
     </footer>
   );
 }
