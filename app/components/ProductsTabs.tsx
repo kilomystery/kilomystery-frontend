@@ -31,6 +31,7 @@ const LABELS: Record<Lang, any> = {
     add: "Aggiungi al carrello",
     addFive: "Scegli il 5 kg",
     addFivePremium: "👑 Scegli il 5 kg Premium",
+    soldOut: "Sold Out",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Pesa il mistero,",
@@ -73,6 +74,7 @@ const LABELS: Record<Lang, any> = {
     add: "Add to cart",
     addFive: "Choose 5 kg",
     addFivePremium: "👑 Choose 5 kg Premium",
+    soldOut: "Sold Out",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Weigh the mystery,",
@@ -115,6 +117,7 @@ const LABELS: Record<Lang, any> = {
     add: "Añadir al carrito",
     addFive: "Elige 5 kg",
     addFivePremium: "👑 Elige 5 kg Premium",
+    soldOut: "Agotado",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Pesa el misterio,",
@@ -157,6 +160,7 @@ const LABELS: Record<Lang, any> = {
     add: "Ajouter au panier",
     addFive: "Choisir 5 kg",
     addFivePremium: "👑 Choisir 5 kg Premium",
+    soldOut: "Rupture de stock",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Pèse le mystère,",
@@ -199,6 +203,7 @@ const LABELS: Record<Lang, any> = {
     add: "In den Warenkorb",
     addFive: "5 kg wählen",
     addFivePremium: "👑 5 kg Premium wählen",
+    soldOut: "Ausverkauft",
     kg: "kg",
     perkg: "€/kg",
     sectionTitleMain: "Wiege das Geheimnis,",
@@ -238,6 +243,7 @@ const LABELS: Record<Lang, any> = {
 };
 
 const WEIGHTS: Kg[] = [5, 3, 10, 2, 1];
+const SOLD_OUT_WEIGHTS: Kg[] = [1, 2];
 
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
@@ -440,7 +446,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
     const tierLookup = tab === "std" ? "standard" : "premium";
 
-    const items = WEIGHTS.map((kg) => {
+    const items = WEIGHTS.filter((kg) => !SOLD_OUT_WEIGHTS.includes(kg)).map((kg) => {
       const { total } = PRICE_TABLE[tab][kg];
       const perKg = +(total / kg).toFixed(2);
       const shopifyId = SHOPIFY_VARIANTS[tierLookup as Tier][kg];
@@ -488,6 +494,8 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
   }, []);
 
   function handleAddToCart(kind: "Standard" | "Premium", kg: Kg, perKg: number) {
+    if (SOLD_OUT_WEIGHTS.includes(kg)) return;
+
     const tierLookup = kind === "Standard" ? "standard" : "premium";
     const shopifyId = SHOPIFY_VARIANTS[tierLookup as Tier][kg];
 
@@ -561,6 +569,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
         {WEIGHTS.map((w) => {
           const kg = w as Kg;
           const isStd = tab === "std";
+          const isSoldOut = SOLD_OUT_WEIGHTS.includes(kg);
 
           const { total, compareAt } = PRICE_TABLE[tab][kg];
           const perKg = +(total / kg).toFixed(2);
@@ -592,7 +601,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
           const isTenKg = kg === 10;
 
           const klarnaRate = KLARNA_INSTALLMENTS[tab][kg];
-          const liveProof = proofMap?.[kg];
+          const liveProof = isSoldOut ? undefined : proofMap?.[kg];
           const addToCartsToday = liveProof?.addToCartsToday;
           const availableNow = liveProof?.availableNow;
 
@@ -615,6 +624,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                   ? "ring-2 ring-emerald-300/45 shadow-[0_26px_70px_rgba(16,185,129,.20)] scale-[1.01]"
                   : "",
                 isFiveKg ? "lg:col-span-2" : "",
+                isSoldOut ? "opacity-80" : "",
               ].join(" ")}
             >
               <div className="flex items-center justify-between mb-3 pt-1 text-[0.72rem] uppercase tracking-[.18em] text-white/65">
@@ -662,6 +672,14 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                       <div className="absolute top-3 right-3 z-30">
                         <span className="rounded-full border border-emerald-200/70 bg-gradient-to-r from-emerald-300 via-green-300 to-lime-200 px-4 py-2 text-[0.72rem] font-extrabold text-[#0f1216] shadow-[0_12px_30px_rgba(52,211,153,.38)]">
                           {L.bestValue}
+                        </span>
+                      </div>
+                    ) : null}
+
+                    {isSoldOut ? (
+                      <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/45 backdrop-blur-[2px]">
+                        <span className="rounded-full border border-red-200/70 bg-red-500/90 px-5 py-2 text-sm font-extrabold uppercase tracking-[.18em] text-white shadow-[0_12px_30px_rgba(239,68,68,.35)]">
+                          {L.soldOut}
                         </span>
                       </div>
                     ) : null}
@@ -713,7 +731,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 </div>
               </div>
 
-              {(addToCartsToday || availableNow) && (
+              {!isSoldOut && (addToCartsToday || availableNow) && (
                 <div className="mt-4 space-y-2">
                   {typeof addToCartsToday === "number" && addToCartsToday > 0 ? (
                     <div className="rounded-xl border border-sky-300/20 bg-sky-300/10 px-3 py-2 text-[0.82rem] font-semibold text-sky-100">
@@ -774,15 +792,20 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
                 <button
                   className={[
                     "w-full rounded-2xl px-5 py-4 text-[1.02rem] font-extrabold transition-all duration-200",
-                    isStd
+                    isSoldOut
+                      ? "bg-white/10 text-white/45 border border-white/10 cursor-not-allowed"
+                      : isStd
                       ? "bg-gradient-to-r from-white to-white/85 text-[#101318] shadow-[0_14px_34px_rgba(255,255,255,.12)] hover:scale-[1.02]"
                       : "bg-gradient-to-r from-[#fff2a8] via-[#f4cf57] to-[#d4af37] text-[#1a1a1a] shadow-[0_16px_40px_rgba(212,175,55,.34)] hover:scale-[1.02]",
                     isFiveKg ? "text-[1.08rem]" : "",
                   ].join(" ")}
                   onClick={() => handleAddToCart(currentKind, kg, perKg)}
                   type="button"
+                  disabled={isSoldOut}
                 >
-                  {isFiveKg
+                  {isSoldOut
+                    ? L.soldOut
+                    : isFiveKg
                     ? isStd
                       ? L.addFive
                       : L.addFivePremium
@@ -840,4 +863,4 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
       </div>
     </section>
   );
-} 
+}
