@@ -17,8 +17,8 @@ import {
 const UPSELL_STD_1KG_SHOPIFY_ID = "52089042567506";
 const UPSELL_PRM_1KG_SHOPIFY_ID = "52089042993490";
 
-const UPSELL_STD_1KG_TOTAL = 14.9;
-const UPSELL_PRM_1KG_TOTAL = 16.9;
+const UPSELL_STD_1KG_TOTAL = 19.9;
+const UPSELL_PRM_1KG_TOTAL = 21.9;
 
 const UPSELL_STD_WEIGHT_KG = 1;
 const UPSELL_PRM_WEIGHT_KG = 1;
@@ -42,7 +42,8 @@ type CartCopyKey =
   | "upsellPrmCta"
   | "wheelBannerTitle"
   | "wheelBannerText"
-  | "wheelPlayedText";
+  | "wheelPlayedText"
+  | "upsellOnlyError";
 
 type CartCopyPerLang = Record<CartCopyKey, string>;
 
@@ -72,6 +73,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
       "🎡 Hai almeno 10 kg nel carrello: ottieni 1 giro alla ruota per vincere kg bonus 🎁 che aggiungiamo come nota al tuo ordine.",
     wheelPlayedText:
       "Hai già usato la ruota di recente da questo dispositivo. Il bonus 🎁 è già collegato al tuo ordine.",
+
+    upsellOnlyError:
+      "Gli upsell sono solo extra: per andare al checkout deve esserci almeno un prodotto principale nel carrello.",
   },
   en: {
     title: "Cart",
@@ -98,6 +102,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
       "🎡 You have at least 10 kg in your cart: you get 1 spin to win bonus kg 🎁 that we add as a note to your order.",
     wheelPlayedText:
       "You’ve already used the wheel recently on this device. The bonus 🎁 is already attached to your order.",
+
+    upsellOnlyError:
+      "Upsells are extras only: you need at least one main product in your cart to proceed to checkout.",
   },
   es: {
     title: "Carrito",
@@ -124,6 +131,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
       "🎡 Tienes al menos 10 kg en el carrito: consigues 1 tirada para ganar kg extra 🎁 que añadimos como nota a tu pedido.",
     wheelPlayedText:
       "Ya has usado la ruleta recientemente desde este dispositivo. El bonus 🎁 ya está vinculado a tu pedido.",
+
+    upsellOnlyError:
+      "Los upsells son solo extras: debe haber al menos un producto principal en el carrito para ir al checkout.",
   },
   fr: {
     title: "Panier",
@@ -150,6 +160,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
       "🎡 Tu as au moins 10 kg dans ton panier : tu obtiens 1 tirage pour gagner des kg bonus 🎁 ajoutés en note à ta commande.",
     wheelPlayedText:
       "Tu as déjà utilisé la roue récemment sur cet appareil. Le bonus 🎁 est déjà lié à ta commande.",
+
+    upsellOnlyError:
+      "Les upsells sont uniquement des extras : il faut au moins un produit principal dans le panier pour passer au checkout.",
   },
   de: {
     title: "Warenkorb",
@@ -176,6 +189,9 @@ const CART_COPY: Record<Lang, CartCopyPerLang> = {
       "🎡 Du hast mindestens 10 kg im Warenkorb: Du erhältst 1 Dreh, um Bonus-Kilos 🎁 zu gewinnen, die wir als Notiz zu deiner Bestellung hinzufügen.",
     wheelPlayedText:
       "Du hast das Rad kürzlich auf diesem Gerät schon benutzt. Der Bonus 🎁 ist bereits mit deiner Bestellung verknüpft.",
+
+    upsellOnlyError:
+      "Upsells sind nur Extras: Für den Checkout muss mindestens ein Hauptprodukt im Warenkorb sein.",
   },
 };
 
@@ -194,13 +210,16 @@ function getCookie(name: string) {
 
 export default function CartPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
-  const { items, setQty, removeItem, subtotal, addItem } = useCart();
+  const { items, setQty, removeItem, subtotal, addItem, clearUpsellsIfNoMain } =
+    useCart();
   const t = CART_COPY[lang] ?? CART_COPY.it;
 
   const mainItems = useMemo(
-    () => items.filter((i: any) => !String(i.id || "").startsWith("upsell-")),
+    () => items.filter((i: any) => i.isUpsell !== true),
     [items]
   );
+
+  const hasMainProduct = mainItems.length > 0;
 
   const hasStdMain = mainItems.some(
     (i: any) => i.tier === "Standard" || i.tier === "standard"
@@ -246,6 +265,11 @@ export default function CartPage({ params }: { params: { lang: string } }) {
     if (!items?.length) return;
     setShowWheel(true);
   }, [hasPlayedWheel, totalEligibleKg, items?.length]);
+
+  useEffect(() => {
+    if (!items.length) return;
+    clearUpsellsIfNoMain();
+  }, [items.length, clearUpsellsIfNoMain]);
 
   const handleWheelFinish = (bonusKg: number) => {
     const safeBonus = Math.max(0, safeNumber(bonusKg, 0));
@@ -306,6 +330,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       pricePerKg: UPSELL_STD_1KG_TOTAL / UPSELL_STD_WEIGHT_KG,
       shopifyId: UPSELL_STD_1KG_SHOPIFY_ID,
       qty: 1,
+      isUpsell: true,
     };
     addItem(item as any);
     trackAddToCart(item as any, 1);
@@ -320,6 +345,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
       pricePerKg: UPSELL_PRM_1KG_TOTAL / UPSELL_PRM_WEIGHT_KG,
       shopifyId: UPSELL_PRM_1KG_SHOPIFY_ID,
       qty: 1,
+      isUpsell: true,
     };
     addItem(item as any);
     trackAddToCart(item as any, 1);
@@ -329,6 +355,11 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
   async function goToCheckout() {
     if (!items?.length || checkoutLoading) return;
+
+    if (!hasMainProduct) {
+      alert(t.upsellOnlyError);
+      return;
+    }
 
     setCheckoutLoading(true);
 
@@ -408,6 +439,12 @@ export default function CartPage({ params }: { params: { lang: string } }) {
           <p className="text-white/70">{t.empty}</p>
         ) : (
           <>
+            {!hasMainProduct && items.length > 0 && (
+              <section className="rounded-2xl border border-red-400/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                {t.upsellOnlyError}
+              </section>
+            )}
+
             {totalEligibleKg >= 10 && (
               <section className="rounded-2xl border border-emerald-400/40 bg-emerald-500/10 px-4 py-3 flex flex-col gap-2 text-sm">
                 <div className="flex items-center justify-between gap-2">
@@ -441,6 +478,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
 
                 const weightKg = safeNumber(item.weightKg, 0);
                 const qty = Math.max(1, safeNumber(item.qty, 1));
+                const isUpsell = item.isUpsell === true;
 
                 return (
                   <div
@@ -470,6 +508,7 @@ export default function CartPage({ params }: { params: { lang: string } }) {
                           <h2 className="text-lg font-bold">{item.title}</h2>
                           <p className="text-white/70 text-sm">
                             {item.tier} · {weightKg} kg
+                            {isUpsell ? " · Extra" : ""}
                           </p>
                         </div>
 
@@ -588,9 +627,14 @@ export default function CartPage({ params }: { params: { lang: string } }) {
             </div>
 
             <button
-              className="btn btn-brand px-6 py-3"
+              className={[
+                "btn px-6 py-3",
+                hasMainProduct
+                  ? "btn btn-brand"
+                  : "bg-white/10 text-white/40 cursor-not-allowed border border-white/10 rounded-xl",
+              ].join(" ")}
               onClick={goToCheckout}
-              disabled={checkoutLoading}
+              disabled={checkoutLoading || !hasMainProduct}
             >
               {checkoutLoading ? "Redirect…" : t.goCheckout}
             </button>
