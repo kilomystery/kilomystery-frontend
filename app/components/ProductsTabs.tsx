@@ -243,7 +243,7 @@ const LABELS: Record<Lang, any> = {
 };
 
 const WEIGHTS: Kg[] = [5, 3, 10, 2, 1];
-const SOLD_OUT_WEIGHTS: Kg[] = [1, 2];
+const SOLD_OUT_WEIGHTS: Kg[] = [1];
 
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
