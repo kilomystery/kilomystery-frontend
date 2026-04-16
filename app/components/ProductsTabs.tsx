@@ -243,7 +243,6 @@ const LABELS: Record<Lang, any> = {
 };
 
 const WEIGHTS: Kg[] = [5, 3, 10, 2, 1];
-const SOLD_OUT_WEIGHTS: Kg[] = [1];
 
 const PRICE_TABLE: Record<TabTier, Record<Kg, { total: number; compareAt: number }>> = {
   std: {
@@ -439,6 +438,12 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
   const listRef = useRef<string>("");
 
+  const isSoldOutProduct = (tier: TabTier, kg: Kg) => {
+    if (tier === "prm") return true; // tutti i Premium sold out
+    if (tier === "std" && kg === 1) return true; // solo Standard 1kg sold out
+    return false;
+  };
+
   useEffect(() => {
     const key = `products-tabs:${safeLang}:${tab}`;
     if (listRef.current === key) return;
@@ -446,7 +451,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
 
     const tierLookup = tab === "std" ? "standard" : "premium";
 
-    const items = WEIGHTS.filter((kg) => !SOLD_OUT_WEIGHTS.includes(kg)).map((kg) => {
+    const items = WEIGHTS.filter((kg) => !isSoldOutProduct(tab, kg)).map((kg) => {
       const { total } = PRICE_TABLE[tab][kg];
       const perKg = +(total / kg).toFixed(2);
       const shopifyId = SHOPIFY_VARIANTS[tierLookup as Tier][kg];
@@ -494,7 +499,8 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
   }, []);
 
   function handleAddToCart(kind: "Standard" | "Premium", kg: Kg, perKg: number) {
-    if (SOLD_OUT_WEIGHTS.includes(kg)) return;
+    const soldOut = kind === "Premium" || (kind === "Standard" && kg === 1);
+    if (soldOut) return;
 
     const tierLookup = kind === "Standard" ? "standard" : "premium";
     const shopifyId = SHOPIFY_VARIANTS[tierLookup as Tier][kg];
@@ -569,7 +575,7 @@ export default function ProductsTabs({ lang = "it" as Lang }) {
         {WEIGHTS.map((w) => {
           const kg = w as Kg;
           const isStd = tab === "std";
-          const isSoldOut = SOLD_OUT_WEIGHTS.includes(kg);
+          const isSoldOut = isSoldOutProduct(tab, kg);
 
           const { total, compareAt } = PRICE_TABLE[tab][kg];
           const perKg = +(total / kg).toFixed(2);
