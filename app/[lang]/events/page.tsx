@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { Lang, normalizeLang } from "@/i18n/lang";
@@ -10,6 +11,19 @@ type CopyKey =
   | "heroSubtitle"
   | "calendarTitle"
   | "calendarText"
+  | "eventBadge"
+  | "eventTitle"
+  | "eventDate"
+  | "eventLocation"
+  | "eventAddress"
+  | "eventDescription"
+  | "eventHowTitle"
+  | "eventHow1"
+  | "eventHow2"
+  | "eventHow3"
+  | "eventPrizeTitle"
+  | "eventPrizeText"
+  | "eventStock"
   | "ctaTitle"
   | "ctaText"
   | "ctaButton";
@@ -21,59 +35,138 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     kicker: "Pop-Up & Eventi",
     heroTitle: "Pop-Up & Eventi KiloMystery",
     heroSubtitle:
-      "Vieni a scoprire le nostre mystery box dal vivo nei pop-up ufficiali.",
-    calendarTitle: "Calendario eventi",
+      "Vieni a scoprire dal vivo il mondo Kilo Mystery: pacchi smarriti, resi e-commerce, stock invenduti e sorprese tutte da aprire.",
+    calendarTitle: "Prossimo evento",
     calendarText:
-      "Stiamo aggiornando il calendario. Torna presto per scoprire le prossime date.",
+      "Il primo evento fisico Kilo Mystery arriva a Brindisi con pacchi smarriti in vendita fino a esaurimento scorte.",
+    eventBadge: "Evento ufficiale",
+    eventTitle: "Pacchi smarriti in vendita a Brindisi",
+    eventDate: "14 · 15 · 16 Maggio 2026",
+    eventLocation: "Black Sheep Store",
+    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventDescription:
+      "Un evento aperto al pubblico dove potrai scegliere i pacchi disponibili, pesarli, acquistarli e scoprire cosa contengono. I pacchi provengono da circuiti e-commerce, resi, giacenze e stock invenduti.",
+    eventHowTitle: "Come funziona",
+    eventHow1: "Scegli i pacchi disponibili",
+    eventHow2: "Li pesi e paghi in base al peso",
+    eventHow3: "Apri e scopri il contenuto mystery",
+    eventPrizeTitle: "Golden Ticket",
+    eventPrizeText:
+      "Durante l’evento saranno presenti Golden Ticket con in palio un iPhone 17 e buoni acquisto Black Sheep Store.",
+    eventStock: "Quantità limitate · Fino esaurimento scorte",
     ctaTitle: "Vuoi ospitare un pop-up KiloMystery?",
     ctaText: "Siamo aperti a collaborazioni con store, fiere ed eventi.",
     ctaButton: "Vai alla sezione contatti",
   },
+
   en: {
     kicker: "Pop-Up & Events",
     heroTitle: "KiloMystery Pop-Up & Events",
     heroSubtitle:
-      "Discover our mystery boxes in real life at our official pop-up events.",
-    calendarTitle: "Events calendar",
+      "Discover the Kilo Mystery world in real life: lost parcels, e-commerce returns, unsold stock and surprises to open.",
+    calendarTitle: "Next event",
     calendarText:
-      "We’re updating the calendar. Check back soon for upcoming dates.",
+      "The first Kilo Mystery physical event arrives in Brindisi with lost parcels on sale while stocks last.",
+    eventBadge: "Official event",
+    eventTitle: "Lost parcels on sale in Brindisi",
+    eventDate: "14 · 15 · 16 May 2026",
+    eventLocation: "Black Sheep Store",
+    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventDescription:
+      "A public event where you can choose available parcels, weigh them, buy them and discover what they contain. Parcels come from e-commerce circuits, returns, stock leftovers and unsold inventory.",
+    eventHowTitle: "How it works",
+    eventHow1: "Choose your available parcels",
+    eventHow2: "Weigh them and pay based on weight",
+    eventHow3: "Open them and discover the mystery content",
+    eventPrizeTitle: "Golden Ticket",
+    eventPrizeText:
+      "During the event there will be Golden Tickets with an iPhone 17 and Black Sheep Store vouchers up for grabs.",
+    eventStock: "Limited quantities · While stocks last",
     ctaTitle: "Want to host a KiloMystery pop-up?",
     ctaText: "We are open to collaborations with stores, fairs and events.",
     ctaButton: "Go to contacts section",
   },
+
   es: {
     kicker: "Pop-Up y Eventos",
     heroTitle: "Pop-Up y Eventos KiloMystery",
     heroSubtitle:
-      "Descubre nuestras mystery boxes en directo en los pop-up oficiales.",
-    calendarTitle: "Calendario de eventos",
+      "Descubre el mundo Kilo Mystery en vivo: paquetes perdidos, devoluciones e-commerce, stock sin vender y sorpresas por abrir.",
+    calendarTitle: "Próximo evento",
     calendarText:
-      "Estamos actualizando el calendario. Vuelve pronto para ver las próximas fechas.",
+      "El primer evento físico Kilo Mystery llega a Brindisi con paquetes perdidos en venta hasta agotar existencias.",
+    eventBadge: "Evento oficial",
+    eventTitle: "Paquetes perdidos en venta en Brindisi",
+    eventDate: "14 · 15 · 16 Mayo 2026",
+    eventLocation: "Black Sheep Store",
+    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventDescription:
+      "Un evento abierto al público donde podrás elegir los paquetes disponibles, pesarlos, comprarlos y descubrir qué contienen.",
+    eventHowTitle: "Cómo funciona",
+    eventHow1: "Elige los paquetes disponibles",
+    eventHow2: "Pésalos y paga según el peso",
+    eventHow3: "Ábrelos y descubre el contenido mystery",
+    eventPrizeTitle: "Golden Ticket",
+    eventPrizeText:
+      "Durante el evento habrá Golden Tickets con un iPhone 17 y vales Black Sheep Store en juego.",
+    eventStock: "Cantidades limitadas · Hasta agotar existencias",
     ctaTitle: "¿Quieres acoger un pop-up de KiloMystery?",
     ctaText: "Estamos abiertos a colaborar con tiendas, ferias y eventos.",
     ctaButton: "Ir a la sección de contacto",
   },
+
   fr: {
     kicker: "Pop-Up & Événements",
     heroTitle: "Pop-Up & Événements KiloMystery",
     heroSubtitle:
-      "Découvre nos mystery box en vrai lors de nos pop-up officiels.",
-    calendarTitle: "Calendrier des événements",
+      "Découvre l’univers Kilo Mystery en vrai : colis perdus, retours e-commerce, invendus et surprises à ouvrir.",
+    calendarTitle: "Prochain événement",
     calendarText:
-      "Nous mettons à jour le calendrier. Reviens bientôt pour les prochaines dates.",
+      "Le premier événement physique Kilo Mystery arrive à Brindisi avec des colis perdus en vente jusqu’à épuisement des stocks.",
+    eventBadge: "Événement officiel",
+    eventTitle: "Colis perdus en vente à Brindisi",
+    eventDate: "14 · 15 · 16 Mai 2026",
+    eventLocation: "Black Sheep Store",
+    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventDescription:
+      "Un événement ouvert au public où tu peux choisir les colis disponibles, les peser, les acheter et découvrir leur contenu.",
+    eventHowTitle: "Comment ça marche",
+    eventHow1: "Choisis les colis disponibles",
+    eventHow2: "Pèse-les et paie selon le poids",
+    eventHow3: "Ouvre-les et découvre le contenu mystery",
+    eventPrizeTitle: "Golden Ticket",
+    eventPrizeText:
+      "Pendant l’événement, des Golden Tickets permettront de gagner un iPhone 17 et des bons Black Sheep Store.",
+    eventStock: "Quantités limitées · Jusqu’à épuisement des stocks",
     ctaTitle: "Tu veux accueillir un pop-up KiloMystery ?",
     ctaText:
       "Nous sommes ouverts aux collaborations avec magasins, salons et événements.",
     ctaButton: "Aller à la section contact",
   },
+
   de: {
     kicker: "Pop-Up & Events",
     heroTitle: "KiloMystery Pop-Up & Events",
     heroSubtitle:
-      "Erlebe unsere Mystery Boxen live auf den offiziellen Pop-Up-Events.",
-    calendarTitle: "Event-Kalender",
+      "Erlebe Kilo Mystery live: verlorene Pakete, E-Commerce-Retouren, Restbestände und Überraschungen zum Öffnen.",
+    calendarTitle: "Nächstes Event",
     calendarText:
-      "Wir aktualisieren gerade den Kalender. Schau bald wieder vorbei für neue Termine.",
+      "Das erste physische Kilo Mystery Event kommt nach Brindisi – verlorene Pakete im Verkauf, solange der Vorrat reicht.",
+    eventBadge: "Offizielles Event",
+    eventTitle: "Verlorene Pakete in Brindisi im Verkauf",
+    eventDate: "14 · 15 · 16 Mai 2026",
+    eventLocation: "Black Sheep Store",
+    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventDescription:
+      "Ein öffentliches Event, bei dem du verfügbare Pakete auswählst, wiegst, kaufst und den Mystery-Inhalt entdeckst.",
+    eventHowTitle: "So funktioniert es",
+    eventHow1: "Wähle verfügbare Pakete aus",
+    eventHow2: "Wiege sie und zahle nach Gewicht",
+    eventHow3: "Öffne sie und entdecke den Mystery-Inhalt",
+    eventPrizeTitle: "Golden Ticket",
+    eventPrizeText:
+      "Während des Events gibt es Golden Tickets mit einem iPhone 17 und Black Sheep Store Gutscheinen.",
+    eventStock: "Begrenzte Menge · Solange der Vorrat reicht",
     ctaTitle: "Möchtest du ein KiloMystery Pop-Up hosten?",
     ctaText: "Wir sind offen für Kooperationen mit Shops, Messen und Events.",
     ctaButton: "Zur Kontakt-Sektion",
@@ -108,15 +201,85 @@ export default function EventsPage({
           </p>
         </header>
 
-        {/* PLACEHOLDER CALENDARIO */}
-        <section className="card text-center py-10 px-6 space-y-3">
-          <div className="text-4xl">🗓️</div>
-          <h2 className="text-2xl md:text-3xl font-extrabold">
-            {t.calendarTitle}
-          </h2>
-          <p className="text-white/70 text-sm md:text-base max-w-2xl mx-auto">
-            {t.calendarText}
-          </p>
+        {/* EVENTO BRINDISI */}
+        <section className="card overflow-hidden p-0">
+          <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-0">
+            {/* LOCANDINA */}
+            <div className="relative min-h-[420px] bg-black">
+              <Image
+                src="/events/brindisi-2026-14-05.png"
+                alt="Locandina evento Kilo Mystery Brindisi pacchi smarriti"
+                fill
+                priority
+                className="object-cover"
+              />
+            </div>
+
+            {/* TESTI EVENTO */}
+            <div className="p-6 md:p-8 lg:p-10 space-y-6">
+              <div className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-[.18em] text-emerald-300">
+                {t.eventBadge}
+              </div>
+
+              <div className="space-y-3">
+                <h2 className="text-2xl md:text-4xl font-extrabold leading-tight">
+                  {t.eventTitle}
+                </h2>
+
+                <p className="text-white/70 text-sm md:text-base">
+                  {t.eventDescription}
+                </p>
+              </div>
+
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="text-white/50 text-xs uppercase tracking-[.18em] mb-1">
+                    Data
+                  </div>
+                  <div className="font-extrabold text-lg text-emerald-300">
+                    {t.eventDate}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="text-white/50 text-xs uppercase tracking-[.18em] mb-1">
+                    Luogo
+                  </div>
+                  <div className="font-extrabold text-lg">
+                    {t.eventLocation}
+                  </div>
+                  <div className="text-white/60 text-sm mt-1">
+                    {t.eventAddress}
+                  </div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-[#7A20FF]/30 bg-[#7A20FF]/10 p-5 space-y-3">
+                <h3 className="text-lg md:text-xl font-extrabold">
+                  {t.eventHowTitle}
+                </h3>
+
+                <div className="grid gap-3 text-sm md:text-base text-white/75">
+                  <div>📦 {t.eventHow1}</div>
+                  <div>⚖️ {t.eventHow2}</div>
+                  <div>🎁 {t.eventHow3}</div>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-yellow-400/30 bg-yellow-400/10 p-5 space-y-2">
+                <h3 className="text-lg md:text-xl font-extrabold text-yellow-300">
+                  🎟️ {t.eventPrizeTitle}
+                </h3>
+                <p className="text-white/75 text-sm md:text-base">
+                  {t.eventPrizeText}
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-center font-extrabold text-emerald-300">
+                {t.eventStock}
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* CTA */}
