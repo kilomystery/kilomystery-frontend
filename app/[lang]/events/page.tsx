@@ -35,24 +35,24 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     kicker: "Pop-Up & Eventi",
     heroTitle: "Pop-Up & Eventi KiloMystery",
     heroSubtitle:
-      "Vieni a scoprire dal vivo il mondo Kilo Mystery: pacchi smarriti, resi e-commerce, stock invenduti e sorprese tutte da aprire.",
+      "Vieni a scoprire dal vivo il mondo Kilo Mystery: pacchi smarriti, non reclamati, resi, giacenze e sorprese tutte da aprire.",
     calendarTitle: "Prossimo evento",
     calendarText:
-      "Il primo evento fisico Kilo Mystery arriva a Brindisi con pacchi smarriti in vendita fino a esaurimento scorte.",
+      "Il nuovo evento Kilo Mystery arriva a Lecce con pacchi smarriti e non reclamati in vendita fino a esaurimento scorte.",
     eventBadge: "Evento ufficiale",
-    eventTitle: "Pacchi smarriti in vendita a Brindisi",
-    eventDate: "14 · 15 · 16 Maggio 2026",
-    eventLocation: "Black Sheep Store",
-    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventTitle: "Pacchi smarriti e non reclamati in vendita a Lecce",
+    eventDate: "26 · 27 · 28 Giugno 2026",
+    eventLocation: "Kilo Mystery Pop-Up Store",
+    eventAddress: "Via Nazario Sauro 11, Lecce",
     eventDescription:
-      "Un evento aperto al pubblico dove potrai scegliere i pacchi disponibili, pesarli, acquistarli e scoprire cosa contengono. I pacchi provengono da circuiti e-commerce, resi, giacenze e stock invenduti.",
+      "Un evento aperto al pubblico dove potrai scegliere i pacchi disponibili, pesarli, acquistarli e scoprire cosa contengono. Le nostre Mystery Box possono contenere pacchi non reclamati, smarriti, giacenze e overstock.",
     eventHowTitle: "Come funziona",
     eventHow1: "Scegli i pacchi disponibili",
     eventHow2: "Li pesi e paghi in base al peso",
     eventHow3: "Apri e scopri il contenuto mystery",
     eventPrizeTitle: "Golden Ticket",
     eventPrizeText:
-      "Durante l’evento saranno presenti Golden Ticket con in palio un iPhone 17 e buoni acquisto Black Sheep Store.",
+      "Durante l’evento sarà presente il Golden Ticket con in palio un iPhone 17.",
     eventStock: "Quantità limitate · Fino esaurimento scorte",
     ctaTitle: "Vuoi ospitare un pop-up KiloMystery?",
     ctaText: "Siamo aperti a collaborazioni con store, fiere ed eventi.",
@@ -63,24 +63,24 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     kicker: "Pop-Up & Events",
     heroTitle: "KiloMystery Pop-Up & Events",
     heroSubtitle:
-      "Discover the Kilo Mystery world in real life: lost parcels, e-commerce returns, unsold stock and surprises to open.",
+      "Discover the Kilo Mystery world in real life: lost parcels, unclaimed parcels, returns, stock leftovers and surprises to open.",
     calendarTitle: "Next event",
     calendarText:
-      "The first Kilo Mystery physical event arrives in Brindisi with lost parcels on sale while stocks last.",
+      "The new Kilo Mystery event arrives in Lecce with lost and unclaimed parcels on sale while stocks last.",
     eventBadge: "Official event",
-    eventTitle: "Lost parcels on sale in Brindisi",
-    eventDate: "14 · 15 · 16 May 2026",
-    eventLocation: "Black Sheep Store",
-    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventTitle: "Lost and unclaimed parcels on sale in Lecce",
+    eventDate: "26 · 27 · 28 June 2026",
+    eventLocation: "Kilo Mystery Pop-Up Store",
+    eventAddress: "Via Nazario Sauro 11, Lecce",
     eventDescription:
-      "A public event where you can choose available parcels, weigh them, buy them and discover what they contain. Parcels come from e-commerce circuits, returns, stock leftovers and unsold inventory.",
+      "A public event where you can choose available parcels, weigh them, buy them and discover what they contain. Our Mystery Boxes may contain unclaimed parcels, lost parcels, stock leftovers and overstock.",
     eventHowTitle: "How it works",
     eventHow1: "Choose your available parcels",
     eventHow2: "Weigh them and pay based on weight",
     eventHow3: "Open them and discover the mystery content",
     eventPrizeTitle: "Golden Ticket",
     eventPrizeText:
-      "During the event there will be Golden Tickets with an iPhone 17 and Black Sheep Store vouchers up for grabs.",
+      "During the event there will be a Golden Ticket with an iPhone 17 up for grabs.",
     eventStock: "Limited quantities · While stocks last",
     ctaTitle: "Want to host a KiloMystery pop-up?",
     ctaText: "We are open to collaborations with stores, fairs and events.",
@@ -91,15 +91,15 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     kicker: "Pop-Up y Eventos",
     heroTitle: "Pop-Up y Eventos KiloMystery",
     heroSubtitle:
-      "Descubre el mundo Kilo Mystery en vivo: paquetes perdidos, devoluciones e-commerce, stock sin vender y sorpresas por abrir.",
+      "Descubre el mundo Kilo Mystery en vivo: paquetes perdidos, no reclamados, devoluciones, stock y sorpresas por abrir.",
     calendarTitle: "Próximo evento",
     calendarText:
-      "El primer evento físico Kilo Mystery llega a Brindisi con paquetes perdidos en venta hasta agotar existencias.",
+      "El nuevo evento Kilo Mystery llega a Lecce con paquetes perdidos y no reclamados en venta hasta agotar existencias.",
     eventBadge: "Evento oficial",
-    eventTitle: "Paquetes perdidos en venta en Brindisi",
-    eventDate: "14 · 15 · 16 Mayo 2026",
-    eventLocation: "Black Sheep Store",
-    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventTitle: "Paquetes perdidos y no reclamados en venta en Lecce",
+    eventDate: "26 · 27 · 28 Junio 2026",
+    eventLocation: "Kilo Mystery Pop-Up Store",
+    eventAddress: "Via Nazario Sauro 11, Lecce",
     eventDescription:
       "Un evento abierto al público donde podrás elegir los paquetes disponibles, pesarlos, comprarlos y descubrir qué contienen.",
     eventHowTitle: "Cómo funciona",
@@ -108,7 +108,7 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     eventHow3: "Ábrelos y descubre el contenido mystery",
     eventPrizeTitle: "Golden Ticket",
     eventPrizeText:
-      "Durante el evento habrá Golden Tickets con un iPhone 17 y vales Black Sheep Store en juego.",
+      "Durante el evento habrá un Golden Ticket con un iPhone 17 en juego.",
     eventStock: "Cantidades limitadas · Hasta agotar existencias",
     ctaTitle: "¿Quieres acoger un pop-up de KiloMystery?",
     ctaText: "Estamos abiertos a colaborar con tiendas, ferias y eventos.",
@@ -119,15 +119,15 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     kicker: "Pop-Up & Événements",
     heroTitle: "Pop-Up & Événements KiloMystery",
     heroSubtitle:
-      "Découvre l’univers Kilo Mystery en vrai : colis perdus, retours e-commerce, invendus et surprises à ouvrir.",
+      "Découvre l’univers Kilo Mystery en vrai : colis perdus, non réclamés, retours, stocks et surprises à ouvrir.",
     calendarTitle: "Prochain événement",
     calendarText:
-      "Le premier événement physique Kilo Mystery arrive à Brindisi avec des colis perdus en vente jusqu’à épuisement des stocks.",
+      "Le nouvel événement Kilo Mystery arrive à Lecce avec des colis perdus et non réclamés en vente jusqu’à épuisement des stocks.",
     eventBadge: "Événement officiel",
-    eventTitle: "Colis perdus en vente à Brindisi",
-    eventDate: "14 · 15 · 16 Mai 2026",
-    eventLocation: "Black Sheep Store",
-    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventTitle: "Colis perdus et non réclamés en vente à Lecce",
+    eventDate: "26 · 27 · 28 Juin 2026",
+    eventLocation: "Kilo Mystery Pop-Up Store",
+    eventAddress: "Via Nazario Sauro 11, Lecce",
     eventDescription:
       "Un événement ouvert au public où tu peux choisir les colis disponibles, les peser, les acheter et découvrir leur contenu.",
     eventHowTitle: "Comment ça marche",
@@ -136,7 +136,7 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     eventHow3: "Ouvre-les et découvre le contenu mystery",
     eventPrizeTitle: "Golden Ticket",
     eventPrizeText:
-      "Pendant l’événement, des Golden Tickets permettront de gagner un iPhone 17 et des bons Black Sheep Store.",
+      "Pendant l’événement, un Golden Ticket permettra de gagner un iPhone 17.",
     eventStock: "Quantités limitées · Jusqu’à épuisement des stocks",
     ctaTitle: "Tu veux accueillir un pop-up KiloMystery ?",
     ctaText:
@@ -148,15 +148,15 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     kicker: "Pop-Up & Events",
     heroTitle: "KiloMystery Pop-Up & Events",
     heroSubtitle:
-      "Erlebe Kilo Mystery live: verlorene Pakete, E-Commerce-Retouren, Restbestände und Überraschungen zum Öffnen.",
+      "Erlebe Kilo Mystery live: verlorene Pakete, nicht abgeholte Pakete, Retouren, Restbestände und Überraschungen zum Öffnen.",
     calendarTitle: "Nächstes Event",
     calendarText:
-      "Das erste physische Kilo Mystery Event kommt nach Brindisi – verlorene Pakete im Verkauf, solange der Vorrat reicht.",
+      "Das neue Kilo Mystery Event kommt nach Lecce – verlorene und nicht abgeholte Pakete im Verkauf, solange der Vorrat reicht.",
     eventBadge: "Offizielles Event",
-    eventTitle: "Verlorene Pakete in Brindisi im Verkauf",
-    eventDate: "14 · 15 · 16 Mai 2026",
-    eventLocation: "Black Sheep Store",
-    eventAddress: "Corso Giuseppe Garibaldi 75, Brindisi",
+    eventTitle: "Verlorene und nicht abgeholte Pakete in Lecce im Verkauf",
+    eventDate: "26 · 27 · 28 Juni 2026",
+    eventLocation: "Kilo Mystery Pop-Up Store",
+    eventAddress: "Via Nazario Sauro 11, Lecce",
     eventDescription:
       "Ein öffentliches Event, bei dem du verfügbare Pakete auswählst, wiegst, kaufst und den Mystery-Inhalt entdeckst.",
     eventHowTitle: "So funktioniert es",
@@ -165,7 +165,7 @@ const EVENTS_COPY: Record<Lang, CopyPerLang> = {
     eventHow3: "Öffne sie und entdecke den Mystery-Inhalt",
     eventPrizeTitle: "Golden Ticket",
     eventPrizeText:
-      "Während des Events gibt es Golden Tickets mit einem iPhone 17 und Black Sheep Store Gutscheinen.",
+      "Während des Events gibt es ein Golden Ticket mit einem iPhone 17 als Gewinn.",
     eventStock: "Begrenzte Menge · Solange der Vorrat reicht",
     ctaTitle: "Möchtest du ein KiloMystery Pop-Up hosten?",
     ctaText: "Wir sind offen für Kooperationen mit Shops, Messen und Events.",
@@ -186,7 +186,6 @@ export default function EventsPage({
       <Header lang={lang} />
 
       <main className="container py-12 mb-16 space-y-12">
-        {/* INTRO */}
         <header className="space-y-4 text-center max-w-3xl mx-auto">
           <div className="uppercase tracking-[.2em] text-emerald-300/80 text-xs md:text-sm">
             {t.kicker}
@@ -201,21 +200,18 @@ export default function EventsPage({
           </p>
         </header>
 
-        {/* EVENTO BRINDISI */}
         <section className="card overflow-hidden p-0">
           <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-0">
-            {/* LOCANDINA */}
             <div className="relative min-h-[420px] bg-black">
               <Image
-                src="/events/brindisi-2026-14-05.png"
-                alt="Locandina evento Kilo Mystery Brindisi pacchi smarriti"
+                src="/events/lecce-2026-26-06.png"
+                alt="Locandina evento Kilo Mystery Lecce pacchi smarriti e non reclamati"
                 fill
                 priority
                 className="object-cover"
               />
             </div>
 
-            {/* TESTI EVENTO */}
             <div className="p-6 md:p-8 lg:p-10 space-y-6">
               <div className="inline-flex items-center rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-bold uppercase tracking-[.18em] text-emerald-300">
                 {t.eventBadge}
@@ -282,14 +278,10 @@ export default function EventsPage({
           </div>
         </section>
 
-        {/* CTA */}
         <section className="card space-y-3">
           <h3 className="text-lg md:text-xl font-extrabold">{t.ctaTitle}</h3>
           <p className="text-white/70 text-sm md:text-base">{t.ctaText}</p>
-          <a
-            href={`/${lang}#contattaci`}
-            className="btn btn-ghost inline-flex mt-1"
-          >
+          <a href={`/${lang}#contattaci`} className="btn btn-ghost inline-flex mt-1">
             {t.ctaButton}
           </a>
         </section>
