@@ -306,7 +306,7 @@ export default function EventsPage({
           <div className="grid lg:grid-cols-[0.95fr_1.05fr] gap-0">
             <div className="relative min-h-[420px] lg:min-h-full bg-black">
               <Image
-                src="/events/Gallipoli-2026-23-07.png"
+                src="/events/Gallipoli-2026-23-07.jpg"
                 alt="Locandina evento Kilo Mystery Gallipoli pacchi smarriti e non reclamati"
                 fill
                 priority
