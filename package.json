@@ -30,6 +30,8 @@
 
     "@stripe/stripe-js": "3.4.1",
 
+    "@zxing/browser": "^0.2.1",
+
     "clsx": "2.1.1",
 
     "framer-motion": "12.23.22",
@@ -97,3 +99,4 @@
   }
 
 }
+

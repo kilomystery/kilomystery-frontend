@@ -572,6 +572,279 @@ export async function POST(request: NextRequest) {
   }
 }
 
+
+//
+// PATCH
+// AGGIORNA I COSTI DI UN LOTTO ESISTENTE
+//
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = (await request.json()) as {
+      handle?: string;
+      costoMerce?: number | string;
+      costoTrasporto?: number | string;
+      altriCosti?: number | string;
+    };
+
+    const handle = body.handle?.trim();
+
+    if (!handle) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Handle lotto mancante.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const costoMerce = parseMoney(body.costoMerce);
+    const costoTrasporto = parseMoney(body.costoTrasporto);
+    const altriCosti = parseMoney(body.altriCosti);
+
+    const costoTotale =
+      Math.round(
+        (
+          costoMerce +
+          costoTrasporto +
+          altriCosti
+        ) * 100
+      ) / 100;
+
+    const shop = process.env.SHOPIFY_SHOP;
+
+    if (!shop) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "SHOPIFY_SHOP mancante.",
+        },
+        { status: 500 }
+      );
+    }
+
+    const accessToken =
+      await getShopifyAccessToken();
+
+    const endpoint =
+      `https://${shop}.myshopify.com/admin/api/${SHOPIFY_API_VERSION}/graphql.json`;
+
+    const findQuery = `
+      query FindPoporamaLotto($handle: String!) {
+        metaobjectByHandle(
+          handle: {
+            type: "poporama_lotto"
+            handle: $handle
+          }
+        ) {
+          id
+          handle
+        }
+      }
+    `;
+
+    const findResponse = await fetch(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token":
+            accessToken,
+        },
+        body: JSON.stringify({
+          query: findQuery,
+          variables: {
+            handle,
+          },
+        }),
+        cache: "no-store",
+      }
+    );
+
+    const findData =
+      await findResponse.json();
+
+    if (!findResponse.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Errore comunicazione con Shopify.",
+          details: findData,
+        },
+        { status: 502 }
+      );
+    }
+
+    if (findData.errors?.length) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Errore GraphQL durante la ricerca del lotto.",
+          details: findData.errors,
+        },
+        { status: 500 }
+      );
+    }
+
+    const lotto =
+      findData.data?.metaobjectByHandle;
+
+    if (!lotto?.id) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Lotto non trovato.",
+        },
+        { status: 404 }
+      );
+    }
+
+    const mutation = `
+      mutation UpdatePoporamaLotto(
+        $id: ID!
+        $metaobject: MetaobjectUpdateInput!
+      ) {
+        metaobjectUpdate(
+          id: $id
+          metaobject: $metaobject
+        ) {
+          metaobject {
+            id
+            handle
+            updatedAt
+          }
+          userErrors {
+            field
+            message
+            code
+          }
+        }
+      }
+    `;
+
+    const fields = [
+      {
+        key: "costo_merce",
+        value:
+          moneyValueForShopify(costoMerce),
+      },
+      {
+        key: "costo_trasporto",
+        value:
+          moneyValueForShopify(
+            costoTrasporto
+          ),
+      },
+      {
+        key: "altri_costi",
+        value:
+          moneyValueForShopify(altriCosti),
+      },
+      {
+        key: "costo_totale",
+        value:
+          moneyValueForShopify(costoTotale),
+      },
+    ];
+
+    const updateResponse = await fetch(
+      endpoint,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Shopify-Access-Token":
+            accessToken,
+        },
+        body: JSON.stringify({
+          query: mutation,
+          variables: {
+            id: lotto.id,
+            metaobject: {
+              fields,
+            },
+          },
+        }),
+        cache: "no-store",
+      }
+    );
+
+    const updateData =
+      await updateResponse.json();
+
+    if (!updateResponse.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Errore comunicazione con Shopify.",
+          details: updateData,
+        },
+        { status: 502 }
+      );
+    }
+
+    if (updateData.errors?.length) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Errore GraphQL durante l'aggiornamento del lotto.",
+          details: updateData.errors,
+        },
+        { status: 500 }
+      );
+    }
+
+    const result =
+      updateData.data?.metaobjectUpdate;
+
+    if (result?.userErrors?.length) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Shopify non ha aggiornato i costi del lotto.",
+          details: result.userErrors,
+        },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json({
+      ok: true,
+      message:
+        "Costi lotto aggiornati correttamente.",
+      lotto: result?.metaobject,
+      costi: {
+        costoMerce,
+        costoTrasporto,
+        altriCosti,
+        costoTotale,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Errore aggiornamento costi lotto POPORAMA:",
+      error
+    );
+
+    return NextResponse.json(
+      {
+        ok: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Errore sconosciuto",
+      },
+      { status: 500 }
+    );
+  }
+}
+
 //
 // FUNZIONI DI SUPPORTO
 //
