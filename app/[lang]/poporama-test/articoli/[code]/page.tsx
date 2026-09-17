@@ -483,12 +483,12 @@ export default function PoporamaArticoloPage({
 
           <p className="mt-2 text-sm leading-6 text-zinc-300">
             Questa è la scheda collegata al QR
-            dell'articolo. Il codice{" "}
+            dell&apos;articolo. Il codice{" "}
             <strong className="text-white">
               {articolo.codicePP}
             </strong>{" "}
-            rimane l'identificativo permanente
-            dell'articolo anche dopo test,
+            rimane l&apos;identificativo permanente
+            dell&apos;articolo anche dopo test,
             cambio grado e vendita.
           </p>
         </div>

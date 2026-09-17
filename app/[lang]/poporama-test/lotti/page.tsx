@@ -169,7 +169,7 @@ export default function LottiPage() {
               </h2>
 
               <p className="mt-1 text-sm text-zinc-400">
-                Lotti registrati nell'archivio POPORAMA.
+                Lotti registrati nell&apos;archivio POPORAMA.
               </p>
             </div>
 
