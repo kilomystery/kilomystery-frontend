@@ -735,8 +735,21 @@ async function addPoporamaLabelPage(
   // QR CODE
   // ==========================================================
 
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL
+      ?.trim()
+      .replace(/\/+$/, "");
+
+  if (!siteUrl) {
+    throw new Error(
+      "NEXT_PUBLIC_SITE_URL non configurato."
+    );
+  }
+
   const qrValue =
-    `POPORAMA:${data.code}`;
+    `${siteUrl}/it/poporama-test/articoli/${encodeURIComponent(
+      data.code
+    )}`;
 
   const qrDataUrl =
     await QRCode.toDataURL(
