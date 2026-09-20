@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
 import { UTM_LINKS } from "./src/utm-links";
+import { POPORAMA_COOKIE, verifyPoporamaSession } from "./app/lib/poporama-session";
 
 const PUBLIC_FILE = /\.(.*)$/;
 const LANG_COOKIE = "km_lang";
@@ -26,9 +27,36 @@ function isPublicPath(pathname: string) {
   );
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
   const { pathname } = url;
+
+  // Prima delle esclusioni asset/API: anche handle con un punto sono privati.
+  const privateApi = pathname === "/api/poporama" || pathname.startsWith("/api/poporama/");
+  const privatePage = /^\/([^/]+)\/poporama-test(?:\/|$)/.exec(pathname);
+  const loginPage = /^\/([^/]+)\/poporama-accesso\/?$/.exec(pathname);
+  // Conserva l'host del browser anche quando NextURL normalizza il loopback.
+  function poporamaRedirect(target: string) {
+    const destination = new URL(req.url);
+    destination.host = req.headers.get("host") || destination.host;
+    destination.pathname = target;
+    destination.search = "";
+    const response = NextResponse.redirect(destination);
+    response.headers.set("Cache-Control", "no-store");
+    return response;
+  }
+  if (loginPage && await verifyPoporamaSession(req.cookies.get(POPORAMA_COOKIE)?.value)) {
+    return poporamaRedirect(`/${loginPage[1]}/poporama-test`);
+  }
+  if ((privateApi && pathname !== "/api/poporama/session") || privatePage) {
+    const expiresAt = await verifyPoporamaSession(req.cookies.get(POPORAMA_COOKIE)?.value);
+    if (!expiresAt) {
+      if (privateApi) return NextResponse.json({ ok: false, authenticated: false,
+        error: "Sessione POPORAMA scaduta o assente. Accedi nuovamente." },
+      { status: 401, headers: { "Cache-Control": "no-store" } });
+      return poporamaRedirect(`/${privatePage![1]}/poporama-accesso`);
+    }
+  }
 
   // 1) Asset e file pubblici (incluso km-consent-stub.js)
   if (isPublicPath(pathname)) {
@@ -101,6 +129,8 @@ export function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/api/poporama/:path*",
+    "/:lang/poporama-test/:path*",
     // ✅ Non eseguire middleware su asset / file / km-consent-stub.js
     "/((?!api/|_next/|static/|favicon.ico|robots.txt|sitemap.xml|km-consent-stub\\.js|.*\\.(?:js|css|map|png|jpg|jpeg|svg|webp|ico|txt|xml)).*)",
   ],

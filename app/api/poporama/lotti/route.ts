@@ -1,3 +1,4 @@
+import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import { NextRequest, NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
@@ -5,7 +6,19 @@ export const dynamic = "force-dynamic";
 const SHOPIFY_API_VERSION = "2026-07";
 const CURRENCY = "EUR";
 
-type LottoBody = {
+const PERCENTUALI = [
+  { name: "percentualeNuovo", key: "percentuale_nuovo", defaultValue: 60 },
+  { name: "percentualeGradoA", key: "percentuale_grado_a", defaultValue: 50 },
+  { name: "percentualeGradoB", key: "percentuale_grado_b", defaultValue: 30 },
+  { name: "percentualeGradoC", key: "percentuale_grado_c", defaultValue: 20 },
+  { name: "percentualeGradoN", key: "percentuale_grado_n", defaultValue: 30 },
+] as const;
+
+type PercentualiBody = Partial<
+  Record<(typeof PERCENTUALI)[number]["name"], number | string>
+>;
+
+type LottoBody = PercentualiBody & {
   codiceLotto?: string;
   dataAcquisto?: string;
   fornitore?: string;
@@ -65,6 +78,8 @@ async function getShopifyAccessToken() {
 //
 
 export async function GET() {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const shop = process.env.SHOPIFY_SHOP;
 
@@ -81,10 +96,11 @@ export async function GET() {
     const accessToken = await getShopifyAccessToken();
 
     const query = `
-      query PoporamaLotti {
+      query PoporamaLotti($after: String) {
         metaobjects(
           type: "poporama_lotto"
-          first: 100
+          first: 250
+          after: $after
         ) {
           nodes {
             id
@@ -139,62 +155,87 @@ export async function GET() {
               value
             }
 
+            ${PERCENTUALI.map(({ name, key }) =>
+              `${name}: field(key: "${key}") { value }`
+            ).join("\n")}
+
             note: field(key: "note") {
               value
             }
           }
+          pageInfo { hasNextPage endCursor }
         }
       }
     `;
 
-    const response = await fetch(
-      `https://${shop}.myshopify.com/admin/api/${SHOPIFY_API_VERSION}/graphql.json`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": accessToken,
-        },
-        body: JSON.stringify({
-          query,
-        }),
-        cache: "no-store",
+    const uniqueNodes = new Map<string, any>();
+    const seenCursors = new Set<string>();
+    let after: string | null = null;
+    while (true) {
+      const response: Response = await fetch(
+        `https://${shop}.myshopify.com/admin/api/${SHOPIFY_API_VERSION}/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Access-Token": accessToken,
+          },
+          body: JSON.stringify({
+            query,
+            variables: { after },
+          }),
+          cache: "no-store",
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Errore HTTP Shopify:", data);
+
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Errore comunicazione con Shopify.",
+            details: data,
+          },
+          { status: 502 }
+        );
       }
-    );
 
-    const data = await response.json();
+      if (data.errors?.length) {
+        console.error(
+          "Errori GraphQL Shopify:",
+          data.errors
+        );
 
-    if (!response.ok) {
-      console.error("Errore HTTP Shopify:", data);
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Errore GraphQL Shopify.",
+            details: data.errors,
+          },
+          { status: 500 }
+        );
+      }
 
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Errore comunicazione con Shopify.",
-          details: data,
-        },
-        { status: 502 }
-      );
+      const connection = data.data?.metaobjects;
+      if (!Array.isArray(connection?.nodes) || typeof connection?.pageInfo?.hasNextPage !== "boolean") {
+        throw new Error("Risposta Shopify lotti incompleta.");
+      }
+      for (const node of connection.nodes) {
+        if (!node?.id) throw new Error("Lotto Shopify senza identificativo.");
+        uniqueNodes.set(node.id, node);
+      }
+      if (!connection.pageInfo.hasNextPage) break;
+      const next = connection.pageInfo.endCursor;
+      if (typeof next !== "string" || !next || seenCursors.has(next)) {
+        throw new Error("Paginazione Shopify lotti non valida.");
+      }
+      seenCursors.add(next);
+      after = next;
     }
-
-    if (data.errors?.length) {
-      console.error(
-        "Errori GraphQL Shopify:",
-        data.errors
-      );
-
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Errore GraphQL Shopify.",
-          details: data.errors,
-        },
-        { status: 500 }
-      );
-    }
-
-    const nodes =
-      data.data?.metaobjects?.nodes ?? [];
+    const nodes = [...uniqueNodes.values()];
 
     const lotti = nodes.map((node: any) => ({
       id: node.id,
@@ -233,6 +274,12 @@ export async function GET() {
       costoTotale:
         moneyValue(node.costoTotale?.value),
 
+      percentualeNuovo: numberValue(node.percentualeNuovo?.value),
+      percentualeGradoA: numberValue(node.percentualeGradoA?.value),
+      percentualeGradoB: numberValue(node.percentualeGradoB?.value),
+      percentualeGradoC: numberValue(node.percentualeGradoC?.value),
+      percentualeGradoN: numberValue(node.percentualeGradoN?.value),
+
       note:
         node.note?.value ?? "",
     }));
@@ -267,9 +314,13 @@ export async function GET() {
 //
 
 export async function POST(request: NextRequest) {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const body =
       (await request.json()) as LottoBody;
+
+    const percentualiFields = percentageFields(body, true);
 
     const codiceLotto =
       body.codiceLotto?.trim();
@@ -402,6 +453,7 @@ export async function POST(request: NextRequest) {
     `;
 
     const fields = [
+      ...percentualiFields,
       {
         key: "codice_lotto",
         value: codiceLotto,
@@ -554,6 +606,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
+    if (error instanceof PercentageValidationError) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 400 }
+      );
+    }
+
     console.error(
       "Errore API POPORAMA lotti:",
       error
@@ -575,11 +634,13 @@ export async function POST(request: NextRequest) {
 
 //
 // PATCH
-// AGGIORNA I COSTI DI UN LOTTO ESISTENTE
+// AGGIORNA PARZIALMENTE COSTI E PERCENTUALI DI UN LOTTO ESISTENTE
 //
 export async function PATCH(request: NextRequest) {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
-    const body = (await request.json()) as {
+    const body = (await request.json()) as PercentualiBody & {
       handle?: string;
       costoMerce?: number | string;
       costoTrasporto?: number | string;
@@ -598,18 +659,28 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const costoMerce = parseMoney(body.costoMerce);
-    const costoTrasporto = parseMoney(body.costoTrasporto);
-    const altriCosti = parseMoney(body.altriCosti);
+    const fields = percentageFields(body, false);
+    const costFields = [
+      { name: "costoMerce", key: "costo_merce" },
+      { name: "costoTrasporto", key: "costo_trasporto" },
+      { name: "altriCosti", key: "altri_costi" },
+    ] as const;
+    const suppliedCosts: Partial<Record<(typeof costFields)[number]["name"], number>> = {};
 
-    const costoTotale =
-      Math.round(
-        (
-          costoMerce +
-          costoTrasporto +
-          altriCosti
-        ) * 100
-      ) / 100;
+    for (const { name, key } of costFields) {
+      if (body[name] !== undefined) {
+        const value = parseMoney(body[name]);
+        suppliedCosts[name] = value;
+        fields.push({ key, value: moneyValueForShopify(value) });
+      }
+    }
+
+    if (!fields.length) {
+      return NextResponse.json(
+        { ok: false, error: "Fornisci almeno un costo o una percentuale da aggiornare." },
+        { status: 400 }
+      );
+    }
 
     const shop = process.env.SHOPIFY_SHOP;
 
@@ -639,6 +710,9 @@ export async function PATCH(request: NextRequest) {
         ) {
           id
           handle
+          costoMerce: field(key: "costo_merce") { value }
+          costoTrasporto: field(key: "costo_trasporto") { value }
+          altriCosti: field(key: "altri_costi") { value }
         }
       }
     `;
@@ -725,30 +799,22 @@ export async function PATCH(request: NextRequest) {
       }
     `;
 
-    const fields = [
-      {
-        key: "costo_merce",
-        value:
-          moneyValueForShopify(costoMerce),
-      },
-      {
-        key: "costo_trasporto",
-        value:
-          moneyValueForShopify(
-            costoTrasporto
-          ),
-      },
-      {
-        key: "altri_costi",
-        value:
-          moneyValueForShopify(altriCosti),
-      },
-      {
-        key: "costo_totale",
-        value:
-          moneyValueForShopify(costoTotale),
-      },
-    ];
+    // I costi omessi restano invariati; il totale cambia solo se cambia un costo.
+    let costi: {
+      costoMerce: number;
+      costoTrasporto: number;
+      altriCosti: number;
+      costoTotale: number;
+    } | undefined;
+
+    if (Object.keys(suppliedCosts).length) {
+      const costoMerce = suppliedCosts.costoMerce ?? moneyValue(lotto.costoMerce?.value);
+      const costoTrasporto = suppliedCosts.costoTrasporto ?? moneyValue(lotto.costoTrasporto?.value);
+      const altriCosti = suppliedCosts.altriCosti ?? moneyValue(lotto.altriCosti?.value);
+      const costoTotale = Math.round((costoMerce + costoTrasporto + altriCosti) * 100) / 100;
+      costi = { costoMerce, costoTrasporto, altriCosti, costoTotale };
+      fields.push({ key: "costo_totale", value: moneyValueForShopify(costoTotale) });
+    }
 
     const updateResponse = await fetch(
       endpoint,
@@ -807,7 +873,7 @@ export async function PATCH(request: NextRequest) {
         {
           ok: false,
           error:
-            "Shopify non ha aggiornato i costi del lotto.",
+            "Shopify non ha aggiornato il lotto.",
           details: result.userErrors,
         },
         { status: 400 }
@@ -817,16 +883,18 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       message:
-        "Costi lotto aggiornati correttamente.",
+        "Lotto aggiornato correttamente.",
       lotto: result?.metaobject,
-      costi: {
-        costoMerce,
-        costoTrasporto,
-        altriCosti,
-        costoTotale,
-      },
+      ...(costi ? { costi } : {}),
     });
   } catch (error) {
+    if (error instanceof PercentageValidationError) {
+      return NextResponse.json(
+        { ok: false, error: error.message },
+        { status: 400 }
+      );
+    }
+
     console.error(
       "Errore aggiornamento costi lotto POPORAMA:",
       error
@@ -848,6 +916,46 @@ export async function PATCH(request: NextRequest) {
 //
 // FUNZIONI DI SUPPORTO
 //
+
+class PercentageValidationError extends Error {}
+
+function percentageFields(body: PercentualiBody, useDefaults: boolean) {
+  const fields: { key: string; value: string }[] = [];
+
+  for (const { name, key, defaultValue } of PERCENTUALI) {
+    const value = body[name];
+    if (value === undefined && !useDefaults) continue;
+
+    const percentage = value === undefined
+      ? defaultValue
+      : parsePercentage(value, name);
+    // I campi Decimal ricevono il numero come stringa, senza oggetto Money.
+    fields.push({ key, value: String(percentage) });
+  }
+
+  return fields;
+}
+
+function parsePercentage(value: unknown, name: string) {
+  const normalized = typeof value === "string"
+    ? value.trim().replace(",", ".")
+    : String(value);
+  const number = Number(normalized);
+
+  if (
+    (typeof value !== "number" && typeof value !== "string") ||
+    !/^\d+(?:\.\d{1,2})?$/.test(normalized) ||
+    !Number.isFinite(number) ||
+    number < 0 ||
+    number > 100
+  ) {
+    throw new PercentageValidationError(
+      `${name}: inserisci un numero tra 0 e 100 con massimo 2 decimali.`
+    );
+  }
+
+  return number;
+}
 
 function parseMoney(
   value: number | string | undefined

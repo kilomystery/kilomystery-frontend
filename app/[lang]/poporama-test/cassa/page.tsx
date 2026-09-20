@@ -6,6 +6,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { allocateCents, centsToDecimal, parseCents, sumCents } from "@/app/lib/poporama-cassa-pricing";
+import { logoutPoporama } from "@/app/lib/poporama-logout";
 import { useParams } from "next/navigation";
 import {
   BrowserQRCodeReader,
@@ -17,6 +19,7 @@ type ArticoloCassa = {
   handle: string;
   codicePP: string;
   nomeProdotto: string;
+  lotto: string;
   ean: string;
   asin: string;
   grado: string;
@@ -37,10 +40,50 @@ function euro(value: number) {
 
 function extractPP(value: string) {
   const match = String(value || "")
+    .trim()
     .toUpperCase()
-    .match(/PP-\d{6}/);
+    .match(/(?:^|[^A-Z0-9_-])(PP-\d{6})(?=$|[^A-Z0-9_-])/);
 
-  return match ? match[0] : "";
+  return match ? match[1] : "";
+}
+
+function gradeLabel(grade: string) {
+  const normalized = grade.trim().toUpperCase();
+  if (normalized === "NEW") return "NUOVO";
+  if (normalized === "N" || !normalized) return "NON TESTATO";
+  if (normalized === "D") return "D (LEGACY)";
+  return normalized;
+}
+
+type CartLine = { articolo: ArticoloCassa; prezzoInput: string };
+type SaleResult = { code: string; stato: "venduto" | "non_avviato" | "non_registrato" | "incerto";
+  prezzoVendita: number; dataVendita?: string; errore?: string };
+
+function cartTotals(lines: CartLine[], manual: boolean, input: string) {
+  try {
+    const weights = lines.map((line) => {
+      const cents = parseCents(line.articolo.prezzoPoporama);
+      if (cents === null) throw new Error(`${line.articolo.codicePP}: prezzo POPORAMA non valido.`);
+      return cents;
+    });
+    const poporama = sumCents(weights);
+    if (!lines.length) return { quotes: [], total: 0, poporama, error: "" };
+    let quotes: number[];
+    if (manual) {
+      const total = parseCents(input);
+      if (total === null) throw new Error("Totale manuale non valido: minimo 0, massimo 2 decimali.");
+      quotes = allocateCents(total, lines.map((line, i) => ({ code: line.articolo.codicePP, weight: weights[i] })));
+    } else {
+      quotes = lines.map((line) => {
+        const cents = parseCents(line.prezzoInput);
+        if (cents === null) throw new Error(`${line.articolo.codicePP}: prezzo vendita non valido. Usa minimo 0 e massimo 2 decimali.`);
+        return cents;
+      });
+    }
+    return { quotes, total: sumCents(quotes), poporama, error: "" };
+  } catch (error) {
+    return { quotes: [], total: 0, poporama: 0, error: error instanceof Error ? error.message : "Importi non validi." };
+  }
 }
 
 export default function PoporamaCassaPage() {
@@ -63,19 +106,17 @@ export default function PoporamaCassaPage() {
   const scannerBusyRef =
     useRef(false);
 
-  const [checking, setChecking] =
-    useState(true);
-
-  const [
-    authenticated,
-    setAuthenticated,
-  ] = useState(false);
-
-  const [pin, setPin] =
-    useState("");
-
-  const [loginLoading, setLoginLoading] =
-    useState(false);
+  const requestBusyRef = useRef(false);
+  const saleDialogRef = useRef<HTMLDialogElement>(null);
+  const [pendingSale, setPendingSale] = useState<{
+    lines: CartLine[]; quotes: number[]; total: number; poporama: number; manual: boolean;
+  } | null>(null);
+  const [cart, setCart] = useState<CartLine[]>([]);
+  const cartRef = useRef<CartLine[]>([]);
+  const saleBlockedRef = useRef(false);
+  const [manualTotal, setManualTotal] = useState(false);
+  const [totalInput, setTotalInput] = useState("");
+  const [saleReport, setSaleReport] = useState<SaleResult[]>([]);
 
   const [scan, setScan] =
     useState("");
@@ -98,11 +139,6 @@ export default function PoporamaCassaPage() {
   const [articolo, setArticolo] =
     useState<ArticoloCassa | null>(null);
 
-  const [
-    prezzoVendita,
-    setPrezzoVendita,
-  ] = useState("");
-
   const [error, setError] =
     useState("");
 
@@ -110,8 +146,6 @@ export default function PoporamaCassaPage() {
     useState("");
 
   useEffect(() => {
-    checkSession();
-
     return () => {
       stopCamera();
     };
@@ -120,20 +154,24 @@ export default function PoporamaCassaPage() {
 
   useEffect(() => {
     if (
-      authenticated &&
       !loading &&
-      !selling
+      !selling &&
+      !pendingSale
     ) {
       window.setTimeout(() => {
         scanRef.current?.focus();
       }, 100);
     }
   }, [
-    authenticated,
     loading,
     selling,
     articolo,
+    pendingSale,
   ]);
+
+  useEffect(() => {
+    if (pendingSale) saleDialogRef.current?.showModal();
+  }, [pendingSale]);
 
   function stopCamera() {
     try {
@@ -165,6 +203,7 @@ export default function PoporamaCassaPage() {
   }
 
   async function openCamera() {
+    if (requestBusyRef.current || pendingSale || saleDialogRef.current?.open || saleBlockedRef.current) return;
     setError("");
     setSuccess("");
     setCameraError("");
@@ -283,113 +322,20 @@ export default function PoporamaCassaPage() {
     }
   }
 
-  async function checkSession() {
-    try {
-      setChecking(true);
-
-      const response = await fetch(
-        "/api/poporama/cassa",
-        {
-          method: "GET",
-          cache: "no-store",
-        }
-      );
-
-      const data =
-        await response.json();
-
-      setAuthenticated(
-        Boolean(
-          response.ok &&
-          data.authenticated
-        )
-      );
-    } catch {
-      setAuthenticated(false);
-    } finally {
-      setChecking(false);
-    }
-  }
-
-  async function login(
-    event: FormEvent
-  ) {
-    event.preventDefault();
-
-    setError("");
-    setSuccess("");
-
-    if (!pin.trim()) {
-      setError(
-        "Inserisci il PIN cassa."
-      );
-      return;
-    }
-
-    try {
-      setLoginLoading(true);
-
-      const response = await fetch(
-        "/api/poporama/cassa",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            action: "login",
-            pin,
-          }),
-        }
-      );
-
-      const data =
-        await response.json();
-
-      if (
-        !response.ok ||
-        !data.ok
-      ) {
-        throw new Error(
-          data.error ||
-            "Accesso non riuscito."
-        );
-      }
-
-      setPin("");
-      setAuthenticated(true);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Accesso non riuscito."
-      );
-    } finally {
-      setLoginLoading(false);
-    }
-  }
-
   async function logout() {
+    if (requestBusyRef.current || pendingSale || saleDialogRef.current?.open) return;
     stopCamera();
-
-    await fetch(
-      "/api/poporama/cassa",
-      {
-        method: "DELETE",
-      }
-    );
-
-    setAuthenticated(false);
-    setArticolo(null);
-    setScan("");
-    setSuccess("");
-    setError("");
+    try {
+      await logoutPoporama(lang);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Uscita non riuscita. Riprova.");
+    }
   }
 
   async function cercaArticolo(
     rawValue?: string
   ) {
+    if (requestBusyRef.current || pendingSale || saleDialogRef.current?.open || saleBlockedRef.current) return;
     const code =
       extractPP(
         rawValue ?? scan
@@ -405,6 +351,12 @@ export default function PoporamaCassaPage() {
       return;
     }
 
+    if (cartRef.current.some((line) => extractPP(line.articolo.codicePP) === code)) {
+      setError("ARTICOLO GIÀ PRESENTE NEL CARRELLO");
+      return;
+    }
+    requestBusyRef.current = true;
+    stopCamera();
     try {
       setLoading(true);
       setArticolo(null);
@@ -425,9 +377,8 @@ export default function PoporamaCassaPage() {
       if (
         response.status === 401
       ) {
-        setAuthenticated(false);
         throw new Error(
-          "Sessione cassa scaduta."
+          "Sessione POPORAMA scaduta."
         );
       }
 
@@ -447,11 +398,6 @@ export default function PoporamaCassaPage() {
 
       setArticolo(item);
       setScan(item.codicePP);
-      setPrezzoVendita(
-        Number(
-          item.prezzoPoporama || 0
-        ).toFixed(2)
-      );
     } catch (err) {
       setError(
         err instanceof Error
@@ -459,6 +405,7 @@ export default function PoporamaCassaPage() {
           : "Errore ricerca articolo."
       );
     } finally {
+      requestBusyRef.current = false;
       setLoading(false);
     }
   }
@@ -475,136 +422,130 @@ export default function PoporamaCassaPage() {
       return;
     }
 
-    window.location.assign(
-      `/${lang}/poporama-test/articoli/${encodeURIComponent(
-        articolo.codicePP
-      )}`
+    window.open(
+      `/${lang}/poporama-test/articoli/${encodeURIComponent(articolo.codicePP)}`,
+      "_blank", "noopener,noreferrer"
     );
   }
 
+  function aggiungiAlCarrello() {
+    if (!articolo || requestBusyRef.current || pendingSale || saleBlockedRef.current) return;
+    const code = extractPP(articolo.codicePP);
+    if (cartRef.current.some((line) => extractPP(line.articolo.codicePP) === code)) {
+      setError("ARTICOLO GIÀ PRESENTE NEL CARRELLO");
+      return;
+    }
+    if (articolo.statoVendita !== "DISPONIBILE") {
+      setError(`${code}: articolo non disponibile.`);
+      return;
+    }
+    const next = [...cartRef.current, { articolo, prezzoInput: articolo.prezzoPoporama.toFixed(2) }];
+    cartRef.current = next;
+    setCart(next);
+    setArticolo(null);
+    setScan("");
+    setError("");
+    setSaleReport([]);
+    scanRef.current?.focus();
+  }
+
+  function modificaCarrello(code: string, price?: string) {
+    if (requestBusyRef.current || pendingSale || saleBlockedRef.current) return;
+    const next = price === undefined
+      ? cartRef.current.filter((line) => line.articolo.codicePP !== code)
+      : cartRef.current.map((line) => line.articolo.codicePP === code ? { ...line, prezzoInput: price } : line);
+    cartRef.current = next;
+    setCart(next);
+    setSaleReport([]);
+    setError("");
+  }
+
+  function preparaVendita() {
+    if (requestBusyRef.current || pendingSale || saleBlockedRef.current) return;
+    const totals = cartTotals(cart, manualTotal, totalInput);
+    if (totals.error || !cart.length) {
+      setError(totals.error || "Aggiungi almeno un articolo al carrello.");
+      return;
+    }
+    stopCamera();
+    setError("");
+    setPendingSale({ lines: cart, ...totals, manual: manualTotal });
+  }
+
   async function confermaVendita() {
-    if (!articolo || selling) {
-      return;
-    }
-
-    if (
-      articolo.statoVendita
-        .toUpperCase() === "VENDUTO"
-    ) {
-      setError(
-        "Questo articolo risulta gia venduto."
-      );
-      return;
-    }
-
-    const price = Number(
-      prezzoVendita
-        .trim()
-        .replace(",", ".")
-    );
-
-    if (
-      !Number.isFinite(price) ||
-      price < 0
-    ) {
-      setError(
-        "Inserisci un prezzo vendita valido."
-      );
-      return;
-    }
-
-    const confirmed =
-      window.confirm(
-        `Confermi la vendita di ${articolo.codicePP} a ${euro(
-          price
-        )}?\n\nL articolo verra segnato come VENDUTO nell archivio POPORAMA.`
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
+    if (!pendingSale || requestBusyRef.current) return;
+    requestBusyRef.current = true;
+    let receivedReport = false;
     try {
       setSelling(true);
       setError("");
       setSuccess("");
-
-      const response = await fetch(
-        "/api/poporama/cassa",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            action: "sell",
-            code:
-              articolo.codicePP,
-            prezzoVendita: price,
-          }),
-        }
-      );
-
-      const data =
-        await response.json();
-
-      if (
-        response.status === 401
-      ) {
-        setAuthenticated(false);
-        throw new Error(
-          "Sessione cassa scaduta."
-        );
+      setSaleReport([]);
+      const response = await fetch("/api/poporama/cassa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "sellCart",
+          items: pendingSale.lines.map((line, i) => ({
+            code: line.articolo.codicePP,
+            prezzoVendita: centsToDecimal(pendingSale.quotes[i]),
+            ...(pendingSale.manual ? { prezzoPoporamaAtteso: line.articolo.prezzoPoporama } : {}),
+          })),
+          ...(pendingSale.manual ? { totaleManuale: centsToDecimal(pendingSale.total) } : {}),
+        }),
+      });
+      const data = await response.json();
+      if (response.status === 401) {
+        receivedReport = true; // Il server non ha avviato la vendita.
+        throw new Error("Sessione POPORAMA scaduta. Accedi nuovamente. La vendita non è stata avviata.");
       }
-
-      if (
-        !response.ok ||
-        !data.ok
-      ) {
-        throw new Error(
-          data.error ||
-            "Vendita non registrata."
-        );
+      if (Array.isArray(data.report)) {
+        receivedReport = true;
+        setSaleReport(data.report);
+        saleBlockedRef.current = data.report.some((entry: SaleResult) => entry.stato === "venduto" || entry.stato === "incerto");
       }
-
-      const updated =
-        data.articolo
-          ? (
-              data.articolo as ArticoloCassa
-            )
-          : {
-              ...articolo,
-              statoVendita:
-                "VENDUTO",
-              prezzoVendita:
-                price,
-              dataVendita:
-                new Date().toISOString(),
-            };
-
-      setArticolo(updated);
-
-      setSuccess(
-        `${articolo.codicePP} segnato come VENDUTO a ${euro(
-          price
-        )}.`
-      );
+      if (!response.ok || !data.ok) {
+        // Una risposta applicativa senza report (validazione o lock) non ha scritto.
+        if (data.ok === false) receivedReport = true;
+        throw new Error(data.error || "Vendita non completata. Verifica il riepilogo.");
+      }
+      saleBlockedRef.current = true;
+      setSuccess(`VENDITA REGISTRATA · ${data.vendita.numeroArticoli} ARTICOLI · TOTALE ${euro(data.vendita.totale)}`);
+      setArticolo(null);
+      setScan("");
     } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Vendita non registrata."
-      );
+      if (!receivedReport) {
+        // Connessione interrotta: non si sa quali update il server abbia eseguito.
+        saleBlockedRef.current = true;
+        setSaleReport(pendingSale.lines.map((line, i) => ({
+          code: line.articolo.codicePP, stato: "incerto", prezzoVendita: pendingSale.quotes[i] / 100,
+          errore: "Risposta non ricevuta. Verifica lo stato dell'articolo prima di un'altra vendita.",
+        })));
+      }
+      setError(receivedReport && err instanceof Error ? err.message : "Esito vendita incerto: verifica tutti i PP prima di procedere. Non ripetere automaticamente la vendita.");
     } finally {
+      requestBusyRef.current = false;
       setSelling(false);
+      setPendingSale(null);
     }
   }
 
+  function nuovaVendita() {
+    if (requestBusyRef.current || pendingSale) return;
+    saleBlockedRef.current = false;
+    cartRef.current = [];
+    setCart([]);
+    setSaleReport([]);
+    setManualTotal(false);
+    setTotalInput("");
+    nuovaScansione();
+  }
+
   function nuovaScansione() {
+    if (requestBusyRef.current || pendingSale || saleDialogRef.current?.open || saleBlockedRef.current) return;
+    stopCamera();
     setArticolo(null);
     setScan("");
-    setPrezzoVendita("");
     setError("");
     setSuccess("");
     setCameraError("");
@@ -614,84 +555,13 @@ export default function PoporamaCassaPage() {
     }, 100);
   }
 
-  if (checking) {
-    return (
-      <main className="min-h-screen bg-black px-4 py-12 text-white">
-        <div className="mx-auto max-w-5xl">
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-8">
-            <p className="font-black">
-              Apertura Cassa POPORAMA...
-            </p>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (!authenticated) {
-    return (
-      <main className="min-h-screen bg-black px-4 py-12 text-white">
-        <div className="mx-auto max-w-md">
-          <div className="rounded-3xl border border-zinc-800 bg-zinc-900 p-7 sm:p-9">
-            <p className="text-xs font-black uppercase tracking-[0.25em] text-yellow-400">
-              POPORAMA
-            </p>
-
-            <h1 className="mt-3 text-3xl font-black">
-              Cassa
-            </h1>
-
-            <p className="mt-3 text-sm leading-6 text-zinc-400">
-              Inserisci il PIN per accedere alla cassa interna POPORAMA.
-            </p>
-
-            <form
-              onSubmit={login}
-              className="mt-7"
-            >
-              <label className="block text-xs font-black uppercase tracking-[0.15em] text-zinc-500">
-                PIN CASSA
-              </label>
-
-              <input
-                type="password"
-                inputMode="numeric"
-                value={pin}
-                onChange={(event) =>
-                  setPin(
-                    event.target.value
-                  )
-                }
-                autoFocus
-                autoComplete="off"
-                className="mt-2 w-full rounded-xl border border-zinc-700 bg-black px-4 py-4 text-xl font-black tracking-[0.25em] text-white outline-none focus:border-yellow-400"
-              />
-
-              {error ? (
-                <div className="mt-4 rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm font-bold text-red-300">
-                  {error}
-                </div>
-              ) : null}
-
-              <button
-                type="submit"
-                disabled={loginLoading}
-                className="mt-5 w-full rounded-xl bg-yellow-400 px-5 py-4 font-black text-black hover:bg-yellow-300 disabled:opacity-50"
-              >
-                {loginLoading
-                  ? "ACCESSO..."
-                  : "ENTRA IN CASSA"}
-              </button>
-            </form>
-          </div>
-        </div>
-      </main>
-    );
-  }
-
   const isSold =
     articolo?.statoVendita
-      ?.toUpperCase() === "VENDUTO";
+      ?.trim().toUpperCase() === "VENDUTO";
+  const isAvailable = articolo?.statoVendita?.trim().toUpperCase() === "DISPONIBILE";
+  const busy = loading || selling || Boolean(pendingSale);
+  const frozen = busy || saleBlockedRef.current;
+  const totals = cartTotals(cart, manualTotal, totalInput);
 
   return (
     <main className="min-h-screen bg-black px-4 py-8 text-white sm:px-6 sm:py-12">
@@ -703,17 +573,18 @@ export default function PoporamaCassaPage() {
             </p>
 
             <h1 className="mt-2 text-3xl font-black sm:text-4xl">
-              Cassa
+              Cassa / Carrello
             </h1>
 
             <p className="mt-2 text-sm text-zinc-500">
-              QR, codice PP, apertura scheda e registrazione vendita.
+              Scansiona gli articoli, componi il carrello e conferma il totale da incassare.
             </p>
           </div>
 
           <button
             type="button"
             onClick={logout}
+            disabled={busy}
             className="rounded-xl border border-zinc-700 px-5 py-3 text-sm font-black hover:border-zinc-500"
           >
             ESCI
@@ -739,6 +610,7 @@ export default function PoporamaCassaPage() {
           >
             <input
               ref={scanRef}
+              disabled={frozen}
               type="text"
               value={scan}
               onChange={(event) =>
@@ -754,12 +626,12 @@ export default function PoporamaCassaPage() {
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={frozen}
               className="rounded-xl bg-yellow-400 px-6 py-4 font-black text-black hover:bg-yellow-300 disabled:opacity-50"
             >
               {loading
                 ? "CERCO..."
-                : "APRI PRODOTTO"}
+                : "CERCA ARTICOLO"}
             </button>
 
             <button
@@ -769,7 +641,7 @@ export default function PoporamaCassaPage() {
                   ? stopCamera
                   : openCamera
               }
-              disabled={cameraLoading}
+              disabled={cameraLoading || frozen}
               className="rounded-xl border border-yellow-400 px-6 py-4 font-black text-yellow-400 hover:bg-yellow-400 hover:text-black disabled:opacity-50"
             >
               {cameraLoading
@@ -806,7 +678,11 @@ export default function PoporamaCassaPage() {
 
         {success ? (
           <div className="mt-6 rounded-2xl border border-emerald-800 bg-emerald-950/30 p-5 font-bold text-emerald-300">
-            {success}
+            <p role="status">{success}</p>
+            <button type="button" onClick={nuovaVendita} disabled={busy}
+              className="mt-4 rounded-xl border border-emerald-500 px-5 py-3 font-black disabled:opacity-50">
+              NUOVA VENDITA
+            </button>
           </div>
         ) : null}
 
@@ -841,7 +717,7 @@ export default function PoporamaCassaPage() {
                 }
               >
                 {articolo.statoVendita ||
-                  "DISPONIBILE"}
+                  "STATO NON DISPONIBILE"}
               </span>
             </div>
 
@@ -849,9 +725,11 @@ export default function PoporamaCassaPage() {
               <Info
                 label="GRADO"
                 value={
-                  articolo.grado || "N"
+                  gradeLabel(articolo.grado)
                 }
               />
+
+              <Info label="LOTTO" value={articolo.lotto || "Non indicato"} />
 
               <Info
                 label="RETAIL"
@@ -885,6 +763,7 @@ export default function PoporamaCassaPage() {
               <button
                 type="button"
                 onClick={apriScheda}
+                disabled={frozen}
                 className="rounded-xl border border-zinc-600 px-5 py-4 font-black hover:border-yellow-400 hover:text-yellow-400"
               >
                 VEDI SCHEDA ARTICOLO
@@ -893,16 +772,17 @@ export default function PoporamaCassaPage() {
               <button
                 type="button"
                 onClick={nuovaScansione}
+                disabled={frozen}
                 className="rounded-xl border border-zinc-700 px-5 py-4 font-black hover:border-zinc-500"
               >
-                NUOVA SCANSIONE
+                NUOVO ARTICOLO
               </button>
             </div>
 
             {isSold ? (
               <div className="mt-7 rounded-2xl border border-red-900 bg-red-950/20 p-5">
                 <p className="font-black text-red-300">
-                  ARTICOLO GIA VENDUTO
+                  ARTICOLO GIÀ VENDUTO
                 </p>
 
                 <p className="mt-2 text-sm text-zinc-400">
@@ -926,51 +806,135 @@ export default function PoporamaCassaPage() {
                   </p>
                 ) : null}
               </div>
+            ) : isAvailable ? (
+              <button type="button" onClick={aggiungiAlCarrello} disabled={frozen}
+                className="mt-7 w-full rounded-xl bg-yellow-400 px-6 py-4 font-black text-black disabled:opacity-50">
+                AGGIUNGI AL CARRELLO
+              </button>
             ) : (
-              <div className="mt-7 rounded-2xl border border-yellow-500/20 bg-black p-5 sm:p-6">
-                <p className="text-xs font-black uppercase tracking-[0.18em] text-yellow-400">
-                  Registra vendita
-                </p>
-
-                <p className="mt-2 text-sm text-zinc-500">
-                  Il prezzo proposto e il prezzo POPORAMA. Puoi modificarlo prima di confermare.
-                </p>
-
-                <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
-                  <div className="flex-1">
-                    <label className="block text-xs font-black uppercase tracking-[0.15em] text-zinc-500">
-                      PREZZO VENDITA EUR
-                    </label>
-
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      value={prezzoVendita}
-                      onChange={(event) =>
-                        setPrezzoVendita(
-                          event.target.value
-                        )
-                      }
-                      className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-4 text-xl font-black text-white outline-none focus:border-yellow-400"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={
-                      confermaVendita
-                    }
-                    disabled={selling}
-                    className="rounded-xl bg-emerald-500 px-6 py-4 font-black text-black hover:bg-emerald-400 disabled:opacity-50"
-                  >
-                    {selling
-                      ? "REGISTRO..."
-                      : "SEGNA VENDUTO"}
-                  </button>
-                </div>
-              </div>
+              <p className="mt-7 font-bold text-red-300">Articolo non disponibile per la vendita.</p>
             )}
           </section>
+        ) : null}
+
+        <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8">
+          <h2 className="text-xl font-black text-yellow-400">CARRELLO ({cart.length} articoli)</h2>
+          {!cart.length ? <p className="mt-4 text-zinc-400">Cerca un articolo e premi AGGIUNGI AL CARRELLO.</p> : null}
+          <div className="mt-5 space-y-4">
+            {cart.map((line, i) => (
+              <article key={line.articolo.codicePP} className="rounded-2xl border border-zinc-700 bg-black p-5">
+                <div className="flex flex-col justify-between gap-4 sm:flex-row">
+                  <div className="min-w-0">
+                    <p className="font-black text-yellow-400">{line.articolo.codicePP}</p>
+                    <p className="mt-1 break-words font-bold">{line.articolo.nomeProdotto || "Articolo POPORAMA"}</p>
+                    <p className="mt-2 text-sm text-zinc-400">{gradeLabel(line.articolo.grado)} · Lotto: {line.articolo.lotto || "Non indicato"}</p>
+                    <p className="mt-2">Prezzo POPORAMA: {euro(line.articolo.prezzoPoporama)}</p>
+                    <a href={`/${lang}/poporama-test/articoli/${encodeURIComponent(line.articolo.codicePP)}`}
+                      target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-sm text-yellow-400 underline">VEDI SCHEDA ARTICOLO</a>
+                  </div>
+                  <div className="sm:w-56">
+                    <label htmlFor={`prezzo-${line.articolo.codicePP}`} className="text-xs font-black text-zinc-400">PREZZO VENDITA €</label>
+                    <input id={`prezzo-${line.articolo.codicePP}`} type="text" inputMode="decimal"
+                      value={manualTotal ? (totals.quotes[i] === undefined ? "" : centsToDecimal(totals.quotes[i])) : line.prezzoInput}
+                      disabled={frozen || manualTotal}
+                      onChange={(event) => modificaCarrello(line.articolo.codicePP, event.target.value)}
+                      className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 text-xl font-black disabled:opacity-70" />
+                    {manualTotal ? <p className="mt-2 text-xs text-yellow-400">Quota del totale manuale</p> : null}
+                    <button type="button" onClick={() => modificaCarrello(line.articolo.codicePP)} disabled={frozen}
+                      className="mt-3 w-full rounded-xl border border-red-800 px-4 py-3 font-black text-red-300 disabled:opacity-50">RIMUOVI</button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          {cart.length ? (
+            <div className="mt-6 border-t border-zinc-700 pt-6">
+              <label className="flex items-center gap-3 font-black">
+                <input type="checkbox" checked={manualTotal} disabled={frozen}
+                  onChange={(event) => {
+                    setManualTotal(event.target.checked);
+                    if (event.target.checked && !totalInput && !totals.error) setTotalInput(centsToDecimal(totals.total));
+                    setError("");
+                  }} className="h-6 w-6 accent-yellow-400" />
+                TOTALE MANUALE / PREZZO UNICO
+              </label>
+              {manualTotal ? (
+                <div className="mt-4">
+                  <label htmlFor="totale-manuale" className="block text-xs font-black text-yellow-400">TOTALE DA INCASSARE €</label>
+                  <input id="totale-manuale" type="text" inputMode="decimal" value={totalInput} disabled={frozen}
+                    onChange={(event) => setTotalInput(event.target.value)}
+                    className="mt-2 w-full rounded-xl border border-yellow-400 bg-black px-4 py-4 text-2xl font-black sm:max-w-xs" />
+                  <p className="mt-3 text-sm text-zinc-400">Ripartito in proporzione ai prezzi POPORAMA. Se sono tutti zero, ripartizione uniforme.</p>
+                </div>
+              ) : null}
+              {totals.error ? <p role="alert" className="mt-4 text-red-300">{totals.error}</p> : (
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                  <Info label="TOTALE POPORAMA" value={euro(totals.poporama / 100)} />
+                  <Info label="TOTALE VENDITA" value={euro(totals.total / 100)} />
+                </div>
+              )}
+              <button type="button" onClick={preparaVendita} disabled={frozen || Boolean(totals.error)}
+                className="mt-6 w-full rounded-xl bg-emerald-500 px-6 py-4 font-black text-black disabled:opacity-50">
+                {selling ? "REGISTRO..." : "CONFERMA VENDITA"}
+              </button>
+            </div>
+          ) : null}
+        </section>
+
+        {saleReport.length && !success ? (
+          <section role="status" className="mt-6 rounded-2xl border border-amber-700 bg-amber-950/20 p-5">
+            <h2 className="font-black text-amber-300">ESITO PER ARTICOLO</h2>
+            <ul className="mt-4 space-y-4">
+              {saleReport.map((entry) => (
+                <li key={entry.code}>
+                  <strong>{entry.code}</strong> · {({ venduto: "VENDITA REGISTRATA", incerto: "ESITO INCERTO — VERIFICA NECESSARIA", non_avviato: "AGGIORNAMENTO NON AVVIATO", non_registrato: "VENDITA RIFIUTATA" })[entry.stato]}
+                  {entry.stato === "venduto" ? <p>{euro(entry.prezzoVendita)} · {entry.dataVendita ? new Date(entry.dataVendita).toLocaleString("it-IT") : ""}</p> : null}
+                  {entry.errore ? <p className="mt-1 text-sm text-zinc-400">{entry.errore}</p> : null}
+                  <a href={`/${lang}/poporama-test/articoli/${encodeURIComponent(entry.code)}`} target="_blank" rel="noopener noreferrer"
+                    className="mt-1 inline-block text-sm text-yellow-400 underline">VERIFICA ARTICOLO</a>
+                </li>
+              ))}
+            </ul>
+            {saleBlockedRef.current ? (
+              <>
+                <p className="mt-5 text-amber-300">Non ripetere questo carrello. Verifica gli esiti incerti prima di iniziare una nuova vendita. Gli articoli registrati restano venduti.</p>
+                <button type="button" onClick={nuovaVendita} disabled={busy}
+                  className="mt-4 rounded-xl border border-amber-500 px-5 py-4 font-black disabled:opacity-50">NUOVA VENDITA</button>
+              </>
+            ) : null}
+          </section>
+        ) : null}
+
+        {pendingSale ? (
+          <dialog ref={saleDialogRef} aria-labelledby="conferma-vendita-title"
+            onCancel={(event) => {
+              event.preventDefault();
+              if (!requestBusyRef.current) setPendingSale(null);
+            }}
+            className="w-[calc(100%_-_2rem)] max-w-lg rounded-3xl border border-zinc-700 bg-zinc-900 p-6 text-white backdrop:bg-black/80 sm:p-8">
+            <h2 id="conferma-vendita-title" className="text-xl font-black text-yellow-400">CONFERMA VENDITA</h2>
+            <p className="mt-5 font-black">{pendingSale.lines.length} ARTICOLI</p>
+            <ul className="mt-3 max-h-60 space-y-3 overflow-y-auto">
+              {pendingSale.lines.map((line, i) => (
+                <li key={line.articolo.codicePP} className="break-words">
+                  <strong>{line.articolo.codicePP}</strong> · {line.articolo.nomeProdotto}
+                  <div>Quota effettiva: {euro(pendingSale.quotes[i] / 100)}</div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-5 text-zinc-400">Totale POPORAMA: {euro(pendingSale.poporama / 100)}</p>
+            <p className="mt-2 text-xl font-black">TOTALE EFFETTIVO: {euro(pendingSale.total / 100)}</p>
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button type="button" onClick={confermaVendita} disabled={selling}
+                className="flex-1 rounded-xl bg-emerald-500 px-5 py-4 font-black text-black disabled:opacity-50">
+                {selling ? "REGISTRO..." : "CONFERMA"}
+              </button>
+              <button type="button" autoFocus onClick={() => setPendingSale(null)} disabled={selling}
+                className="flex-1 rounded-xl border border-zinc-600 px-5 py-4 font-black disabled:opacity-50">
+                ANNULLA
+              </button>
+            </div>
+          </dialog>
         ) : null}
       </div>
     </main>

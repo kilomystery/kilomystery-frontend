@@ -13,7 +13,8 @@ import type {
   LabelData,
 } from "app/components/PoporamaLabelPdf";
 
-type Grade = "A" | "B" | "C" | "D";
+type Grade = "NEW" | "A" | "B" | "C" | "N";
+type Listino = Record<Grade, number | null>;
 type TestResult = "OK" | "KO" | "NA" | "";
 
 type Articolo = {
@@ -66,6 +67,8 @@ type Articolo = {
 type ApiResponse = {
   ok: boolean;
   articolo?: Articolo;
+  listino?: Listino | null;
+  erroreListino?: string;
   error?: string;
   message?: string;
 };
@@ -128,14 +131,12 @@ const GRADE_INFO: Record<
   {
     title: string;
     description: string;
-    percentuale: number | null;
   }
 > = {
   A: {
     title: "TESTATO • PIENAMENTE FUNZIONANTE",
     description:
       "Articolo testato e pienamente funzionante.",
-    percentuale: 55,
   },
 
   B: {
@@ -143,7 +144,6 @@ const GRADE_INFO: Record<
       "TESTATO • FUNZIONANTE CON INCOMPLETEZZA",
     description:
       "Funzionante, ma con accessori o dotazione incompleta.",
-    percentuale: 45,
   },
 
   C: {
@@ -151,15 +151,15 @@ const GRADE_INFO: Record<
       "FUNZIONANTE • DIFETTO DICHIARATO",
     description:
       "Funzionante con difetto o limitazione dichiarata.",
-    percentuale: 35,
   },
 
-  D: {
-    title:
-      "NON FUNZIONANTE • RIPARAZIONE / RICAMBI",
-    description:
-      "Non funzionante oppure destinato a riparazione o ricambi.",
-    percentuale: null,
+  NEW: {
+    title: "NUOVO",
+    description: "Prodotto nuovo. I test tecnici non sono obbligatori.",
+  },
+  N: {
+    title: "NON TESTATO",
+    description: "Articolo non sottoposto a test tecnico.",
   },
 };
 
@@ -194,6 +194,9 @@ export default function TestArticoloPage() {
 
   const [articolo, setArticolo] =
     useState<Articolo | null>(null);
+
+  const [listino, setListino] = useState<Listino | null>(null);
+  const [erroreListino, setErroreListino] = useState("");
 
   const [loading, setLoading] =
     useState(true);
@@ -305,27 +308,14 @@ export default function TestArticoloPage() {
         const existingGrade =
           normalizeGrade(item.grado);
 
-        if (existingGrade !== "N") {
-          setGrado(existingGrade);
-        }
-
-        setPercentualePrezzo(
-          item.percentualePrezzo
-            ? String(
-                item.percentualePrezzo
-              )
-            : ""
-        );
-
-        setPrezzoPoporama(
-          Number.isFinite(
-            item.prezzoPoporama
-          )
-            ? item.prezzoPoporama.toFixed(
-                2
-              )
-            : ""
-        );
+        setGrado(existingGrade === "D" ? "" : existingGrade);
+        setListino(data.listino ?? null);
+        setErroreListino(data.erroreListino || "");
+        const percentage = existingGrade === "D" ? null : data.listino?.[existingGrade];
+        setPercentualePrezzo(percentage == null ? "" : String(percentage));
+        setPrezzoPoporama(percentage == null || data.erroreListino
+          ? ""
+          : roundMoney(item.retail * percentage / 100).toFixed(2));
 
         setNumeroSeriale(
           item.numeroSeriale || ""
@@ -400,67 +390,11 @@ export default function TestArticoloPage() {
       return;
     }
 
-    const config =
-      GRADE_INFO[nextGrade];
-
-    /*
-     * Per D il prezzo rimane manuale.
-     */
-    if (
-      config.percentuale === null
-    ) {
-      setPercentualePrezzo("");
-      return;
-    }
-
-    const percentage =
-      config.percentuale;
-
-    const suggestedPrice =
-      roundMoney(
-        articolo.retail *
-          (percentage / 100)
-      );
-
-    setPercentualePrezzo(
-      String(percentage)
-    );
-
-    setPrezzoPoporama(
-      suggestedPrice.toFixed(2)
-    );
-  }
-
-  /*
-   * ==========================================================
-   * PERCENTUALE / PREZZO
-   * ==========================================================
-   */
-
-  function changePercentage(
-    value: string
-  ) {
-    setPercentualePrezzo(value);
-
-    if (!articolo) {
-      return;
-    }
-
-    const percentage =
-      parseInputNumber(value);
-
-    if (percentage === null) {
-      return;
-    }
-
-    const price = roundMoney(
-      articolo.retail *
-        (percentage / 100)
-    );
-
-    setPrezzoPoporama(
-      price.toFixed(2)
-    );
+    const percentage = listino?.[nextGrade];
+    setPercentualePrezzo(percentage == null ? "" : String(percentage));
+    setPrezzoPoporama(percentage == null || erroreListino
+      ? ""
+      : roundMoney(articolo.retail * percentage / 100).toFixed(2));
   }
 
   /*
@@ -515,16 +449,10 @@ export default function TestArticoloPage() {
     try {
       setEtichettaInCorso(true);
 
-      const grade: Grade =
-        grado ||
-        normalizeGradeForLabel(
-          articolo.grado
-        );
+      const grade = normalizeGradeForLabel(articolo.grado);
 
-      const prezzo =
-        parseNumberForLabel(
-          prezzoPoporama
-        );
+      // L'etichetta usa solo l'articolo restituito dal server, mai il form.
+      const prezzo = Number(articolo.prezzoPoporama);
 
       const retail =
         Number(articolo.retail);
@@ -546,15 +474,12 @@ export default function TestArticoloPage() {
           articolo.condizioneOriginale ||
           undefined,
         cosmeticCondition:
-          condizioneEstetica ||
           articolo.condizioneEstetica ||
           undefined,
         missingAccessories:
-          accessoriMancanti ||
           articolo.accessoriMancanti ||
           undefined,
         defects:
-          difettiDichiarati ||
           articolo.difettiDichiarati ||
           undefined,
         referencePrice:
@@ -564,15 +489,15 @@ export default function TestArticoloPage() {
         poporamaPrice:
           Number.isFinite(prezzo)
             ? prezzo.toFixed(2)
-            : Number(
-                articolo.prezzoPoporama
-              ).toFixed(2),
+            : undefined,
         grade,
         testDate:
           formatDateForLabel(
-            dataTest ||
-            articolo.dataTest ||
-            articolo.createdAt
+            grade === "NEW"
+              ? articolo.updatedAt || articolo.createdAt
+              : grade === "N"
+                ? articolo.createdAt
+                : articolo.dataTest || articolo.updatedAt || articolo.createdAt
           ),
       };
 
@@ -605,64 +530,18 @@ export default function TestArticoloPage() {
 
     if (!grado) {
       setError(
-        "Seleziona il grado finale A, B, C oppure D."
+        "Seleziona la classificazione NUOVO, A, B, C oppure N."
       );
       return;
     }
 
-    const price =
-      parseInputNumber(
-        prezzoPoporama
-      );
-
-    if (
-      price === null ||
-      price < 0
-    ) {
-      setError(
-        "Inserisci un prezzo POPORAMA valido."
-      );
+    if (erroreListino || listino?.[grado] == null || !prezzoPoporama) {
+      setError(erroreListino || "Percentuale del lotto non valida per la classificazione selezionata. Configura il listino del lotto.");
       return;
     }
 
-    let percentage =
-      parseInputNumber(
-        percentualePrezzo
-      );
-
-    /*
-     * Per il grado D possiamo avere
-     * prezzo manuale senza percentuale.
-     */
-    if (
-      grado === "D" &&
-      percentage === null
-    ) {
-      percentage =
-        articolo.retail > 0
-          ? roundPercentage(
-              (price /
-                articolo.retail) *
-                100
-            )
-          : 0;
-    }
-
-    if (
-      percentage === null ||
-      percentage < 0 ||
-      percentage > 100
-    ) {
-      setError(
-        "Inserisci una percentuale prezzo valida da 0 a 100."
-      );
-      return;
-    }
-
-    if (!dataTest) {
-      setError(
-        "Inserisci la data del test."
-      );
+    if (grado !== "NEW" && grado !== "N" && !dataTest) {
+      setError("Inserisci la data del test.");
       return;
     }
 
@@ -687,11 +566,6 @@ export default function TestArticoloPage() {
           body: JSON.stringify({
             grado,
 
-            percentualePrezzo:
-              percentage,
-
-            prezzoPoporama: price,
-
             condizioneEstetica:
               condizioneEstetica.trim(),
 
@@ -707,9 +581,9 @@ export default function TestArticoloPage() {
             risultatiTest,
 
             testatoDa:
-              testatoDa.trim(),
+              grado === "NEW" || grado === "N" ? "" : testatoDa.trim(),
 
-            dataTest,
+            dataTest: grado === "NEW" || grado === "N" ? "" : dataTest,
 
             numeroSeriale:
               numeroSeriale.trim(),
@@ -734,6 +608,7 @@ export default function TestArticoloPage() {
       setArticolo(
         data.articolo
       );
+      setListino(data.listino ?? null);
 
       setPercentualePrezzo(
         String(
@@ -749,7 +624,7 @@ export default function TestArticoloPage() {
       );
 
       setSuccess(
-        `${data.articolo.codicePP} salvato correttamente: grado ${data.articolo.grado} • ${formatCurrency(
+        `${data.articolo.codicePP} salvato correttamente: grado ${displayGrade(data.articolo.grado)} • ${formatCurrency(
           data.articolo
             .prezzoPoporama
         )}`
@@ -935,7 +810,7 @@ export default function TestArticoloPage() {
               <div className="mt-4 flex flex-wrap gap-2">
                 <Badge>
                   GRADO ATTUALE{" "}
-                  {currentGrade}
+                  {displayGrade(currentGrade)}
                 </Badge>
 
                 <Badge>
@@ -1309,16 +1184,17 @@ export default function TestArticoloPage() {
             Il codice PP rimane
             sempre lo stesso.
             Seleziona il grado
-            risultante dal test.
+            dell&apos;articolo. NUOVO non richiede tutti i test tecnici; N resta NON TESTATO.
           </p>
 
           <div className="mt-6 grid gap-3 md:grid-cols-2">
             {(
               [
+                "NEW",
                 "A",
                 "B",
                 "C",
-                "D",
+                "N",
               ] as Grade[]
             ).map((item) => {
               const config =
@@ -1331,7 +1207,7 @@ export default function TestArticoloPage() {
                 <button
                   key={item}
                   type="button"
-                  disabled={sold}
+                  disabled={sold || saving}
                   onClick={() =>
                     selectGrade(item)
                   }
@@ -1343,13 +1219,13 @@ export default function TestArticoloPage() {
                 >
                   <div className="flex items-start gap-4">
                     <div
-                      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-xl font-black ${
+                      className={`flex h-12 min-w-12 px-2 shrink-0 items-center justify-center rounded-xl text-xl font-black ${
                         active
                           ? "bg-yellow-400 text-black"
                           : "bg-zinc-800 text-white"
                       }`}
                     >
-                      {item}
+                      {displayGrade(item)}
                     </div>
 
                     <div>
@@ -1364,10 +1240,9 @@ export default function TestArticoloPage() {
                       </p>
 
                       <p className="mt-3 text-xs font-black text-yellow-400">
-                        {config.percentuale !==
-                        null
-                          ? `${config.percentuale}% RETAIL`
-                          : "PREZZO MANUALE"}
+                        {listino?.[item] != null
+                          ? `${listino[item]}% RETAIL`
+                          : "LISTINO NON CONFIGURATO"}
                       </p>
                     </div>
                   </div>
@@ -1376,6 +1251,12 @@ export default function TestArticoloPage() {
             })}
           </div>
         </section>
+
+        {erroreListino ? (
+          <p role="alert" className="mt-6 rounded-2xl border border-red-700 bg-red-950/30 p-5 text-red-200">
+            {erroreListino}
+          </p>
+        ) : null}
 
         {/* PREZZO */}
 
@@ -1409,20 +1290,16 @@ export default function TestArticoloPage() {
                 value={
                   percentualePrezzo
                 }
-                onChange={(event) =>
-                  changePercentage(
-                    event.target.value
-                  )
-                }
+                readOnly
                 disabled={sold}
-                placeholder="es. 55"
+                placeholder="—"
                 className={inputClass}
               />
             </div>
 
             <div>
               <FieldLabel>
-                Prezzo finale €
+                Prezzo proposto €
               </FieldLabel>
 
               <input
@@ -1431,21 +1308,14 @@ export default function TestArticoloPage() {
                 value={
                   prezzoPoporama
                 }
-                onChange={(event) =>
-                  setPrezzoPoporama(
-                    event.target.value
-                  )
-                }
+                readOnly
                 disabled={sold}
-                placeholder="0,00"
+                placeholder="—"
                 className={`${inputClass} text-xl font-black text-yellow-400`}
               />
 
               <p className="mt-2 text-xs text-zinc-500">
-                Il prezzo può essere
-                modificato
-                manualmente prima
-                del salvataggio.
+                Calcolato dal listino del lotto. Il server verifica la percentuale al salvataggio.
               </p>
             </div>
           </div>
@@ -1453,7 +1323,7 @@ export default function TestArticoloPage() {
 
         {/* OPERATORE */}
 
-        <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8">
+        {grado !== "NEW" && grado !== "N" ? <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8">
           <SectionTitle
             eyebrow="06"
             title="Chiusura test"
@@ -1497,7 +1367,7 @@ export default function TestArticoloPage() {
               />
             </div>
           </div>
-        </section>
+        </section> : null}
 
         {/* ERROR */}
 
@@ -1518,7 +1388,7 @@ export default function TestArticoloPage() {
         {success ? (
           <div className="mt-6 rounded-2xl border border-emerald-600 bg-emerald-950/30 p-5 text-emerald-200">
             <p className="font-black">
-              TEST SALVATO
+              CLASSIFICAZIONE SALVATA
             </p>
 
             <p className="mt-2 text-sm">
@@ -1569,7 +1439,7 @@ export default function TestArticoloPage() {
             <div>
               <p className="font-black">
                 {grado
-                  ? `GRADO ${grado}`
+                  ? `GRADO ${displayGrade(grado)}`
                   : "GRADO NON SELEZIONATO"}
               </p>
 
@@ -1577,7 +1447,7 @@ export default function TestArticoloPage() {
                 {grado
                   ? `${
                       percentualePrezzo ||
-                      "0"
+                      "—"
                     }% • ${formatInputCurrency(
                       prezzoPoporama
                     )}`
@@ -1589,13 +1459,13 @@ export default function TestArticoloPage() {
               type="button"
               onClick={saveTest}
               disabled={
-                sold || saving
+                sold || saving || !!erroreListino
               }
               className="rounded-xl bg-yellow-400 px-7 py-4 text-sm font-black text-black transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
             >
               {saving
                 ? "SALVATAGGIO..."
-                : "SALVA TEST"}
+                : grado === "NEW" || grado === "N" ? "SALVA CLASSIFICAZIONE" : "SALVA TEST"}
             </button>
           </div>
         </div>
@@ -1606,39 +1476,24 @@ export default function TestArticoloPage() {
 
 function normalizeGradeForLabel(
   value: string
-): Grade {
+): LabelData["grade"] {
   const normalized =
     String(value || "")
       .trim()
       .toUpperCase();
 
   if (
+    normalized === "NEW" ||
     normalized === "A" ||
     normalized === "B" ||
     normalized === "C" ||
-    normalized === "D"
+    normalized === "D" ||
+    normalized === "N"
   ) {
     return normalized;
   }
 
-  return "D";
-}
-
-function parseNumberForLabel(
-  value: string
-) {
-  const normalized =
-    String(value || "")
-      .trim()
-      .replace(/\s/g, "")
-      .replace(",", ".");
-
-  const parsed =
-    Number(normalized);
-
-  return Number.isFinite(parsed)
-    ? parsed
-    : Number.NaN;
+  throw new Error("Classificazione non valida per l’etichetta.");
 }
 
 function formatDateForLabel(
@@ -1895,7 +1750,7 @@ function normalizeTestResult(
 
 function normalizeGrade(
   value: string
-): Grade | "N" {
+): Grade | "D" {
   const grade = String(
     value || ""
   )
@@ -1903,6 +1758,8 @@ function normalizeGrade(
     .toUpperCase();
 
   if (
+    grade === "NEW" ||
+    grade === "N" ||
     grade === "A" ||
     grade === "B" ||
     grade === "C" ||
@@ -1959,16 +1816,8 @@ function roundMoney(
   );
 }
 
-function roundPercentage(
-  value: number
-) {
-  return (
-    Math.round(
-      (value +
-        Number.EPSILON) *
-        100
-    ) / 100
-  );
+function displayGrade(value: string) {
+  return value === "NEW" ? "NUOVO" : value === "D" ? "D (LEGACY)" : value;
 }
 
 function formatCurrency(

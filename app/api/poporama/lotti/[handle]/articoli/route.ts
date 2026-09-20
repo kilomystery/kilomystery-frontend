@@ -1,11 +1,15 @@
+import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import {
   NextRequest,
   NextResponse,
 } from "next/server";
 
+import { calcolaEconomia, normalizeGrade, normalizeSaleStatus, parseShopifyMoney, saleTimestamp } from "@/app/lib/poporama-economics";
+
 export const dynamic = "force-dynamic";
 
 const SHOPIFY_API_VERSION = "2026-07";
+
 
 type ShopifyField = {
   key: string;
@@ -58,6 +62,8 @@ export async function GET(
   _request: NextRequest,
   context: RouteContext
 ) {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const handle =
       decodeURIComponent(
@@ -170,6 +176,11 @@ export async function GET(
     const totale =
       articoliDelLotto.length;
 
+    const gradoNEW =
+      articoliDelLotto.filter(
+        (articolo) => normalizeGrade(articolo.grado) === "NEW"
+      ).length;
+
     const gradoN =
       articoliDelLotto.filter(
         (articolo) =>
@@ -216,24 +227,28 @@ export async function GET(
       gradoC +
       gradoD;
 
+    const nuovi = gradoNEW;
+    const classificati = nuovi + testati;
+
     const nonTestati =
       gradoN;
 
-    const venduti =
-      articoliDelLotto.filter(
-        (articolo) =>
-          normalizeSaleStatus(
-            articolo.statoVendita
-          ) === "VENDUTO"
-      ).length;
-
-    const disponibili =
-      articoliDelLotto.filter(
-        (articolo) =>
-          normalizeSaleStatus(
-            articolo.statoVendita
-          ) !== "VENDUTO"
-      ).length;
+    const articoliVenduti = articoliDelLotto.filter(
+      (articolo) => articolo.statoVendita === "VENDUTO"
+    );
+    const articoliDisponibili = articoliDelLotto.filter(
+      (articolo) => articolo.statoVendita !== "VENDUTO"
+    );
+    const venduti = articoliVenduti.length;
+    const disponibili = articoliDisponibili.length;
+    const economia = calcolaEconomia(
+      parseShopifyMoney(getFieldValue(lotto, "costo_totale")), articoliDelLotto
+    );
+    const vendite = articoliVenduti
+      .map(({ id, codicePP, nomeProdotto, grado, prezzoPoporama, prezzoVendita, dataVendita }) => ({
+        id, codicePP, nomeProdotto, grado, prezzoPoporama, prezzoVendita, dataVendita,
+      }))
+      .sort((a, b) => saleTimestamp(b.dataVendita) - saleTimestamp(a.dataVendita));
 
     // --------------------------------------------------------
     // 5. RISPOSTA
@@ -256,12 +271,15 @@ export async function GET(
 
       statistiche: {
         totale,
+        nuovi,
+        classificati,
         testati,
         nonTestati,
         disponibili,
         venduti,
 
         gradi: {
+          NEW: gradoNEW,
           A: gradoA,
           B: gradoB,
           C: gradoC,
@@ -270,6 +288,8 @@ export async function GET(
         },
       },
 
+      economia,
+      vendite,
       articoli:
         articoliDelLotto,
     });
@@ -879,47 +899,13 @@ function getFieldValue(
 // GRADO
 // ============================================================
 
-function normalizeGrade(
-  value: string
-) {
-  const grade =
-    String(value || "")
-      .trim()
-      .toUpperCase();
 
-  if (
-    grade === "A" ||
-    grade === "B" ||
-    grade === "C" ||
-    grade === "D" ||
-    grade === "N"
-  ) {
-    return grade;
-  }
-
-  return "N";
-}
 
 // ============================================================
 // STATO VENDITA
 // ============================================================
 
-function normalizeSaleStatus(
-  value: string
-) {
-  const status =
-    String(value || "")
-      .trim()
-      .toUpperCase();
 
-  if (
-    status === "VENDUTO"
-  ) {
-    return "VENDUTO";
-  }
-
-  return "DISPONIBILE";
-}
 
 // ============================================================
 // NUMERO PP
@@ -958,53 +944,7 @@ function extractPPNumber(
 // MONEY SHOPIFY
 // ============================================================
 
-function parseShopifyMoney(
-  value: string
-) {
-  if (!value) {
-    return 0;
-  }
 
-  try {
-    const parsed =
-      JSON.parse(value);
-
-    const amount =
-      Number(
-        parsed?.amount
-      );
-
-    if (
-      Number.isFinite(
-        amount
-      )
-    ) {
-      return roundMoney(
-        amount
-      );
-    }
-  } catch {
-    const amount =
-      Number(
-        value.replace(
-          ",",
-          "."
-        )
-      );
-
-    if (
-      Number.isFinite(
-        amount
-      )
-    ) {
-      return roundMoney(
-        amount
-      );
-    }
-  }
-
-  return 0;
-}
 
 // ============================================================
 // DECIMAL SHOPIFY
@@ -1039,16 +979,3 @@ function parseShopifyDecimal(
 // ============================================================
 // ROUND MONEY
 // ============================================================
-
-function roundMoney(
-  value: number
-) {
-  return (
-    Math.round(
-      (
-        value +
-        Number.EPSILON
-      ) * 100
-    ) / 100
-  );
-}

@@ -3,6 +3,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { useParams } from "next/navigation";
@@ -34,8 +35,17 @@ type Lotto = {
   altriCosti: number;
   costoTotale: number;
 
+  percentualeNuovo: number;
+  percentualeGradoA: number;
+  percentualeGradoB: number;
+  percentualeGradoC: number;
+  percentualeGradoN: number;
+
   note: string;
 };
+
+// D è mantenuto esclusivamente per i record legacy.
+type GradoArticolo = "NEW" | "A" | "B" | "C" | "D" | "N";
 
 type Articolo = {
   id: string;
@@ -61,7 +71,7 @@ type Articolo = {
   retail: number;
   costoManifest: number;
 
-  grado: string;
+  grado: GradoArticolo;
   percentualePrezzo: number;
   prezzoPoporama: number;
 
@@ -87,12 +97,15 @@ type Articolo = {
 
 type StatisticheArticoli = {
   totale: number;
+  nuovi: number;
+  classificati: number;
   testati: number;
   nonTestati: number;
   disponibili: number;
   venduti: number;
 
   gradi: {
+    NEW: number;
     A: number;
     B: number;
     C: number;
@@ -108,6 +121,31 @@ type LottiApiResponse = {
   error?: string;
 };
 
+type EconomiaLotto = {
+  investimentoTotale: number;
+  incassoReale: number;
+  percentualeVenduta: number;
+  percentualeRecuperata: number | null;
+  residuoDaRecuperare: number;
+  sopraBreakEven: number;
+  valorePoporamaDisponibile: number;
+  potenzialeTotale: number;
+  risultatoPotenziale: number;
+  gradiDisponibili: Record<GradoArticolo, number>;
+  iva: {
+    aliquota: number | null;
+    incassoLordo: number;
+    imponibile: number | null;
+    importo: number | null;
+    incassoNetto: number | null;
+  };
+};
+
+type VenditaLotto = Pick<Articolo,
+  "id" | "codicePP" | "nomeProdotto" | "grado" |
+  "prezzoPoporama" | "prezzoVendita" | "dataVendita"
+>;
+
 type ArticoliApiResponse = {
   ok: boolean;
 
@@ -122,17 +160,13 @@ type ArticoliApiResponse = {
   statistiche?: StatisticheArticoli;
 
   articoli?: Articolo[];
+  economia?: EconomiaLotto;
+  vendite?: VenditaLotto[];
 
   error?: string;
 };
 
-type FiltroGrado =
-  | "TUTTI"
-  | "N"
-  | "A"
-  | "B"
-  | "C"
-  | "D";
+type FiltroGrado = "TUTTI" | GradoArticolo;
 
 type FiltroStato =
   | "TUTTI"
@@ -155,18 +189,24 @@ export default function LottoPage() {
   const [lotto, setLotto] =
     useState<Lotto | null>(null);
 
+  const [economia, setEconomia] = useState<EconomiaLotto | null>(null);
+  const [vendite, setVendite] = useState<VenditaLotto[]>([]);
+
   const [articoli, setArticoli] =
     useState<Articolo[]>([]);
 
   const [statistiche, setStatistiche] =
     useState<StatisticheArticoli>({
       totale: 0,
+      nuovi: 0,
+      classificati: 0,
       testati: 0,
       nonTestati: 0,
       disponibili: 0,
       venduti: 0,
 
       gradi: {
+        NEW: 0,
         A: 0,
         B: 0,
         C: 0,
@@ -212,6 +252,26 @@ export default function LottoPage() {
 
   const [messaggioCosti, setMessaggioCosti] =
     useState("");
+
+  const [percentualeNuovoInput, setPercentualeNuovoInput] = useState("");
+  const [percentualeGradoAInput, setPercentualeGradoAInput] = useState("");
+  const [percentualeGradoBInput, setPercentualeGradoBInput] = useState("");
+  const [percentualeGradoCInput, setPercentualeGradoCInput] = useState("");
+  const [percentualeGradoNInput, setPercentualeGradoNInput] = useState("");
+  const [salvataggioListino, setSalvataggioListino] = useState(false);
+  const [messaggioListino, setMessaggioListino] = useState("");
+  const [erroreListino, setErroreListino] = useState("");
+
+  const [venditaDaAnnullare, setVenditaDaAnnullare] = useState<VenditaLotto | null>(null);
+  const [annullamentoInCorso, setAnnullamentoInCorso] = useState(false);
+  const [annullamentoIncerto, setAnnullamentoIncerto] = useState(false);
+  const [erroreAnnullamento, setErroreAnnullamento] = useState("");
+  const [messaggioAnnullamento, setMessaggioAnnullamento] = useState("");
+  const annullamentoBusyRef = useRef(false);
+  const annullamentoDialogRef = useRef<HTMLDialogElement>(null);
+  useEffect(() => {
+    if (venditaDaAnnullare) annullamentoDialogRef.current?.showModal();
+  }, [venditaDaAnnullare]);
 
   useEffect(() => {
     if (!handle) {
@@ -294,6 +354,16 @@ export default function LottoPage() {
       }
 
       setLotto(trovato);
+      setEconomia(articoliData.economia ?? null);
+      setVendite(articoliData.vendite ?? []);
+
+      setPercentualeNuovoInput(String(trovato.percentualeNuovo));
+      setPercentualeGradoAInput(String(trovato.percentualeGradoA));
+      setPercentualeGradoBInput(String(trovato.percentualeGradoB));
+      setPercentualeGradoCInput(String(trovato.percentualeGradoC));
+      setPercentualeGradoNInput(String(trovato.percentualeGradoN));
+      setMessaggioListino("");
+      setErroreListino("");
 
       setCostoMerceInput(
         formatMoneyInput(
@@ -349,6 +419,73 @@ export default function LottoPage() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  function preparaAnnullamento(vendita: VenditaLotto) {
+    if (annullamentoBusyRef.current) return;
+    setVenditaDaAnnullare(vendita);
+    setErroreAnnullamento("");
+    setMessaggioAnnullamento("");
+    setAnnullamentoIncerto(false);
+  }
+
+  async function aggiornaDopoAnnullamento(code: string) {
+    for (const delay of [0, 250, 750, 1000]) {
+      if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+      const response = await fetch(`/api/poporama/lotti/${encodeURIComponent(handle)}/articoli`, { cache: "no-store" });
+      const data = await response.json() as ArticoliApiResponse;
+      if (!response.ok || !data.ok) throw new Error(data.error || "Aggiornamento cruscotto non riuscito.");
+      const updated = data.articoli?.find((item) => item.codicePP === code);
+      if (updated?.statoVendita.trim().toUpperCase() !== "DISPONIBILE") continue;
+      // Tutti i totali vengono ricalcolati dall'API del lotto, mai modificati qui.
+      setArticoli(data.articoli ?? []);
+      setVendite(data.vendite ?? []);
+      setEconomia(data.economia ?? null);
+      if (data.statistiche) setStatistiche(data.statistiche);
+      return;
+    }
+    throw new Error("Il cruscotto non riflette ancora l'annullamento. Premi AGGIORNA tra qualche istante.");
+  }
+
+  async function confermaAnnullamento() {
+    if (!venditaDaAnnullare || annullamentoBusyRef.current || annullamentoIncerto) return;
+    annullamentoBusyRef.current = true;
+    setAnnullamentoInCorso(true);
+    setErroreAnnullamento("");
+    let requestSent = false;
+    let responseReceived = false;
+    try {
+      requestSent = true;
+      const response = await fetch("/api/poporama/cassa", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancelSale", code: venditaDaAnnullare.codicePP,
+          prezzoVenditaAtteso: venditaDaAnnullare.prezzoVendita, dataVenditaAttesa: venditaDaAnnullare.dataVendita }),
+      });
+      const data = await response.json();
+      responseReceived = true;
+      if (response.status === 401) {
+        throw new Error("Sessione POPORAMA scaduta. Accedi nuovamente; annullamento non eseguito.");
+      }
+      if (!response.ok || !data.ok) {
+        setAnnullamentoIncerto(Boolean(data.esitoIncerto));
+        throw new Error(data.error || "Annullamento non riuscito.");
+      }
+      setVenditaDaAnnullare(null);
+      setMessaggioAnnullamento(`${venditaDaAnnullare.codicePP}: VENDITA ANNULLATA. Articolo DISPONIBILE.`);
+      try {
+        await aggiornaDopoAnnullamento(venditaDaAnnullare.codicePP);
+      } catch (error) {
+        setMessaggioAnnullamento(`${venditaDaAnnullare.codicePP}: vendita annullata. ${error instanceof Error ? error.message : "Aggiorna il cruscotto."}`);
+      }
+    } catch (error) {
+      if (requestSent && !responseReceived) {
+        setAnnullamentoIncerto(true);
+        setErroreAnnullamento("Esito annullamento incerto. Chiudi e aggiorna il lotto prima di riprovare.");
+      } else setErroreAnnullamento(error instanceof Error ? error.message : "Annullamento non riuscito.");
+    } finally {
+      annullamentoBusyRef.current = false;
+      setAnnullamentoInCorso(false);
     }
   }
 
@@ -480,6 +617,8 @@ export default function LottoPage() {
         formatMoneyInput(altriCosti)
       );
 
+      // Rilegge anche il cruscotto calcolato sul costo appena salvato.
+      await loadPage();
       setMessaggioCosti(
         "Costi salvati su Shopify."
       );
@@ -499,11 +638,60 @@ export default function LottoPage() {
     }
   }
 
+  async function salvaListinoLotto() {
+    if (!lotto || salvataggioListino) return;
+
+    setMessaggioListino("");
+    setErroreListino("");
+
+    try {
+      const percentuali = {
+        percentualeNuovo: parseListinoPercentage(percentualeNuovoInput, "NUOVO"),
+        percentualeGradoA: parseListinoPercentage(percentualeGradoAInput, "A"),
+        percentualeGradoB: parseListinoPercentage(percentualeGradoBInput, "B"),
+        percentualeGradoC: parseListinoPercentage(percentualeGradoCInput, "C"),
+        percentualeGradoN: parseListinoPercentage(percentualeGradoNInput, "N"),
+      };
+
+      setSalvataggioListino(true);
+
+      const response = await fetch("/api/poporama/lotti", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ handle: lotto.handle, ...percentuali }),
+      });
+      const data = await response.json();
+
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error || "Impossibile salvare il listino del lotto.");
+      }
+
+      setLotto((current) =>
+        current && current.handle === lotto.handle
+          ? { ...current, ...percentuali }
+          : current
+      );
+      setMessaggioListino("LISTINO SALVATO");
+    } catch (err) {
+      setErroreListino(
+        err instanceof Error
+          ? err.message
+          : "Errore durante il salvataggio del listino."
+      );
+    } finally {
+      setSalvataggioListino(false);
+    }
+  }
+
   /*
    * ==========================================================
    * FILTRI ARTICOLI
    * ==========================================================
    */
+
+  const hasLegacyD = articoli.some(
+    (articolo) => normalizeGrade(articolo.grado) === "D"
+  );
 
   const articoliFiltrati =
     useMemo(() => {
@@ -862,11 +1050,124 @@ export default function LottoPage() {
           </p>
         </header>
 
+        {messaggioAnnullamento ? <p role="status" className="mt-6 rounded-xl border border-emerald-700 bg-emerald-950/30 p-4 text-emerald-300">{messaggioAnnullamento}</p> : null}
+        {venditaDaAnnullare ? (
+          <dialog ref={annullamentoDialogRef} aria-labelledby="annulla-vendita-title"
+            onCancel={(event) => { event.preventDefault(); if (!annullamentoBusyRef.current) setVenditaDaAnnullare(null); }}
+            className="w-[calc(100%_-_2rem)] max-w-lg rounded-3xl border border-zinc-700 bg-zinc-900 p-6 text-white backdrop:bg-black/80 sm:p-8">
+            <h2 id="annulla-vendita-title" className="text-xl font-black text-yellow-400">ANNULLA VENDITA?</h2>
+            <p className="mt-5 font-black">{venditaDaAnnullare.codicePP}</p>
+            <p className="mt-2 break-words">{venditaDaAnnullare.nomeProdotto || "Articolo POPORAMA"}</p>
+            <p className="mt-4">Prezzo vendita: {formatCurrency(venditaDaAnnullare.prezzoVendita)}</p>
+            <p className="mt-2">Data vendita: {formatSaleDate(venditaDaAnnullare.dataVendita)}</p>
+            <p className="mt-4 text-amber-300">Questa operazione rimuoverà la vendita dal cruscotto.</p>
+            {erroreAnnullamento ? <p role="alert" className="mt-4 text-red-300">{erroreAnnullamento}</p> : null}
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+              <button type="button" autoFocus disabled={annullamentoInCorso} onClick={() => setVenditaDaAnnullare(null)}
+                className="flex-1 rounded-xl border border-zinc-600 px-5 py-4 font-black disabled:opacity-50">ANNULLA</button>
+              <button type="button" disabled={annullamentoInCorso || annullamentoIncerto} onClick={confermaAnnullamento}
+                className="flex-1 rounded-xl bg-yellow-400 px-5 py-4 font-black text-black disabled:opacity-50">
+                {annullamentoInCorso ? "ANNULLAMENTO..." : "CONFERMA"}
+              </button>
+            </div>
+          </dialog>
+        ) : null}
+
+        <section aria-labelledby="andamento-vendite" className="mt-8 rounded-3xl border border-yellow-500/40 bg-zinc-900 p-6 sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 id="andamento-vendite" className="text-xl font-black text-yellow-400">ANDAMENTO VENDITE</h2>
+              <p className="mt-2 text-sm text-zinc-400">Dati del lotto aggiornati da articoli e vendite registrate. Gli incassi usano il prezzo di vendita reale.</p>
+            </div>
+            <button type="button" onClick={loadPage} className="shrink-0 rounded-xl border border-zinc-700 bg-zinc-950 px-5 py-3 text-sm font-black transition hover:border-yellow-400">
+              ↻ AGGIORNA
+            </button>
+          </div>
+          {economia ? (
+            <>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <MoneyCard label="INVESTIMENTO TOTALE" value={economia.investimentoTotale} />
+                <StatCard label="PEZZI TOTALI" value={String(statistiche.totale)} />
+                <StatCard label="PEZZI VENDUTI" value={String(statistiche.venduti)} accent="green" />
+                <StatCard label="PEZZI DISPONIBILI" value={String(statistiche.disponibili)} />
+                <PercentageCard label="% ARTICOLI VENDUTI" value={economia.percentualeVenduta} />
+                <MoneyCard label="INCASSO REALE" value={economia.incassoReale} important />
+                <StatCard label="% INVESTIMENTO RECUPERATO" value={economia.percentualeRecuperata === null ? "—" : formatPercentage(economia.percentualeRecuperata)} accent="yellow" />
+                <MoneyCard label="RESIDUO DA RECUPERARE" value={economia.residuoDaRecuperare} />
+                <MoneyCard label="SUPERATO BREAK-EVEN" value={economia.sopraBreakEven} />
+              </div>
+              {economia.percentualeRecuperata === null ? <p className="mt-3 text-sm text-zinc-400">Percentuale recuperata non calcolabile con investimento pari a zero.</p> : null}
+              <p className="mt-4 text-sm text-zinc-400">Il recupero investimento confronta l’incasso lordo con il costo del lotto; non rappresenta un utile netto.</p>
+
+              <h3 className="mt-8 font-black">IVA SULLE VENDITE</h3>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <MoneyCard label="INCASSO LORDO IVA INCLUSA" value={economia.iva.incassoLordo} />
+                {[
+                  { label: "IMPONIBILE", value: economia.iva.imponibile },
+                  { label: "IVA", value: economia.iva.importo },
+                  { label: "INCASSO NETTO IVA", value: economia.iva.incassoNetto },
+                ].map(({ label, value }) => <StatCard key={label} label={label} value={value === null ? "—" : formatCurrency(value)} />)}
+              </div>
+              {economia.iva.aliquota === null ? <p className="mt-3 text-sm text-zinc-400">Aliquota IVA da configurare: imponibile, IVA e incasso netto IVA non ancora calcolati.</p> : null}
+
+              <h3 className="mt-8 font-black">STOCK E RISULTATI POTENZIALI</h3>
+              <p className="mt-2 text-sm text-zinc-400">Valori teorici dello stock non venduto, non incassi o utili già realizzati.</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <MoneyCard label="VALORE POPORAMA DISPONIBILE" value={economia.valorePoporamaDisponibile} />
+                <MoneyCard label="POTENZIALE TOTALE LOTTO" value={economia.potenzialeTotale} />
+                <MoneyCard label="RISULTATO POTENZIALE" value={economia.risultatoPotenziale} />
+              </div>
+              <h3 className="mt-8 font-black">CLASSIFICAZIONI DISPONIBILI</h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {(["NEW", "A", "B", "C", "N", ...(hasLegacyD ? ["D"] : [])] as GradoArticolo[]).map((grade) => (
+                  <GradeStat key={grade} grade={grade} label={grade === "N" ? "Non testati disponibili" : "Pezzi disponibili"} value={economia.gradiDisponibili[grade]} />
+                ))}
+              </div>
+            </>
+          ) : <p className="mt-4 text-zinc-400">Dati economici non disponibili. Aggiorna il lotto.</p>}
+        </section>
+
+        <section aria-labelledby="vendite-lotto" className="mt-6 overflow-hidden rounded-3xl border border-zinc-800 bg-zinc-900">
+          <div className="p-6 sm:p-8">
+            <h2 id="vendite-lotto" className="text-xl font-black">VENDITE DEL LOTTO</h2>
+            <p className="mt-2 text-sm text-zinc-400">Dalla vendita più recente. Orari Europe/Rome; vendite senza data valida in fondo.</p>
+          </div>
+          {vendite.length === 0 ? (
+            <p className="px-6 pb-8 text-zinc-400 sm:px-8">Nessuna vendita registrata per questo lotto.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-left text-sm">
+                <thead className="bg-zinc-950 text-xs uppercase text-zinc-400">
+                  <tr>{["Codice PP", "Nome prodotto", "Grado", "Prezzo POPORAMA previsto", "Prezzo vendita reale", "Data/ora vendita", "Azioni"].map((label) => <th key={label} scope="col" className="px-5 py-4">{label}</th>)}</tr>
+                </thead>
+                <tbody>
+                  {vendite.map((vendita) => (
+                    <tr key={vendita.id} className="border-t border-zinc-800">
+                      <td className="whitespace-nowrap px-5 py-4 font-black text-yellow-400">{vendita.codicePP}</td>
+                      <td className="px-5 py-4">{vendita.nomeProdotto || "Articolo POPORAMA"}</td>
+                      <td className="px-5 py-4"><GradeBadge grade={vendita.grado} /></td>
+                      <td className="whitespace-nowrap px-5 py-4 text-zinc-400">{formatCurrency(vendita.prezzoPoporama)}</td>
+                      <td className="whitespace-nowrap px-5 py-4 font-black text-emerald-400">{formatCurrency(vendita.prezzoVendita)}</td>
+                      <td className="whitespace-nowrap px-5 py-4">{formatSaleDate(vendita.dataVendita)}</td>
+                      <td className="px-5 py-4">
+                        <button type="button" onClick={() => preparaAnnullamento(vendita)} disabled={annullamentoInCorso}
+                          className="rounded-xl border border-yellow-500/50 px-4 py-3 text-xs font-black text-yellow-400 disabled:opacity-50">
+                          RIPORTA A DISPONIBILE
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+
         {/* ===================================================
             STATISTICHE PRINCIPALI
         =================================================== */}
 
-        <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+        <section className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <StatCard
             label="Pezzi dichiarati"
             value={String(
@@ -882,7 +1183,7 @@ export default function LottoPage() {
           />
 
           <StatCard
-            label="Da testare"
+            label="Non testati"
             value={String(
               statistiche.nonTestati
             )}
@@ -895,6 +1196,17 @@ export default function LottoPage() {
               statistiche.testati
             )}
             accent="green"
+          />
+
+          <StatCard
+            label="NUOVO"
+            value={String(statistiche.nuovi)}
+            accent="blue"
+          />
+
+          <StatCard
+            label="Classificati"
+            value={String(statistiche.classificati)}
           />
 
           <StatCard
@@ -917,7 +1229,17 @@ export default function LottoPage() {
             GRADI
         =================================================== */}
 
-        <section className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <p className="mt-4 text-sm text-zinc-400">
+          Classificati: NUOVO + A + B + C + D (LEGACY). Testati: A + B + C + D (LEGACY).
+          N indica esclusivamente gli articoli non testati.
+        </p>
+
+        <section className={`mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 ${hasLegacyD ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}>
+          <GradeStat
+            grade="NEW"
+            label="Prodotto nuovo"
+            value={statistiche.gradi.NEW}
+          />
           <GradeStat
             grade="N"
             label="Non testati"
@@ -950,13 +1272,13 @@ export default function LottoPage() {
             }
           />
 
-          <GradeStat
-            grade="D"
-            label="Grado D"
-            value={
-              statistiche.gradi.D
-            }
-          />
+          {hasLegacyD ? (
+            <GradeStat
+              grade="D"
+              label="Classificazione legacy"
+              value={statistiche.gradi.D}
+            />
+          ) : null}
         </section>
 
         {/* ===================================================
@@ -1140,6 +1462,86 @@ export default function LottoPage() {
           </div>
         </section>
 
+        <section
+          aria-labelledby="listino-lotto-title"
+          aria-busy={salvataggioListino}
+          className="mt-6 rounded-3xl border border-yellow-500/40 bg-zinc-900 p-6 sm:p-8"
+        >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 id="listino-lotto-title" className="text-xl font-black text-yellow-400">
+                LISTINO DEL LOTTO
+              </h2>
+              <p className="mt-2 text-sm text-zinc-400">
+                Percentuale del retail utilizzata per calcolare il prezzo POPORAMA
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={salvaListinoLotto}
+              disabled={salvataggioListino}
+              className="shrink-0 rounded-xl bg-yellow-400 px-5 py-3 text-sm font-black text-black transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {salvataggioListino ? "SALVATAGGIO..." : "SALVA LISTINO"}
+            </button>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {[
+              { label: "NUOVO", value: percentualeNuovoInput, setValue: setPercentualeNuovoInput },
+              { label: "A", value: percentualeGradoAInput, setValue: setPercentualeGradoAInput },
+              { label: "B", value: percentualeGradoBInput, setValue: setPercentualeGradoBInput },
+              { label: "C", value: percentualeGradoCInput, setValue: setPercentualeGradoCInput },
+              { label: "N", value: percentualeGradoNInput, setValue: setPercentualeGradoNInput },
+            ].map(({ label, value, setValue }) => (
+              <label key={label} className="block min-w-0 rounded-2xl border border-zinc-800 bg-zinc-950 p-5">
+                <span className="text-xs font-black uppercase tracking-wider text-zinc-400">
+                  {label}
+                </span>
+                <span className="mt-3 flex items-center gap-2">
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    required
+                    value={value}
+                    disabled={salvataggioListino}
+                    aria-describedby="listino-lotto-help"
+                    onChange={(event) => {
+                      setValue(event.target.value);
+                      setMessaggioListino("");
+                      setErroreListino("");
+                    }}
+                    className="min-w-0 flex-1 rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-lg font-black text-white outline-none transition focus:border-yellow-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <span className="font-black text-yellow-400">%</span>
+                </span>
+              </label>
+            ))}
+          </div>
+
+          <p id="listino-lotto-help" className="mt-4 text-xs text-zinc-400">
+            Valori obbligatori da 0 a 100, con massimo 2 decimali. Puoi usare la virgola o il punto.
+          </p>
+          <div className="mt-4 space-y-1 text-sm text-zinc-400">
+            <p>NUOVO = prodotto nuovo</p>
+            <p>A = migliore condizione tra i resi testati</p>
+            <p>B = funzionante con incompletezze</p>
+            <p>C = funzionante con difetto dichiarato</p>
+            <p>N = non testato</p>
+          </div>
+
+          {erroreListino ? (
+            <p role="alert" className="mt-4 rounded-xl border border-red-800 bg-red-950/30 px-4 py-3 text-sm font-bold text-red-200">
+              {erroreListino}
+            </p>
+          ) : null}
+          {messaggioListino ? (
+            <p role="status" className="mt-4 rounded-xl border border-emerald-700 bg-emerald-950/30 px-4 py-3 text-sm font-bold text-emerald-300">
+              {messaggioListino}
+            </p>
+          ) : null}
+        </section>
+
         {/* ===================================================
             ARTICOLI DEL LOTTO
         =================================================== */}
@@ -1215,6 +1617,10 @@ export default function LottoPage() {
                     Tutti i gradi
                   </option>
 
+                  <option value="NEW">
+                    NUOVO
+                  </option>
+
                   <option value="N">
                     N — Non testato
                   </option>
@@ -1231,9 +1637,11 @@ export default function LottoPage() {
                     C
                   </option>
 
-                  <option value="D">
-                    D
-                  </option>
+                  {hasLegacyD ? (
+                    <option value="D">
+                      D (LEGACY)
+                    </option>
+                  ) : null}
                 </select>
               </div>
 
@@ -1959,6 +2367,10 @@ function GradeBadge({
   let classes =
     "border-zinc-600 bg-zinc-800 text-zinc-200";
 
+  if (normalized === "NEW") {
+    classes = "border-violet-500/40 bg-violet-500/10 text-violet-300";
+  }
+
   if (
     normalized === "A"
   ) {
@@ -1998,7 +2410,7 @@ function GradeBadge({
     <span
       className={`inline-flex min-w-9 items-center justify-center rounded-lg border px-2.5 py-1 text-xs font-black ${classes}`}
     >
-      {normalized}
+      {normalized === "NEW" ? "NUOVO" : normalized === "D" ? "D (LEGACY)" : normalized}
     </span>
   );
 }
@@ -2254,13 +2666,14 @@ function formatLabelDate(
 
 function normalizeGrade(
   value: string
-) {
+): GradoArticolo {
   const grade =
     String(value || "")
       .trim()
       .toUpperCase();
 
   if (
+    grade === "NEW" ||
     grade === "A" ||
     grade === "B" ||
     grade === "C" ||
@@ -2288,6 +2701,25 @@ function normalizeSaleStatus(
   }
 
   return "DISPONIBILE";
+}
+
+function parseListinoPercentage(value: string, label: string) {
+  const normalized = value.trim().replace(",", ".");
+  if (!normalized) {
+    throw new Error(`Inserisci la percentuale per ${label}.`);
+  }
+
+  const number = Number(normalized);
+  if (
+    !/^\d+(?:\.\d{1,2})?$/.test(normalized) ||
+    !Number.isFinite(number) ||
+    number < 0 ||
+    number > 100
+  ) {
+    throw new Error(`${label}: inserisci una percentuale tra 0 e 100 con massimo 2 decimali.`);
+  }
+
+  return number;
 }
 
 function parseMoneyInput(
@@ -2385,4 +2817,13 @@ function formatDate(
   }
 
   return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+function formatSaleDate(value: string) {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${formatDate(value)} (orario non registrato)`;
+  const date = new Date(value);
+  if (!value || Number.isNaN(date.getTime())) return "Data non disponibile";
+  return new Intl.DateTimeFormat("it-IT", {
+    dateStyle: "short", timeStyle: "short", timeZone: "Europe/Rome",
+  }).format(date);
 }

@@ -8,6 +8,7 @@ import {
 import QRCode from "qrcode";
 
 export type Grade =
+  | "NEW"
   | "A"
   | "B"
   | "C"
@@ -309,13 +310,15 @@ async function addPoporamaLabelPage(
     black
   );
 
-  drawCenteredText(
+  drawCenteredTextFit(
     page,
-    data.grade,
+    data.grade === "NEW" ? "NUOVO" : data.grade,
     y - 76,
     61,
+    24,
     boldFont,
-    black
+    black,
+    A6_WIDTH - margin * 2 - 12
   );
 
   drawCenteredTextFit(
@@ -685,9 +688,11 @@ async function addPoporamaLabelPage(
   y -= 11;
 
   const dateLabel =
-    data.grade === "N"
-      ? "Registrato"
-      : "Test";
+    data.grade === "NEW"
+      ? "Classificato"
+      : data.grade === "N"
+        ? "Registrato"
+        : "Test";
 
   page.drawText(
     `${dateLabel}: ${
@@ -803,9 +808,11 @@ async function addPoporamaLabelPage(
   // ==========================================================
 
   page.drawText(
-    data.grade === "N"
-      ? "Articolo registrato POPORAMA - non ancora testato"
-      : "Prodotto controllato e classificato da POPORAMA",
+    data.grade === "NEW"
+      ? "Prodotto classificato come NUOVO da POPORAMA"
+      : data.grade === "N"
+        ? "Articolo registrato POPORAMA - non ancora testato"
+        : "Prodotto controllato e classificato da POPORAMA",
     {
       x: margin,
       y: 9,
@@ -1312,6 +1319,9 @@ function getGradeDescription(
   grade: Grade
 ) {
   switch (grade) {
+    case "NEW":
+      return "PRODOTTO NUOVO";
+
     case "A":
       return "TESTATO - PIENAMENTE FUNZIONANTE";
 
@@ -1365,7 +1375,7 @@ function createFileName(
     clean(
       data.model
     ),
-    `GRADO-${data.grade}`,
+    `GRADO-${data.grade === "NEW" ? "NUOVO" : data.grade}`,
   ]
     .filter(Boolean)
     .join("_")

@@ -1,8 +1,11 @@
+import { requirePoporamaSession } from "@/app/lib/poporama-auth";
  import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const shop = process.env.SHOPIFY_SHOP;
     const clientId = process.env.SHOPIFY_CLIENT_ID;

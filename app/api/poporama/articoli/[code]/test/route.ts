@@ -1,3 +1,4 @@
+import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import {
   NextRequest,
   NextResponse,
@@ -33,17 +34,20 @@ type RouteContext = {
   };
 };
 
-type Grade =
-  | "A"
-  | "B"
-  | "C"
-  | "D";
+type Grade = "NEW" | "A" | "B" | "C" | "N";
+
+const LOTTO_PERCENTAGE_FIELDS: Record<Grade, string> = {
+  NEW: "percentuale_nuovo",
+  A: "percentuale_grado_a",
+  B: "percentuale_grado_b",
+  C: "percentuale_grado_c",
+  N: "percentuale_grado_n",
+};
+
+class PricingError extends Error {}
 
 type TestPayload = {
   grado?: string;
-
-  percentualePrezzo?: number;
-  prezzoPoporama?: number;
 
   condizioneEstetica?: string;
   accessoriMancanti?: string;
@@ -72,6 +76,8 @@ export async function GET(
   _request: NextRequest,
   context: RouteContext
 ) {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const codicePP =
       normalizePPCode(
@@ -113,8 +119,20 @@ export async function GET(
       );
     }
 
+    let listino: Record<Grade, number | null> | null = null;
+    let erroreListino = "";
+    try {
+      listino = await getLottoListino(accessToken, articolo);
+      getRetailForPricing(articolo);
+    } catch (error) {
+      if (!(error instanceof PricingError)) throw error;
+      erroreListino = error.message;
+    }
+
     return NextResponse.json({
       ok: true,
+      listino,
+      erroreListino,
       articolo:
         normalizeArticolo(
           articolo
@@ -157,6 +175,8 @@ export async function PATCH(
   request: NextRequest,
   context: RouteContext
 ) {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const codicePP =
       normalizePPCode(
@@ -198,8 +218,7 @@ export async function PATCH(
      * --------------------------------------------------------
      * GRADO
      *
-     * Un articolo sottoposto a test deve passare da N
-     * a uno dei gradi operativi A/B/C/D.
+     * Classificazioni operative NEW/A/B/C/N. D resta solo leggibile.
      * --------------------------------------------------------
      */
 
@@ -213,62 +232,7 @@ export async function PATCH(
         {
           ok: false,
           error:
-            "Seleziona un grado valido: A, B, C oppure D.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    /*
-     * --------------------------------------------------------
-     * PERCENTUALE
-     * --------------------------------------------------------
-     */
-
-    const percentualePrezzo =
-      normalizeNumber(
-        body.percentualePrezzo
-      );
-
-    if (
-      percentualePrezzo === null ||
-      percentualePrezzo < 0 ||
-      percentualePrezzo > 100
-    ) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Percentuale prezzo non valida.",
-        },
-        {
-          status: 400,
-        }
-      );
-    }
-
-    /*
-     * --------------------------------------------------------
-     * PREZZO POPORAMA
-     * --------------------------------------------------------
-     */
-
-    const prezzoPoporama =
-      normalizeNumber(
-        body.prezzoPoporama
-      );
-
-    if (
-      prezzoPoporama === null ||
-      prezzoPoporama < 0
-    ) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Prezzo POPORAMA non valido.",
+            "Seleziona un grado valido: NUOVO, A, B, C oppure N. D è solo legacy.",
         },
         {
           status: 400,
@@ -337,6 +301,19 @@ export async function PATCH(
       );
     }
 
+    // La percentuale e il retail provengono esclusivamente da Shopify.
+    const listino = await getLottoListino(accessToken, articolo);
+    const percentualePrezzo = listino[grado];
+    if (percentualePrezzo === null) {
+      throw new PricingError(`Percentuale del lotto non valida per ${grado === "NEW" ? "NUOVO" : grado}. Configura il listino del lotto.`);
+    }
+    const retail = getRetailForPricing(articolo);
+    const prezzoPoporama = roundMoney(retail * percentualePrezzo / 100);
+    if (!Number.isFinite(prezzoPoporama)) {
+      throw new PricingError("Retail non valido per il calcolo del prezzo POPORAMA.");
+    }
+    const isTechnicalTest = grado === "A" || grado === "B" || grado === "C";
+
     /*
      * --------------------------------------------------------
      * DATA TEST
@@ -346,11 +323,9 @@ export async function PATCH(
      * --------------------------------------------------------
      */
 
-    const dataTest =
-      normalizeDate(
-        body.dataTest
-      ) ||
-      getTodayDate();
+    const dataTest = isTechnicalTest
+      ? normalizeDate(body.dataTest) || getTodayDate()
+      : "";
 
     /*
      * --------------------------------------------------------
@@ -442,9 +417,7 @@ export async function PATCH(
         key:
           "testato_da",
         value:
-          cleanText(
-            body.testatoDa
-          ),
+          isTechnicalTest ? cleanText(body.testatoDa) : "",
       },
 
       {
@@ -481,6 +454,7 @@ export async function PATCH(
     return NextResponse.json({
       ok: true,
 
+      listino,
       message:
         `${codicePP} aggiornato correttamente.`,
 
@@ -490,6 +464,9 @@ export async function PATCH(
         ),
     });
   } catch (error) {
+    if (error instanceof PricingError) {
+      return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    }
     console.error(
       "Errore PATCH test articolo POPORAMA:",
       error
@@ -875,6 +852,12 @@ async function updateArticolo(
 function normalizeArticolo(
   articolo: ShopifyMetaobject
 ) {
+  let retail = 0;
+  try {
+    retail = getRetailForPricing(articolo);
+  } catch {
+    // La GET mantiene leggibile l'articolo e segnala il problema in erroreListino.
+  }
   return {
     id:
       articolo.id,
@@ -954,13 +937,7 @@ function normalizeArticolo(
         "sottocategoria"
       ),
 
-    retail:
-      parseShopifyMoney(
-        getFieldValue(
-          articolo,
-          "retail"
-        )
-      ),
+    retail,
 
     costoManifest:
       parseShopifyMoney(
@@ -1136,7 +1113,8 @@ function normalizeTestGrade(
     grade === "A" ||
     grade === "B" ||
     grade === "C" ||
-    grade === "D"
+    grade === "NEW" ||
+    grade === "N"
   ) {
     return grade;
   }
@@ -1163,6 +1141,7 @@ function normalizeExistingGrade(
     grade === "B" ||
     grade === "C" ||
     grade === "D" ||
+    grade === "NEW" ||
     grade === "N"
   ) {
     return grade;
@@ -1200,34 +1179,51 @@ function normalizeSaleStatus(
  * ============================================================
  */
 
-function normalizeNumber(
-  value: unknown
-) {
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
-    return null;
+async function getLottoListino(accessToken: string, articolo: ShopifyMetaobject) {
+  const lottoId = getFieldValue(articolo, "lotto").trim();
+  if (!lottoId) throw new PricingError("L'articolo non ha un lotto associato.");
+
+  const data = await shopifyGraphQL(accessToken, `
+    query GetListinoLotto($id: ID!) {
+      metaobject(id: $id) {
+        id
+        type
+        fields { key value }
+      }
+    }
+  `, { id: lottoId });
+  const lotto = data.data?.metaobject as ShopifyMetaobject | null;
+  if (!lotto || lotto.type !== "poporama_lotto") {
+    throw new PricingError("Il lotto associato all'articolo non esiste o non è un lotto POPORAMA.");
   }
 
-  const number =
-    typeof value === "number"
-      ? value
-      : Number(
-          String(value)
-            .trim()
-            .replace(",", ".")
-        );
-
-  if (
-    !Number.isFinite(
-      number
-    )
-  ) {
-    return null;
+  const listino = {} as Record<Grade, number | null>;
+  for (const grado of Object.keys(LOTTO_PERCENTAGE_FIELDS) as Grade[]) {
+    const raw = getFieldValue(lotto, LOTTO_PERCENTAGE_FIELDS[grado]).trim().replace(",", ".");
+    const value = Number(raw);
+    listino[grado] = /^\d+(?:\.\d{1,2})?$/.test(raw) &&
+      Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
   }
+  return listino;
+}
 
+function getRetailForPricing(articolo: ShopifyMetaobject) {
+  const raw = getFieldValue(articolo, "retail").trim();
+  let amount: unknown = raw;
+  try {
+    const parsed = JSON.parse(raw);
+    amount = parsed !== null && typeof parsed === "object" ? parsed.amount : parsed;
+  } catch {
+    // Compatibilità con importi numerici non JSON, anche con virgola.
+  }
+  const normalized = typeof amount === "string" ? amount.trim().replace(",", ".") : amount;
+  const number = Number(normalized);
+  if (
+    (typeof normalized !== "string" && typeof normalized !== "number") ||
+    normalized === "" || !Number.isFinite(number) || number < 0
+  ) {
+    throw new PricingError("Retail dell'articolo non valido: impossibile calcolare il prezzo POPORAMA.");
+  }
   return number;
 }
 

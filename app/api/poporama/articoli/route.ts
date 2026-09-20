@@ -1,3 +1,4 @@
+import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import {
   NextRequest,
   NextResponse,
@@ -214,6 +215,8 @@ async function shopifyGraphQL(
 export async function GET(
   request: NextRequest
 ) {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const accessToken =
       await getShopifyAccessToken();
@@ -502,6 +505,8 @@ export async function GET(
 export async function POST(
   request: NextRequest
 ) {
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
   try {
     const body =
       (await request.json()) as ArticoloBody;

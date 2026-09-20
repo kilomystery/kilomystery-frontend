@@ -1,49 +1,9 @@
+import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 
 export const dynamic = "force-dynamic";
 
 const SUMUP_BASE_URL = "https://api.sumup.com";
-const COOKIE_NAME = "poporama_cassa_session";
-
-function sessionSecret() {
-  const pin = process.env.POPORAMA_CASSA_PIN;
-  const shopifySecret = process.env.SHOPIFY_CLIENT_SECRET;
-
-  if (!pin || !shopifySecret) {
-    throw new Error("Configurazione sessione Cassa POPORAMA incompleta.");
-  }
-
-  return crypto
-    .createHash("sha256")
-    .update(`${shopifySecret}:${pin}:poporama-cassa`)
-    .digest();
-}
-
-function isAuthenticated(request: NextRequest) {
-  try {
-    const value = request.cookies.get(COOKIE_NAME)?.value || "";
-    const [expiresRaw, signature] = value.split(".");
-    const expiresAt = Number(expiresRaw);
-
-    if (!expiresAt || !signature || Date.now() > expiresAt) {
-      return false;
-    }
-
-    const expected = crypto
-      .createHmac("sha256", sessionSecret())
-      .update(expiresRaw)
-      .digest("hex");
-
-    const a = Buffer.from(signature, "hex");
-    const b = Buffer.from(expected, "hex");
-
-    return a.length === b.length && crypto.timingSafeEqual(a, b);
-  } catch {
-    return false;
-  }
-}
-
 function getApiKey() {
   const apiKey = process.env.SUMUP_API_KEY;
 
@@ -119,12 +79,8 @@ async function listReaders(merchantCode: string) {
 }
 
 export async function GET(request: NextRequest) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json(
-      { ok: false, authenticated: false, error: "Sessione cassa non autorizzata." },
-      { status: 401 }
-    );
-  }
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
 
   try {
     const merchantCode = await getMerchantCode();
@@ -164,12 +120,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAuthenticated(request)) {
-    return NextResponse.json(
-      { ok: false, authenticated: false, error: "Sessione cassa non autorizzata." },
-      { status: 401 }
-    );
-  }
+  const unauthorized = await requirePoporamaSession();
+  if (unauthorized) return unauthorized;
 
   try {
     const body = await request.json();
