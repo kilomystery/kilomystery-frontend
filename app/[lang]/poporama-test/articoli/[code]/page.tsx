@@ -180,7 +180,7 @@ export default function SchedaArticoloPage() {
     ) === "VENDUTO";
 
   const testato =
-    grade !== "N";
+    grade !== "N" && grade !== "NEW";
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white">
@@ -218,7 +218,7 @@ export default function SchedaArticoloPage() {
 
                 <div className="mt-5 flex flex-wrap gap-2">
                   <Badge>
-                    GRADO {grade}
+                    GRADO {displayGrade(grade)}
                   </Badge>
 
                   <Badge>
@@ -230,7 +230,7 @@ export default function SchedaArticoloPage() {
                   <Badge>
                     {testato
                       ? "TESTATO"
-                      : "NON TESTATO"}
+                      : grade === "NEW" ? "NUOVO" : "NON TESTATO"}
                   </Badge>
                 </div>
               </div>
@@ -269,10 +269,14 @@ export default function SchedaArticoloPage() {
                 Il grado definitivo verrà assegnato dopo il test POPORAMA.
               </p>
             </div>
+          ) : grade === "NEW" ? (
+            <div className="border-b border-zinc-800 bg-violet-950/20 px-6 py-4 sm:px-8">
+              <p className="font-black text-violet-300">PRODOTTO NUOVO</p>
+            </div>
           ) : (
             <div className="border-b border-zinc-800 bg-emerald-950/20 px-6 py-4 sm:px-8">
               <p className="font-black text-emerald-300">
-                ARTICOLO TESTATO • GRADO {grade}
+                ARTICOLO TESTATO • GRADO {displayGrade(grade)}
               </p>
 
               {articolo.dataTest ? (
@@ -682,6 +686,7 @@ function normalizeGrade(
       .toUpperCase();
 
   if (
+    grade === "NEW" ||
     grade === "A" ||
     grade === "B" ||
     grade === "C" ||
@@ -760,4 +765,8 @@ function formatDate(
       year: "numeric",
     }
   ).format(date);
+}
+
+function displayGrade(grade: string) {
+  return grade === "NEW" ? "NUOVO" : grade === "C" ? "C — NON FUNZIONANTE" : grade === "D" ? "D (LEGACY)" : grade;
 }

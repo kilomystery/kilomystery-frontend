@@ -5,6 +5,7 @@ import {
   useMemo,
   useState,
 } from "react";
+import { formatPPCode as formatPP } from "@/app/lib/poporama-pp";
 import { useParams } from "next/navigation";
 
 type ManifestRow = Record<string, string>;
@@ -15,6 +16,9 @@ type ParsedManifest = {
 };
 
 type NumberingResponse = {
+  from?: number;
+  to?: number;
+  ppReservation?: string;
   ok: boolean;
   totaleArticoli?: number;
   ultimoNumeroPP?: number;
@@ -46,6 +50,7 @@ type ImportStatus =
   | "error";
 
 type SavedImportPlan = {
+  ppReservation?: string;
   handle: string;
   fileName: string;
   fileSize: number;
@@ -74,6 +79,8 @@ export default function ImportaManifestPage() {
     typeof params.handle === "string"
       ? params.handle
       : "";
+
+  const [ppReservation, setPPReservation] = useState("");
 
   const [fileName, setFileName] =
     useState("");
@@ -381,6 +388,7 @@ export default function ImportaManifestPage() {
     setImportStatus("idle");
 
     setFirstPPNumber(null);
+    setPPReservation("");
 
     setFirstPPCode("");
 
@@ -422,7 +430,8 @@ export default function ImportaManifestPage() {
   }
 
   function saveImportPlan(
-    start: number
+    start: number,
+    reservation: string
   ) {
     if (
       !manifest ||
@@ -444,6 +453,7 @@ export default function ImportaManifestPage() {
 
         firstPPNumber:
           start,
+        ppReservation: reservation,
 
         totalRows:
           manifest.rows.length,
@@ -557,6 +567,8 @@ export default function ImportaManifestPage() {
 
       const start =
         plan.firstPPNumber;
+      if (!Number.isSafeInteger(start) || start < 1) throw new Error("Piano di import non valido.");
+      setPPReservation(plan.ppReservation || "");
 
       const end =
         start +
@@ -569,7 +581,7 @@ export default function ImportaManifestPage() {
 
       const response =
         await fetch(
-          `/api/poporama/articoli?from=${start}&to=${end}`,
+          `/api/poporama/articoli?from=${start}&to=${end}&lottoHandle=${encodeURIComponent(handle)}`,
           {
             method: "GET",
             cache:
@@ -674,40 +686,8 @@ export default function ImportaManifestPage() {
         )
       );
 
-      if (
-        existing.size >=
-        parsed.rows.length
-      ) {
-        setImportStatus(
-          "completed"
-        );
-
-        setProcessedCount(
-          parsed.rows.length
-        );
-
-        setRecoveryMessage(
-          `Importazione già completata: ${existing.size} articoli risultano presenti su Shopify.`
-        );
-
-        return;
-      }
-
-      setImportStatus(
-        "ready"
-      );
-
-      const nextCode =
-        formatPP(
-          start +
-            contiguous
-        );
-
-      setRecoveryMessage(
-        existing.size > 0
-          ? `Import precedente recuperato. Shopify contiene ${existing.size} PP di questo intervallo. La ripresa partirà da ${nextCode}.`
-          : "È stato trovato un piano di import precedente, ma nessun articolo dell'intervallo risulta ancora creato su Shopify."
-      );
+      setImportStatus("ready");
+      setRecoveryMessage(`Piano recuperato: ${existing.size} codici presenti nell'intervallo. Alla ripresa ogni riga verrà confrontata con l'articolo esistente prima di essere considerata completata.`);
     } catch (err) {
       console.error(
         "Errore recupero import:",
@@ -754,7 +734,9 @@ export default function ImportaManifestPage() {
         await fetch(
           "/api/poporama/articoli",
           {
-            method: "GET",
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "reservePP", lottoHandle: handle, count: manifest.rows.length }),
             cache:
               "no-store",
           }
@@ -775,8 +757,7 @@ export default function ImportaManifestPage() {
       }
 
       if (
-        typeof data.prossimoNumeroPP !==
-        "number"
+        typeof data.from !== "number" || !data.ppReservation || data.to !== data.from + manifest.rows.length - 1
       ) {
         throw new Error(
           "Shopify non ha restituito il prossimo numero PP."
@@ -784,7 +765,8 @@ export default function ImportaManifestPage() {
       }
 
       const start =
-        data.prossimoNumeroPP;
+        data.from;
+      setPPReservation(data.ppReservation);
 
       const end =
         start +
@@ -826,7 +808,7 @@ export default function ImportaManifestPage() {
        */
 
       saveImportPlan(
-        start
+        start, data.ppReservation
       );
 
       setImportStatus(
@@ -866,7 +848,7 @@ export default function ImportaManifestPage() {
 
     const confirmed =
       window.confirm(
-        `Stai per importare ${manifest.rows.length} articoli POPORAMA.\n\nIntervallo:\n${firstPPCode} → ${lastPPCode}\n\nGli articoli già presenti su Shopify verranno saltati automaticamente.\n\nGrado iniziale: N\nPercentuale N: ${formatPercentage(
+        `Stai per importare ${manifest.rows.length} articoli POPORAMA.\n\nIntervallo:\n${firstPPCode} → ${lastPPCode}\n\nLe righe già presenti verranno verificate. Un codice occupato da un articolo diverso interrompe l’importazione.\n\nGrado iniziale: N\nPercentuale N: ${formatPercentage(
           parsePercentage(
             percentN
           )
@@ -913,7 +895,7 @@ export default function ImportaManifestPage() {
     try {
       const response =
         await fetch(
-          `/api/poporama/articoli?from=${start}&to=${end}`,
+          `/api/poporama/articoli?from=${start}&to=${end}&lottoHandle=${encodeURIComponent(handle)}`,
           {
             method: "GET",
             cache:
@@ -989,25 +971,6 @@ export default function ImportaManifestPage() {
         codicePP
       );
 
-      /*
-       * Se Shopify possiede già questo
-       * PP, NON facciamo POST.
-       */
-
-      if (
-        existing.has(
-          codicePP
-        )
-      ) {
-        processed += 1;
-
-        setProcessedCount(
-          processed
-        );
-
-        continue;
-      }
-
       const retail =
         parseMoney(
           getValue(
@@ -1039,6 +1002,7 @@ export default function ImportaManifestPage() {
           handle,
 
         codicePP,
+        ...(ppReservation ? { ppReservation } : {}),
 
         nomeProdotto:
           getValue(
@@ -1171,21 +1135,12 @@ export default function ImportaManifestPage() {
         const data =
           await response.json();
 
-        /*
-         * Se riceviamo 409 significa
-         * che Shopify possiede già
-         * quel PP.
-         *
-         * In un recupero è una
-         * condizione sicura:
-         * consideriamo la riga
-         * processata.
-         */
-
+        // Un PP esistente è recuperabile solo se il server conferma stesso
+        // lotto e dati originari della riga. Mai saltare collisioni diverse.
         if (
           response.status ===
             409 &&
-          data.duplicate
+          data.duplicate && data.matchesImportRow
         ) {
           existing.add(
             codicePP
@@ -1549,7 +1504,7 @@ export default function ImportaManifestPage() {
                 />
 
                 <PercentageField
-                  label="Grado C"
+                  label="Grado C — NON FUNZIONANTE"
                   value={percentC}
                   onChange={
                     setPercentC
@@ -2413,17 +2368,6 @@ function formatPercentage(
       }
     ).format(value) + "%"
   );
-}
-
-function formatPP(
-  numero: number
-) {
-  return `PP-${String(
-    numero
-  ).padStart(
-    6,
-    "0"
-  )}`;
 }
 
 /*

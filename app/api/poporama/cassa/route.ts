@@ -90,7 +90,7 @@ function normalizeCode(value: unknown) {
     .trim()
     .toUpperCase();
 
-  const match = raw.match(/(?:^|[^A-Z0-9_-])(PP-\d{6})(?=$|[^A-Z0-9_-])/);
+  const match = raw.match(/(?:^|[^A-Z0-9_-])(PP-\d{6,})(?=$|[^A-Z0-9_-])/);
 
   return match ? match[1] : "";
 }

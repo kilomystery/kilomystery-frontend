@@ -1526,7 +1526,7 @@ export default function LottoPage() {
             <p>NUOVO = prodotto nuovo</p>
             <p>A = migliore condizione tra i resi testati</p>
             <p>B = funzionante con incompletezze</p>
-            <p>C = funzionante con difetto dichiarato</p>
+            <p>C = testato e NON FUNZIONANTE</p>
             <p>N = non testato</p>
           </div>
 
@@ -1634,7 +1634,7 @@ export default function LottoPage() {
                   </option>
 
                   <option value="C">
-                    C
+                    C — NON FUNZIONANTE
                   </option>
 
                   {hasLegacyD ? (
@@ -2410,7 +2410,7 @@ function GradeBadge({
     <span
       className={`inline-flex min-w-9 items-center justify-center rounded-lg border px-2.5 py-1 text-xs font-black ${classes}`}
     >
-      {normalized === "NEW" ? "NUOVO" : normalized === "D" ? "D (LEGACY)" : normalized}
+      {normalized === "NEW" ? "NUOVO" : normalized === "D" ? "D (LEGACY)" : normalized === "C" ? "C — NON FUNZIONANTE" : normalized}
     </span>
   );
 }

@@ -1,4 +1,5 @@
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
+import { calculateTestPrice, parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 import {
   NextRequest,
   NextResponse,
@@ -48,6 +49,7 @@ class PricingError extends Error {}
 
 type TestPayload = {
   grado?: string;
+  percentualePrezzo?: number | string;
 
   condizioneEstetica?: string;
   accessoriMancanti?: string;
@@ -301,14 +303,21 @@ export async function PATCH(
       );
     }
 
-    // La percentuale e il retail provengono esclusivamente da Shopify.
+    // Percentuale omessa: default lotto. Valore esplicito errato: 400 (mai
+    // salvare un prezzo diverso da quello che l'operatore ha scelto).
+    const manualPercentage = body.percentualePrezzo === undefined
+      ? undefined : parseTestPercentage(body.percentualePrezzo);
+    if (manualPercentage === null) {
+      throw new PricingError("Percentuale prezzo: inserisci un numero da 0 a 100 con massimo 2 decimali (virgola o punto).");
+    }
     const listino = await getLottoListino(accessToken, articolo);
-    const percentualePrezzo = listino[grado];
+    const percentualePrezzo = manualPercentage ?? listino[grado];
     if (percentualePrezzo === null) {
       throw new PricingError(`Percentuale del lotto non valida per ${grado === "NEW" ? "NUOVO" : grado}. Configura il listino del lotto.`);
     }
     const retail = getRetailForPricing(articolo);
-    const prezzoPoporama = roundMoney(retail * percentualePrezzo / 100);
+    // Il retail è riletto da Shopify; ignoriamo qualsiasi prezzo inviato dal client.
+    const prezzoPoporama = calculateTestPrice(retail, percentualePrezzo);
     if (!Number.isFinite(prezzoPoporama)) {
       throw new PricingError("Retail non valido per il calcolo del prezzo POPORAMA.");
     }
@@ -1085,7 +1094,7 @@ function normalizePPCode(
       .toUpperCase();
 
   if (
-    !/^PP-\d{6}$/.test(
+    !/^PP-\d{6,}$/.test(
       code
     )
   ) {

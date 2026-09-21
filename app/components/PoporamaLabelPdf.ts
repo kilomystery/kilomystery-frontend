@@ -1329,10 +1329,10 @@ function getGradeDescription(
       return "TESTATO - FUNZIONANTE CON INCOMPLETEZZA";
 
     case "C":
-      return "FUNZIONANTE - DIFETTO DICHIARATO";
+      return "TESTATO - NON FUNZIONANTE";
 
     case "D":
-      return "NON FUNZIONANTE - RIPARAZIONE / RICAMBI";
+      return "LEGACY - NON FUNZIONANTE / RICAMBI";
 
     case "N":
       return "NON TESTATO";

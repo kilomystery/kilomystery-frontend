@@ -915,7 +915,7 @@ function extractPPNumber(
   codice: string
 ) {
   const match =
-    /^PP-(\d{6})$/i.exec(
+    /^PP-(\d{6,})$/i.exec(
       String(
         codice || ""
       ).trim()

@@ -1,3 +1,5 @@
+import { extractPPNumber, formatPPCode } from "@/app/lib/poporama-pp";
+import { lockPPSequence, nextPPNumber, rememberPPNumber, reservePPRange, readPPReservation } from "@/app/lib/poporama-pp-sequence";
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import {
   NextRequest,
@@ -10,6 +12,9 @@ const SHOPIFY_API_VERSION = "2026-07";
 const CURRENCY = "EUR";
 
 type ArticoloBody = {
+  action?: "reservePP";
+  count?: number;
+  ppReservation?: string;
   lottoId?: string;
   lottoHandle?: string;
 
@@ -271,6 +276,19 @@ export async function GET(
         accessToken
       );
 
+    const requestedLotto = url.searchParams.get("lottoHandle");
+    if (requestedLotto && from !== null && to !== null) {
+      const lottoId = await findLottoIdByHandle(accessToken, requestedLotto);
+      if (!lottoId) return NextResponse.json({ ok: false, error: "Lotto non trovato." }, { status: 404 });
+      const conflict = articoli.find((item) => {
+        const number = extractPPNumber(getFieldValue(item, "codice_pp"));
+        return number !== null && number >= from && number <= to && getFieldValue(item, "lotto") !== lottoId;
+      });
+      if (conflict) return NextResponse.json({ ok: false,
+        error: `${getFieldValue(conflict, "codice_pp")}: codice già assegnato a un altro lotto. Nessun articolo verrà sovrascritto.`,
+      }, { status: 409 });
+    }
+
     // --------------------------------------------------------
     // NUMERI PP REALI
     //
@@ -314,7 +332,7 @@ export async function GET(
         : 0;
 
     const prossimoNumeroPP =
-      ultimoNumeroPP + 1;
+      nextPPNumber(articoli.map((item) => getFieldValue(item, "codice_pp")));
 
     const prossimoCodicePP =
       formatPPCode(
@@ -507,26 +525,40 @@ export async function POST(
 ) {
   const unauthorized = await requirePoporamaSession();
   if (unauthorized) return unauthorized;
+  const release = await lockPPSequence();
   try {
-    const body =
-      (await request.json()) as ArticoloBody;
+    const body = await request.json().catch(() => null) as ArticoloBody | null;
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ ok: false, error: "Richiesta JSON non valida." }, { status: 400 });
+    }
+    if (body.action === "reservePP") {
+      if (!Number.isSafeInteger(body.count) || !body.count || body.count < 1) {
+        return NextResponse.json({ ok: false, error: "Numero articoli non valido." }, { status: 400 });
+      }
+      const token = await getShopifyAccessToken();
+      const lottoId = body.lottoId?.trim() || (body.lottoHandle ? await findLottoIdByHandle(token, body.lottoHandle.trim()) : "");
+      if (!lottoId) return NextResponse.json({ ok: false, error: "Lotto non trovato." }, { status: 400 });
+      const all = await getAllArticoli(token);
+      const codes = all.map((item) => getFieldValue(item, "codice_pp"));
+      const range = reservePPRange(codes, body.count, lottoId);
+      // Verifica anche handle occupati da vecchi record con codice_pp anomalo.
+      const conflict = all.some((item) => {
+        const number = extractPPNumber(item.handle);
+        return number !== null && number >= range.from && number <= range.to;
+      });
+      if (conflict) return NextResponse.json({ ok: false, error: "Range PP occupato da un handle esistente. Prepara un nuovo intervallo." }, { status: 409 });
+      return NextResponse.json({ ok: true, ...range }, { headers: { "Cache-Control": "no-store" } });
+    }
+    if (body.action !== undefined) return NextResponse.json({ ok: false, error: "Azione non valida." }, { status: 400 });
 
-    const codicePP =
-      body.codicePP?.trim();
+    let codicePP = body.codicePP?.trim().toUpperCase() || "";
 
     const nomeProdotto =
       body.nomeProdotto?.trim() ||
       "";
 
-    if (!codicePP) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            "Codice PP mancante.",
-        },
-        { status: 400 }
-      );
+    if (codicePP && (extractPPNumber(codicePP) === null || formatPPCode(extractPPNumber(codicePP)!) !== codicePP)) {
+      return NextResponse.json({ ok: false, error: "Codice PP non valido: usa almeno 6 cifre." }, { status: 400 });
     }
 
     const grado =
@@ -540,7 +572,7 @@ export async function POST(
         "A",
         "B",
         "C",
-        "D",
+        "NEW",
         "N",
       ].includes(grado)
     ) {
@@ -624,40 +656,35 @@ export async function POST(
       );
     }
 
-    // --------------------------------------------------------
-    // HANDLE ARTICOLO
-    // --------------------------------------------------------
-
-    const articoloHandle =
-      createHandleFromPP(
-        codicePP
-      );
-
-    // --------------------------------------------------------
-    // CONTROLLO DUPLICATO
-    //
-    // È utile soprattutto per retry / recupero import.
-    // --------------------------------------------------------
-
-    const articoloEsistente =
-      await findArticoloByHandle(
-        accessToken,
-        articoloHandle
-      );
-
-    if (articoloEsistente) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error:
-            `Il codice ${codicePP} esiste già in Shopify.`,
-          duplicate: true,
-          articolo:
-            articoloEsistente,
-        },
-        { status: 409 }
-      );
+    const all = await getAllArticoli(accessToken);
+    const existingCodes = all.map((item) => getFieldValue(item, "codice_pp"));
+    const reservation = body.ppReservation === undefined ? null : readPPReservation(body.ppReservation, lottoId);
+    if (body.ppReservation !== undefined && !reservation) {
+      return NextResponse.json({ ok: false, error: "Piano PP non valido. Verifica e prepara nuovamente l'importazione." }, { status: 409 });
     }
+    if (reservation) {
+      const number = extractPPNumber(codicePP);
+      if (number === null || number < reservation.from || number > reservation.to) {
+        return NextResponse.json({ ok: false, error: "Il PP non appartiene al range assegnato al lotto." }, { status: 400 });
+      }
+      rememberPPNumber(reservation.to);
+    }
+    if (!codicePP) codicePP = formatPPCode(nextPPNumber(existingCodes));
+    const articoloHandle = createHandleFromPP(codicePP);
+    const articoloEsistente = all.find((item) => item.handle.toLowerCase() === articoloHandle ||
+      extractPPNumber(getFieldValue(item, "codice_pp")) === extractPPNumber(codicePP));
+    if (articoloEsistente) {
+      return NextResponse.json({ ok: false, duplicate: true,
+        matchesImportRow: matchesImportRow(articoloEsistente, body, lottoId),
+        error: `Il codice ${codicePP} esiste già in Shopify. Nessuna modifica effettuata.`,
+        articolo: articoloEsistente,
+      }, { status: 409 });
+    }
+    const ppNumber = extractPPNumber(codicePP)!;
+    if (!reservation && ppNumber !== nextPPNumber(existingCodes)) {
+      return NextResponse.json({ ok: false, error: `Numerazione PP cambiata. Il prossimo codice è ${formatPPCode(nextPPNumber(existingCodes))}. Prepara un nuovo intervallo.` }, { status: 409 });
+    }
+    rememberPPNumber(ppNumber);
 
     // --------------------------------------------------------
     // MUTATION
@@ -918,6 +945,8 @@ export async function POST(
       },
       { status: 500 }
     );
+  } finally {
+    release();
   }
 }
 
@@ -934,6 +963,7 @@ async function getAllArticoli(
   const articoli: ShopifyMetaobject[] =
     [];
 
+  const cursors = new Set<string>();
   let hasNextPage = true;
 
   let after:
@@ -990,6 +1020,9 @@ async function getAllArticoli(
     const connection =
       data.data?.metaobjects;
 
+    if (!Array.isArray(connection?.edges) || typeof connection?.pageInfo?.hasNextPage !== "boolean") {
+      throw new Error("Lettura globale PP incompleta: nessun codice assegnato.");
+    }
     const edges:
       ShopifyMetaobjectEdge[] =
         connection?.edges ||
@@ -998,9 +1031,8 @@ async function getAllArticoli(
     for (
       const edge of edges
     ) {
-      articoli.push(
-        edge.node
-      );
+      if (!edge.node?.id || !Array.isArray(edge.node.fields)) throw new Error("Articolo Shopify incompleto.");
+      articoli.push(edge.node);
     }
 
     hasNextPage =
@@ -1016,15 +1048,16 @@ async function getAllArticoli(
 
     if (
       hasNextPage &&
-      !after
+      (!after || cursors.has(after))
     ) {
       throw new Error(
         "Paginazione Shopify non valida."
       );
     }
+    if (after) cursors.add(after);
   }
 
-  return articoli;
+  return [...new Map(articoli.map((item) => [item.id, item])).values()];
 }
 
 // ============================================================
@@ -1123,24 +1156,6 @@ async function findLottoIdByHandle(
 // ============================================================
 // TROVA ARTICOLO DA HANDLE
 // ============================================================
-
-async function findArticoloByHandle(
-  accessToken: string,
-  handle: string
-) {
-  const articoli =
-    await getAllArticoli(
-      accessToken
-    );
-
-  return (
-    articoli.find(
-      (articolo) =>
-        articolo.handle ===
-        handle
-    ) || null
-  );
-}
 
 // ============================================================
 // NORMALIZZA ARTICOLO
@@ -1362,41 +1377,6 @@ function getFieldValue(
 // ============================================================
 // PP
 // ============================================================
-
-function extractPPNumber(
-  codice: string
-) {
-  const match =
-    /^PP-(\d{6})$/i.exec(
-      codice.trim()
-    );
-
-  if (!match) {
-    return null;
-  }
-
-  const number =
-    Number(match[1]);
-
-  if (
-    !Number.isInteger(
-      number
-    ) ||
-    number < 1
-  ) {
-    return null;
-  }
-
-  return number;
-}
-
-function formatPPCode(
-  number: number
-) {
-  return `PP-${String(
-    number
-  ).padStart(6, "0")}`;
-}
 
 function createHandleFromPP(
   codicePP: string
@@ -1626,4 +1606,15 @@ function parsePositiveInteger(
   }
 
   return number;
+}
+function matchesImportRow(article: ShopifyMetaobject, body: ArticoloBody, lottoId: string) {
+  if (getFieldValue(article, "lotto") !== lottoId) return false;
+  const pairs = [
+    ["nome_prodotto", body.nomeProdotto], ["asin", body.asin], ["ean", body.ean],
+    ["upc", body.upc], ["fnsku", body.fnsku], ["lpn", body.lpn], ["pallet_id", body.palletId],
+    ["condizione_originale", body.condizioneOriginale], ["categoria", body.categoria], ["sottocategoria", body.sottocategoria],
+  ];
+  return pairs.every(([key, value]) => getFieldValue(article, key!).trim() === (value?.trim() || "")) &&
+    parseShopifyMoney(getFieldValue(article, "retail")) === parseMoney(body.retail) &&
+    parseShopifyMoney(getFieldValue(article, "costo_manifest")) === parseMoney(body.costoManifest);
 }

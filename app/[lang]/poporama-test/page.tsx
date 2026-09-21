@@ -230,7 +230,7 @@ function percentage(value: number | null) {
   return value === null ? "—" : `${new Intl.NumberFormat("it-IT", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value)}%`;
 }
 function gradeLabel(grade: string) {
-  return grade === "NEW" ? "NUOVO" : grade === "N" ? "NON TESTATO" : grade === "D" ? "D (LEGACY)" : grade;
+  return grade === "NEW" ? "NUOVO" : grade === "N" ? "NON TESTATO" : grade === "D" ? "D (LEGACY)" : grade === "C" ? "C — NON FUNZIONANTE" : grade;
 }
 function dateLabel(value: string) {
   const day = value.slice(0, 10);

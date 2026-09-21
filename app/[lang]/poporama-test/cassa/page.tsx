@@ -42,7 +42,7 @@ function extractPP(value: string) {
   const match = String(value || "")
     .trim()
     .toUpperCase()
-    .match(/(?:^|[^A-Z0-9_-])(PP-\d{6})(?=$|[^A-Z0-9_-])/);
+    .match(/(?:^|[^A-Z0-9_-])(PP-\d{6,})(?=$|[^A-Z0-9_-])/);
 
   return match ? match[1] : "";
 }
@@ -51,6 +51,7 @@ function gradeLabel(grade: string) {
   const normalized = grade.trim().toUpperCase();
   if (normalized === "NEW") return "NUOVO";
   if (normalized === "N" || !normalized) return "NON TESTATO";
+  if (normalized === "C") return "C — NON FUNZIONANTE";
   if (normalized === "D") return "D (LEGACY)";
   return normalized;
 }

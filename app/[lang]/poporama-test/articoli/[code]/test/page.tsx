@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { calculateTestPrice, parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 import {
   useParams,
   useRouter,
@@ -148,9 +149,9 @@ const GRADE_INFO: Record<
 
   C: {
     title:
-      "FUNZIONANTE • DIFETTO DICHIARATO",
+      "TESTATO • NON FUNZIONANTE",
     description:
-      "Funzionante con difetto o limitazione dichiarata.",
+      "Prodotto sottoposto a test e non funzionante. N indica invece un prodotto non testato.",
   },
 
   NEW: {
@@ -311,11 +312,12 @@ export default function TestArticoloPage() {
         setGrado(existingGrade === "D" ? "" : existingGrade);
         setListino(data.listino ?? null);
         setErroreListino(data.erroreListino || "");
-        const percentage = existingGrade === "D" ? null : data.listino?.[existingGrade];
+        const percentage = existingGrade === "D" ? null
+          : parseTestPercentage(item.percentualePrezzo) ?? data.listino?.[existingGrade];
         setPercentualePrezzo(percentage == null ? "" : String(percentage));
         setPrezzoPoporama(percentage == null || data.erroreListino
           ? ""
-          : roundMoney(item.retail * percentage / 100).toFixed(2));
+          : calculateTestPrice(item.retail, percentage).toFixed(2));
 
         setNumeroSeriale(
           item.numeroSeriale || ""
@@ -382,6 +384,7 @@ export default function TestArticoloPage() {
   function selectGrade(
     nextGrade: Grade
   ) {
+    if (nextGrade === grado) return;
     setGrado(nextGrade);
     setSuccess("");
     setError("");
@@ -394,7 +397,16 @@ export default function TestArticoloPage() {
     setPercentualePrezzo(percentage == null ? "" : String(percentage));
     setPrezzoPoporama(percentage == null || erroreListino
       ? ""
-      : roundMoney(articolo.retail * percentage / 100).toFixed(2));
+      : calculateTestPrice(articolo.retail, percentage).toFixed(2));
+  }
+
+  function changePercentage(value: string) {
+    setPercentualePrezzo(value);
+    setSuccess("");
+    setError("");
+    const percentage = parseTestPercentage(value);
+    setPrezzoPoporama(percentage === null || !articolo || erroreListino ? ""
+      : calculateTestPrice(articolo.retail, percentage).toFixed(2));
   }
 
   /*
@@ -535,8 +547,9 @@ export default function TestArticoloPage() {
       return;
     }
 
-    if (erroreListino || listino?.[grado] == null || !prezzoPoporama) {
-      setError(erroreListino || "Percentuale del lotto non valida per la classificazione selezionata. Configura il listino del lotto.");
+    const chosenPercentage = parseTestPercentage(percentualePrezzo);
+    if (erroreListino || chosenPercentage === null || !prezzoPoporama) {
+      setError(erroreListino || "Percentuale prezzo obbligatoria: inserisci un numero da 0 a 100 con massimo 2 decimali, usando virgola o punto.");
       return;
     }
 
@@ -565,6 +578,7 @@ export default function TestArticoloPage() {
 
           body: JSON.stringify({
             grado,
+            percentualePrezzo: chosenPercentage,
 
             condizioneEstetica:
               condizioneEstetica.trim(),
@@ -1281,32 +1295,41 @@ export default function TestArticoloPage() {
 
             <div>
               <FieldLabel>
-                Percentuale %
+                PERCENTUALE PREZZO
               </FieldLabel>
 
+              <div className="flex items-center gap-2">
               <input
                 type="text"
                 inputMode="decimal"
                 value={
                   percentualePrezzo
                 }
-                readOnly
-                disabled={sold}
+                onChange={(event) => changePercentage(event.target.value)}
+                required
+                aria-label="Percentuale prezzo"
+                disabled={sold || saving}
                 placeholder="—"
                 className={inputClass}
               />
+              <span className="font-black text-yellow-400">%</span>
+              </div>
+              <p className="mt-2 text-xs text-zinc-400">
+                LISTINO LOTTO: {grado && listino?.[grado] != null ? `${listino[grado]}%` : "non configurato"}
+              </p>
+              <p className="mt-1 text-xs text-zinc-500">Da 0 a 100, massimo 2 decimali. La modifica vale solo per questo articolo.</p>
             </div>
 
             <div>
               <FieldLabel>
-                Prezzo proposto €
+                PREZZO POPORAMA
               </FieldLabel>
 
               <input
                 type="text"
                 inputMode="decimal"
                 value={
-                  prezzoPoporama
+                  formatInputCurrency(prezzoPoporama)
                 }
                 readOnly
                 disabled={sold}
@@ -1315,7 +1338,7 @@ export default function TestArticoloPage() {
               />
 
               <p className="mt-2 text-xs text-zinc-500">
-                Calcolato dal listino del lotto. Il server verifica la percentuale al salvataggio.
+                Anteprima della percentuale scelta. Il prezzo definitivo viene ricalcolato dal server sul retail dell’articolo.
               </p>
             </div>
           </div>
