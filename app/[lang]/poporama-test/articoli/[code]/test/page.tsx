@@ -1,7 +1,9 @@
 "use client";
 
+import { moneyOrNull, resolvePrice, type PriceRule } from "@/app/lib/poporama-pricing";
+
 import { useEffect, useMemo, useState } from "react";
-import { calculateTestPrice, parseTestPercentage } from "@/app/lib/poporama-test-pricing";
+import { parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 import {
   useParams,
   useRouter,
@@ -38,11 +40,15 @@ type Articolo = {
   categoria: string;
   sottocategoria: string;
 
+  prezzoManuale?: number | null;
+  regolaPrezzo?: PriceRule | null;
   retail: number;
   costoManifest: number;
+  cogsDisponibile?: boolean;
 
   grado: string;
   percentualePrezzo: number;
+  prezzoValido?: boolean;
   prezzoPoporama: number;
 
   condizioneEstetica: string;
@@ -214,6 +220,9 @@ export default function TestArticoloPage() {
   const [success, setSuccess] =
     useState("");
 
+  const [manualPrice, setManualPrice] = useState("");
+  const [percentageDirty, setPercentageDirty] = useState(false);
+
   const [grado, setGrado] =
     useState<Grade | "">("");
 
@@ -222,10 +231,14 @@ export default function TestArticoloPage() {
     setPercentualePrezzo,
   ] = useState("");
 
-  const [
-    prezzoPoporama,
-    setPrezzoPoporama,
-  ] = useState("");
+  const priceBase = articolo && normalizeGrade(articolo.grado) === grado && articolo.regolaPrezzo ? articolo.regolaPrezzo.base : grado === "N" ? "COGS" : "RETAIL";
+  const preview = articolo ? resolvePrice({
+    manual: moneyOrNull(manualPrice),
+    rule: percentageDirty ? { base: priceBase, percentage: parseTestPercentage(percentualePrezzo) ?? NaN } : articolo.regolaPrezzo,
+    grade: grado, percentage: parseTestPercentage(percentualePrezzo), retail: articolo.retail,
+    cogs: articolo.cogsDisponibile === false ? null : articolo.costoManifest,
+  }) : { price: null, valid: false };
+  const prezzoPoporama = preview.price === null ? "" : preview.price.toFixed(2);
 
   const [
     numeroSeriale,
@@ -310,14 +323,13 @@ export default function TestArticoloPage() {
           normalizeGrade(item.grado);
 
         setGrado(existingGrade === "D" ? "" : existingGrade);
+        setManualPrice(item.prezzoManuale == null ? "" : String(item.prezzoManuale));
+        setPercentageDirty(false);
         setListino(data.listino ?? null);
         setErroreListino(data.erroreListino || "");
         const percentage = existingGrade === "D" ? null
-          : parseTestPercentage(item.percentualePrezzo) ?? data.listino?.[existingGrade];
+          : item.regolaPrezzo?.percentage ?? data.listino?.[existingGrade] ?? parseTestPercentage(item.percentualePrezzo);
         setPercentualePrezzo(percentage == null ? "" : String(percentage));
-        setPrezzoPoporama(percentage == null || data.erroreListino
-          ? ""
-          : calculateTestPrice(item.retail, percentage).toFixed(2));
 
         setNumeroSeriale(
           item.numeroSeriale || ""
@@ -386,6 +398,7 @@ export default function TestArticoloPage() {
   ) {
     if (nextGrade === grado) return;
     setGrado(nextGrade);
+    setPercentageDirty(true);
     setSuccess("");
     setError("");
 
@@ -395,18 +408,15 @@ export default function TestArticoloPage() {
 
     const percentage = listino?.[nextGrade];
     setPercentualePrezzo(percentage == null ? "" : String(percentage));
-    setPrezzoPoporama(percentage == null || erroreListino
-      ? ""
-      : calculateTestPrice(articolo.retail, percentage).toFixed(2));
+
   }
 
   function changePercentage(value: string) {
+    setPercentageDirty(true);
     setPercentualePrezzo(value);
     setSuccess("");
     setError("");
-    const percentage = parseTestPercentage(value);
-    setPrezzoPoporama(percentage === null || !articolo || erroreListino ? ""
-      : calculateTestPrice(articolo.retail, percentage).toFixed(2));
+
   }
 
   /*
@@ -471,6 +481,7 @@ export default function TestArticoloPage() {
 
       const labelData: LabelData = {
         code: articolo.codicePP,
+        priceValid: articolo.prezzoValido,
         brand: "",
         model:
           articolo.nomeProdotto ||
@@ -548,7 +559,11 @@ export default function TestArticoloPage() {
     }
 
     const chosenPercentage = parseTestPercentage(percentualePrezzo);
-    if (erroreListino || chosenPercentage === null || !prezzoPoporama) {
+    if (manualPrice !== "" && moneyOrNull(manualPrice) === null) {
+      setError("Prezzo manuale non valido: usa euro e massimo due decimali.");
+      return;
+    }
+    if (manualPrice === "" && chosenPercentage === null) {
       setError(erroreListino || "Percentuale prezzo obbligatoria: inserisci un numero da 0 a 100 con massimo 2 decimali, usando virgola o punto.");
       return;
     }
@@ -578,7 +593,8 @@ export default function TestArticoloPage() {
 
           body: JSON.stringify({
             grado,
-            percentualePrezzo: chosenPercentage,
+            ...(percentageDirty && chosenPercentage !== null ? { percentualePrezzo: chosenPercentage, regolaPrezzo: { base: priceBase, percentage: chosenPercentage } } : {}),
+            prezzoManuale: manualPrice === "" ? null : manualPrice,
 
             condizioneEstetica:
               condizioneEstetica.trim(),
@@ -623,6 +639,8 @@ export default function TestArticoloPage() {
         data.articolo
       );
       setListino(data.listino ?? null);
+      setManualPrice(data.articolo.prezzoManuale == null ? "" : String(data.articolo.prezzoManuale));
+      setPercentageDirty(false);
 
       setPercentualePrezzo(
         String(
@@ -631,17 +649,8 @@ export default function TestArticoloPage() {
         )
       );
 
-      setPrezzoPoporama(
-        data.articolo
-          .prezzoPoporama
-          .toFixed(2)
-      );
-
       setSuccess(
-        `${data.articolo.codicePP} salvato correttamente: grado ${displayGrade(data.articolo.grado)} • ${formatCurrency(
-          data.articolo
-            .prezzoPoporama
-        )}`
+        `${data.articolo.codicePP} salvato correttamente: grado ${displayGrade(data.articolo.grado)} • ${data.articolo.prezzoValido === false ? "PREZZO DA VERIFICARE" : formatCurrency(data.articolo.prezzoPoporama)}`
       );
     } catch (err) {
       console.error(
@@ -1255,7 +1264,7 @@ export default function TestArticoloPage() {
 
                       <p className="mt-3 text-xs font-black text-yellow-400">
                         {listino?.[item] != null
-                          ? `${listino[item]}% RETAIL`
+                          ? `${listino[item]}% ${item === "N" ? "COGS" : "RETAIL"}`
                           : "LISTINO NON CONFIGURATO"}
                       </p>
                     </div>
@@ -1291,11 +1300,12 @@ export default function TestArticoloPage() {
                   articolo.retail
                 )}
               </p>
+              <p className="mt-3 text-sm text-zinc-400">COGS manifest: {articolo.cogsDisponibile === false ? "Assente" : formatCurrency(articolo.costoManifest)}</p>
             </div>
 
             <div>
               <FieldLabel>
-                PERCENTUALE PREZZO
+                PERCENTUALE PREZZO ({priceBase})
               </FieldLabel>
 
               <div className="flex items-center gap-2">
@@ -1338,11 +1348,21 @@ export default function TestArticoloPage() {
               />
 
               <p className="mt-2 text-xs text-zinc-500">
-                Anteprima della percentuale scelta. Il prezzo definitivo viene ricalcolato dal server sul retail dell’articolo.
+                Il prezzo manuale ha priorità. Il grado N usa il COGS; COGS assente: da verificare. Le regole salvate dal Listino restano attive.
               </p>
             </div>
           </div>
         </section>
+
+        <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
+          <FieldLabel>PREZZO MANUALE IN EURO (IVA INCLUSA)</FieldLabel>
+          <input aria-label="Prezzo manuale in euro" type="text" inputMode="decimal" value={manualPrice} disabled={sold || saving}
+            onChange={e => { setManualPrice(e.target.value); setSuccess(""); }} placeholder="Es. 149,90" className={inputClass} />
+          <button type="button" disabled={sold || saving} onClick={() => setManualPrice("")} className="mt-3 font-bold text-yellow-400">Cancella prezzo manuale e torna al calcolo automatico</button>
+          <p className="mt-2 text-sm text-zinc-400">Premi Salva per confermare il prezzo o la sua cancellazione.</p>
+        </section>
+
+        {!preview.valid && <p role="status" className="mt-4 text-yellow-300">Prezzo da verificare: manca una base o una percentuale valida. Puoi inserire un prezzo manuale.</p>}
 
         {/* OPERATORE */}
 
@@ -1482,7 +1502,7 @@ export default function TestArticoloPage() {
               type="button"
               onClick={saveTest}
               disabled={
-                sold || saving || !!erroreListino
+                sold || saving
               }
               className="rounded-xl bg-yellow-400 px-7 py-4 text-sm font-black text-black transition hover:bg-yellow-300 disabled:cursor-not-allowed disabled:opacity-40"
             >

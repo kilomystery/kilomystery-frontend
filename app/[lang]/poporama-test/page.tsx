@@ -57,6 +57,7 @@ export default function PoporamaDashboardPage() {
             <p className="mt-3 max-w-2xl text-zinc-400">Tutti i lotti, le vendite reali e lo stock disponibile. I pezzi sono gli articoli censiti, non quelli dichiarati nei manifest.</p>
           </div>
           <nav aria-label="Azioni POPORAMA" className="flex flex-wrap gap-3">
+            <a href={`/${lang}/poporama-test/listino`} className="rounded-xl border border-yellow-400 px-5 py-3 font-black text-yellow-400">LISTINO / STAMPA</a>
             <a href={`/${lang}/poporama-test/lotti`} className="rounded-xl border border-yellow-400 px-5 py-3 font-black text-yellow-400">LOTTI</a>
             <a href={`/${lang}/poporama-test/cassa`} className="rounded-xl border border-yellow-400 px-5 py-3 font-black text-yellow-400">APRI CASSA</a>
             <a href={`/${lang}/poporama-test/lotti/nuovo`} className="rounded-xl bg-yellow-400 px-5 py-3 font-black text-black">+ NUOVO LOTTO</a>

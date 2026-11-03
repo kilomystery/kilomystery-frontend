@@ -1,3 +1,5 @@
+import { moneyOrNull, readPricing, resolvePrice, testDocument, type PriceRule, type PricingState } from "@/app/lib/poporama-pricing";
+import { pricingInfo } from "@/app/lib/poporama-pricing";
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import { calculateTestPrice, parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 import {
@@ -48,6 +50,11 @@ const LOTTO_PERCENTAGE_FIELDS: Record<Grade, string> = {
 class PricingError extends Error {}
 
 type TestPayload = {
+  pricingOnly?: boolean;
+  prezzoManuale?: number | string | null;
+  regolaPrezzo?: PriceRule | null;
+  sovrascriviManuale?: boolean;
+  expectedUpdatedAt?: string;
   grado?: string;
   percentualePrezzo?: number | string;
 
@@ -125,7 +132,7 @@ export async function GET(
     let erroreListino = "";
     try {
       listino = await getLottoListino(accessToken, articolo);
-      getRetailForPricing(articolo);
+
     } catch (error) {
       if (!(error instanceof PricingError)) throw error;
       erroreListino = error.message;
@@ -224,12 +231,12 @@ export async function PATCH(
      * --------------------------------------------------------
      */
 
-    const grado =
+    let grado =
       normalizeTestGrade(
         body.grado
       );
 
-    if (!grado) {
+    if (!grado && !body.pricingOnly) {
       return NextResponse.json(
         {
           ok: false,
@@ -303,23 +310,45 @@ export async function PATCH(
       );
     }
 
-    // Percentuale omessa: default lotto. Valore esplicito errato: 400 (mai
-    // salvare un prezzo diverso da quello che l'operatore ha scelto).
-    const manualPercentage = body.percentualePrezzo === undefined
-      ? undefined : parseTestPercentage(body.percentualePrezzo);
-    if (manualPercentage === null) {
-      throw new PricingError("Percentuale prezzo: inserisci un numero da 0 a 100 con massimo 2 decimali (virgola o punto).");
+    if (body.expectedUpdatedAt && body.expectedUpdatedAt !== articolo.updatedAt) {
+      return NextResponse.json({ ok: false, error: "Articolo modificato: aggiorna l’anteprima." }, { status: 409 });
+    }
+    if (body.pricingOnly) grado = normalizeTestGrade(getFieldValue(articolo, "grado"));
+    if (!grado) throw new PricingError("Grado non supportato: riclassifica l’articolo prima di applicare una regola.");
+    const previous = pricingInfo(articolo.fields);
+    let manual = previous.prezzoManuale;
+    if (body.prezzoManuale !== undefined) {
+      manual = body.prezzoManuale === null || body.prezzoManuale === "" ? null : moneyOrNull(body.prezzoManuale);
+      if (manual === null && body.prezzoManuale !== null && body.prezzoManuale !== "") throw new PricingError("Prezzo manuale non valido: usa euro e massimo due decimali.");
+    }
+    if (body.pricingOnly && body.regolaPrezzo && manual !== null) {
+      if (!body.sovrascriviManuale) return NextResponse.json({ ok: true, skipped: true, articolo: normalizeArticolo(articolo) });
+      manual = null;
     }
     const listino = await getLottoListino(accessToken, articolo);
-    const percentualePrezzo = manualPercentage ?? listino[grado];
-    if (percentualePrezzo === null) {
-      throw new PricingError(`Percentuale del lotto non valida per ${grado === "NEW" ? "NUOVO" : grado}. Configura il listino del lotto.`);
+    const explicitPercentage = body.percentualePrezzo === undefined ? undefined : parseTestPercentage(body.percentualePrezzo);
+    if (explicitPercentage === null) throw new PricingError("Percentuale non valida: usa un valore da 0 a 100 con massimo due decimali.");
+    const percentualePrezzo = explicitPercentage ?? listino[grado] ?? (grado === "N" ? 50 : null);
+    let rule = previous.regolaPrezzo;
+    if (body.regolaPrezzo !== undefined) {
+      const candidate = body.regolaPrezzo;
+      if (candidate !== null && (!candidate || !["COGS", "RETAIL"].includes(candidate.base) || parseTestPercentage(candidate.percentage) === null)) throw new PricingError("Regola prezzo non valida.");
+      rule = candidate === null ? null : { base: candidate.base, percentage: parseTestPercentage(candidate.percentage)! };
+    } else if (explicitPercentage !== undefined) {
+      rule = { base: grado === "N" ? "COGS" : "RETAIL", percentage: explicitPercentage };
     }
-    const retail = getRetailForPricing(articolo);
-    // Il retail è riletto da Shopify; ignoriamo qualsiasi prezzo inviato dal client.
-    const prezzoPoporama = calculateTestPrice(retail, percentualePrezzo);
-    if (!Number.isFinite(prezzoPoporama)) {
-      throw new PricingError("Retail non valido per il calcolo del prezzo POPORAMA.");
+    const resolved = resolvePrice({ manual, rule, grade: grado, percentage: percentualePrezzo,
+      retail: getFieldValue(articolo, "retail"), cogs: getFieldValue(articolo, "costo_manifest") });
+    const prezzoPoporama = resolved.price;
+    const pricing: PricingState = { version: 1, manual, rule, valid: resolved.valid };
+    const pricingFields = [
+      { key: "percentuale_prezzo", value: String(rule?.percentage ?? percentualePrezzo ?? 0) },
+      ...(prezzoPoporama === null ? [] : [{ key: "prezzo_poporama", value: formatMoney(prezzoPoporama) }]),
+      { key: "risultati_test", value: JSON.stringify({ ...testDocument(getFieldValue(articolo, "risultati_test")), _poporamaPricing: pricing }) },
+    ];
+    if (body.pricingOnly) {
+      const updated = await updateArticolo(accessToken, articolo.id, pricingFields);
+      return NextResponse.json({ ok: true, articolo: normalizeArticolo(updated), listino });
     }
     const isTechnicalTest = grado === "A" || grado === "B" || grado === "C";
 
@@ -344,10 +373,10 @@ export async function PATCH(
      * --------------------------------------------------------
      */
 
-    const risultatiTest =
-      normalizeJsonField(
-        body.risultatiTest
-      );
+    const risultatiTest = JSON.stringify({
+      ...testDocument(getFieldValue(articolo, "risultati_test")),
+      ...testDocument(body.risultatiTest), _poporamaPricing: pricing,
+    });
 
     /*
      * --------------------------------------------------------
@@ -366,18 +395,11 @@ export async function PATCH(
           "percentuale_prezzo",
         value:
           formatDecimal(
-            percentualePrezzo
+            rule?.percentage ?? percentualePrezzo ?? 0
           ),
       },
 
-      {
-        key:
-          "prezzo_poporama",
-        value:
-          formatMoney(
-            prezzoPoporama
-          ),
-      },
+      ...(prezzoPoporama === null ? [] : [{ key: "prezzo_poporama", value: formatMoney(prezzoPoporama) }]),
 
       {
         key:
@@ -661,6 +683,16 @@ async function findArticoloByPP(
   accessToken: string,
   codicePP: string
 ): Promise<ShopifyMetaobject | null> {
+  const direct = await shopifyGraphQL(accessToken, `
+    query PoporamaPriceArticle($handle: String!) {
+      metaobjectByHandle(handle: { type: "poporama_articolo", handle: $handle }) {
+        id handle type displayName createdAt updatedAt fields { key value }
+      }
+    }
+  `, { handle: codicePP.toLowerCase() });
+  const candidate = direct.data?.metaobjectByHandle as ShopifyMetaobject | null;
+  if (candidate && normalizePPCode(getFieldValue(candidate, "codice_pp")) === codicePP) return candidate;
+
   const query = `
     query GetPoporamaArticoli(
       $first: Int!
@@ -868,6 +900,7 @@ function normalizeArticolo(
     // La GET mantiene leggibile l'articolo e segnala il problema in erroreListino.
   }
   return {
+    ...pricingInfo(articolo.fields),
     id:
       articolo.id,
 
@@ -973,12 +1006,12 @@ function normalizeArticolo(
       ),
 
     prezzoPoporama:
-      parseShopifyMoney(
+      pricingInfo(articolo.fields).prezzoValido ? parseShopifyMoney(
         getFieldValue(
           articolo,
           "prezzo_poporama"
         )
-      ),
+      ) : 0,
 
     condizioneEstetica:
       getFieldValue(
@@ -1213,6 +1246,7 @@ async function getLottoListino(accessToken: string, articolo: ShopifyMetaobject)
     listino[grado] = /^\d+(?:\.\d{1,2})?$/.test(raw) &&
       Number.isFinite(value) && value >= 0 && value <= 100 ? value : null;
   }
+  if (listino.N === null) listino.N = 50;
   return listino;
 }
 
@@ -1368,42 +1402,6 @@ function cleanText(
  * JSON
  * ============================================================
  */
-
-function normalizeJsonField(
-  value: unknown
-) {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
-    return "{}";
-  }
-
-  if (
-    typeof value === "string"
-  ) {
-    const trimmed =
-      value.trim();
-
-    if (!trimmed) {
-      return "{}";
-    }
-
-    try {
-      JSON.parse(trimmed);
-      return trimmed;
-    } catch {
-      return JSON.stringify({
-        valore: trimmed,
-      });
-    }
-  }
-
-  return JSON.stringify(
-    value
-  );
-}
 
 function parseJsonForResponse(
   value: string

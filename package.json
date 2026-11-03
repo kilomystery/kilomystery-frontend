@@ -14,7 +14,9 @@
 
     "start": "next start",
 
-    "lint": "next lint"
+    "lint": "next lint",
+
+    "test": "node --test tests/*.test.cjs"
 
   },
 

@@ -73,6 +73,7 @@ type Articolo = {
 
   grado: GradoArticolo;
   percentualePrezzo: number;
+  prezzoValido?: boolean;
   prezzoPoporama: number;
 
   condizioneEstetica: string;
@@ -1469,11 +1470,12 @@ export default function LottoPage() {
         >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
+              <a className="text-yellow-400 underline" href={`/${lang}/poporama-test/listino`}>Apri Listino / Stampa massiva</a>
               <h2 id="listino-lotto-title" className="text-xl font-black text-yellow-400">
                 LISTINO DEL LOTTO
               </h2>
               <p className="mt-2 text-sm text-zinc-400">
-                Percentuale del retail utilizzata per calcolare il prezzo POPORAMA
+                Percentuale del Retail per NUOVO/A/B/C; percentuale del COGS per N. I prezzi già salvati cambiano solo applicando una regola nel Listino/Stampa.
               </p>
             </div>
             <button
@@ -2591,6 +2593,7 @@ function articoloToLabelData(
 
   return {
     code: articolo.codicePP,
+        priceValid: articolo.prezzoValido,
     brand: "",
     model:
       articolo.nomeProdotto ||

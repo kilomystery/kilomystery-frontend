@@ -11,7 +11,7 @@ const PERCENTUALI = [
   { name: "percentualeGradoA", key: "percentuale_grado_a", defaultValue: 50 },
   { name: "percentualeGradoB", key: "percentuale_grado_b", defaultValue: 30 },
   { name: "percentualeGradoC", key: "percentuale_grado_c", defaultValue: 20 },
-  { name: "percentualeGradoN", key: "percentuale_grado_n", defaultValue: 30 },
+  { name: "percentualeGradoN", key: "percentuale_grado_n", defaultValue: 50 },
 ] as const;
 
 type PercentualiBody = Partial<
@@ -278,7 +278,7 @@ export async function GET() {
       percentualeGradoA: numberValue(node.percentualeGradoA?.value),
       percentualeGradoB: numberValue(node.percentualeGradoB?.value),
       percentualeGradoC: numberValue(node.percentualeGradoC?.value),
-      percentualeGradoN: numberValue(node.percentualeGradoN?.value),
+      percentualeGradoN: node.percentualeGradoN?.value == null || node.percentualeGradoN.value === "" ? 50 : numberValue(node.percentualeGradoN.value),
 
       note:
         node.note?.value ?? "",

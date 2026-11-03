@@ -1,3 +1,4 @@
+import { pricingInfo } from "@/app/lib/poporama-pricing";
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import {
   NextRequest,
@@ -682,6 +683,7 @@ function normalizeArticolo(
   articolo: ShopifyMetaobject
 ) {
   return {
+    ...pricingInfo(articolo.fields),
     id:
       articolo.id,
 
@@ -793,12 +795,12 @@ function normalizeArticolo(
       ),
 
     prezzoPoporama:
-      parseShopifyMoney(
+      pricingInfo(articolo.fields).prezzoValido ? parseShopifyMoney(
         getFieldValue(
           articolo,
           "prezzo_poporama"
         )
-      ),
+      ) : 0,
 
     condizioneEstetica:
       getFieldValue(

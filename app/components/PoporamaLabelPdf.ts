@@ -27,6 +27,7 @@ export type LabelData = {
   missingAccessories?: string;
   defects?: string;
 
+  priceValid?: boolean;
   referencePrice?: string;
   poporamaPrice?: string;
 
@@ -411,27 +412,12 @@ async function addPoporamaLabelPage(
       2
     );
 
-    y -= 41;
+    y -= 38;
   }
 
   // ==========================================================
   // CONDIZIONI
   // ==========================================================
-
-  y = drawInfoRow(
-    page,
-    "Condizione",
-
-    cleanPdfText(
-      data.originCondition ||
-        "-"
-    ),
-
-    margin,
-    y,
-    boldFont,
-    regularFont
-  );
 
   y = drawInfoRow(
     page,
@@ -465,10 +451,8 @@ async function addPoporamaLabelPage(
   );
 
   // ==========================================================
-  // PREZZO DI RIFERIMENTO
+  // PREZZO USCITA AMAZON
   // ==========================================================
-
-  y -= 4;
 
   page.drawLine({
     start: {
@@ -497,7 +481,7 @@ async function addPoporamaLabelPage(
     )
   ) {
     page.drawText(
-      "PREZZO DI RIFERIMENTO",
+      "Prezzo uscita Amazon",
       {
         x: margin,
         y,
@@ -590,7 +574,7 @@ async function addPoporamaLabelPage(
   // ==========================================================
 
   if (
-    hasPrice(
+    data.priceValid !== false && hasPrice(
       data.poporamaPrice
     )
   ) {
@@ -616,7 +600,7 @@ async function addPoporamaLabelPage(
 
     drawCenteredText(
       page,
-      "PREZZO POPORAMA",
+      "Prezzo Poporama",
       y - 12,
       7,
       boldFont,
@@ -639,6 +623,11 @@ async function addPoporamaLabelPage(
     y -=
       priceBoxHeight +
       8;
+  }
+
+  if (data.priceValid === false) {
+    drawCenteredText(page, "Prezzo Poporama: da verificare", y - 15, 10, boldFont, black);
+    y -= 28;
   }
 
   // ==========================================================
@@ -1331,7 +1320,7 @@ function getGradeDescription(
       return "LEGACY - NON FUNZIONANTE / RICAMBI";
 
     case "N":
-      return "NON TESTATO";
+      return "Non testato";
 
     default:
       return "";
@@ -1450,7 +1439,7 @@ function cleanPdfText(
       "..."
     )
     .replace(
-      /[^\x20-\x7E\u00A0-\u00FF]/g,
+      /[^\x20-\x7E\u00A0-\u00FF\u20AC]/g,
       ""
     )
     .replace(

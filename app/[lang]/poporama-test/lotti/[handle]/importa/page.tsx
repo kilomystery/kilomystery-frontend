@@ -2,9 +2,13 @@
 
 import {
   ChangeEvent,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { parseManifestMoney } from "@/app/lib/poporama-pricing";
+import { calculateTestPrice, parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 import { formatPPCode as formatPP } from "@/app/lib/poporama-pp";
 import { useParams } from "next/navigation";
 
@@ -111,7 +115,27 @@ export default function ImportaManifestPage() {
     useState("35");
 
   const [percentN, setPercentN] =
-    useState("30");
+    useState("50");
+
+  const [settingsReady, setSettingsReady] = useState(false);
+  const restoredPricing = useRef(false);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/poporama/lotti", { cache: "no-store", signal: controller.signal }).then(async response => {
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.error || "Listino non disponibile");
+      const current = data.lotti.find((lot: { handle: string }) => lot.handle === handle);
+      if (!current) throw new Error("Lotto non trovato");
+      if (!restoredPricing.current) {
+        setPercentN(String(current.percentualeGradoN ?? 50));
+        setPercentA(String(current.percentualeGradoA));
+        setPercentB(String(current.percentualeGradoB));
+        setPercentC(String(current.percentualeGradoC));
+      }
+      setSettingsReady(true);
+    }).catch(error => { if (!controller.signal.aborted) setError(`Impossibile leggere il listino: ${error.message}`); });
+    return () => controller.abort();
+  }, [handle]);
 
   const [
     importStatus,
@@ -254,9 +278,7 @@ export default function ImportaManifestPage() {
 
       retail,
 
-      valoreN:
-        retail *
-        (n / 100),
+      valoreN: manifest.rows.reduce((total, row) => { const cogs = manifestCogs(row); return total + (cogs === null ? 0 : calculateTestPrice(cogs, n)); }, 0),
 
       conEan,
 
@@ -662,6 +684,7 @@ export default function ImportaManifestPage() {
         existing.size
       );
 
+      restoredPricing.current = true;
       setPercentA(
         String(
           plan.percentA
@@ -713,6 +736,8 @@ export default function ImportaManifestPage() {
    */
 
   async function prepareImport() {
+    if (parseTestPercentage(percentN) === null) { setError("Percentuale N non valida: usa un valore da 0 a 100 con massimo due decimali."); return; }
+    if (!settingsReady) { setError("Attendi il caricamento delle percentuali del lotto o ricarica la pagina."); return; }
     if (!manifest) {
       return;
     }
@@ -839,6 +864,8 @@ export default function ImportaManifestPage() {
    */
 
   async function startImport() {
+    if (parseTestPercentage(percentN) === null) { setError("Percentuale N non valida."); return; }
+    if (!settingsReady) { setError("Attendi il caricamento delle percentuali del lotto."); return; }
     if (
       !manifest ||
       firstPPNumber === null
@@ -985,18 +1012,6 @@ export default function ImportaManifestPage() {
           )
         );
 
-      const costoManifest =
-        parseMoney(
-          getValue(
-            row,
-            [
-              "COST",
-              "Cost",
-              "cost",
-            ]
-          )
-        );
-
       const body = {
         lottoHandle:
           handle,
@@ -1104,7 +1119,7 @@ export default function ImportaManifestPage() {
 
         retail,
 
-        costoManifest,
+        costoManifest: manifestCogs(row),
 
         grado: "N",
 
@@ -1439,7 +1454,7 @@ export default function ImportaManifestPage() {
               />
 
               <StatCard
-                label="Valore Grado N"
+                label="Valore Grado N (COGS)"
                 value={formatCurrency(
                   stats.valoreN
                 )}
@@ -1516,7 +1531,7 @@ export default function ImportaManifestPage() {
                 />
 
                 <PercentageField
-                  label="Grado N"
+                  label="Grado N — % del COGS"
                   value={percentN}
                   onChange={
                     setPercentN
@@ -1607,14 +1622,8 @@ export default function ImportaManifestPage() {
                             )
                           );
 
-                        const priceN =
-                          retail *
-                          (
-                            parsePercentage(
-                              percentN
-                            ) /
-                            100
-                          );
+                        const cogs = manifestCogs(row);
+                        const priceN = cogs === null ? null : calculateTestPrice(cogs, parsePercentage(percentN));
 
                         return (
                           <tr
@@ -1697,9 +1706,7 @@ export default function ImportaManifestPage() {
                               right
                               important
                             >
-                              {formatCurrency(
-                                priceN
-                              )}
+                              {priceN === null ? "Da verificare" : formatCurrency(priceN)}
                             </TableCell>
                           </tr>
                         );
@@ -2664,4 +2671,10 @@ function parseDelimitedText(
   }
 
   return records;
+}
+
+function manifestCogs(row: ManifestRow): number | null {
+  const raw = getValue(row, ["COGS", "Cogs", "cogs", "COST", "Cost", "cost", "Unit Cost", "UNIT COST", "Unit COGS", "UNIT COGS"]);
+  if (!raw) return null;
+  return parseManifestMoney(raw);
 }

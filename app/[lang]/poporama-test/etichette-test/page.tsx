@@ -31,6 +31,7 @@ type Articolo = {
 
   grado?: string;
   percentualePrezzo?: number | string | null;
+  prezzoValido?: boolean;
   prezzoPoporama?: number | string | null;
 
   condizioneEstetica?: string;
@@ -534,6 +535,7 @@ function articoloToLabel(
   return {
     code:
       articolo.codicePP,
+    priceValid: articolo.prezzoValido,
 
     /*
      * Il manifest non contiene brand e

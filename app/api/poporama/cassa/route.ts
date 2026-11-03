@@ -1,3 +1,4 @@
+import { pricingInfo } from "@/app/lib/poporama-pricing";
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import { NextRequest, NextResponse } from "next/server";
 import { DELETE as logoutSession } from "@/app/api/poporama/session/route";
@@ -239,6 +240,7 @@ async function loadArticle(code: string) {
   const fields = node.fields || [];
 
   return {
+    ...pricingInfo(fields),
     id: node.id as string,
     handle: node.handle as string,
     codicePP:
@@ -534,6 +536,7 @@ export async function POST(
       if (!article) problems.push(`${item.code}: articolo non trovato`);
       else {
         articles.push(article);
+        if (!article.prezzoValido) problems.push(`${item.code}: prezzo da verificare; imposta un prezzo nel Test o nel Listino`);
         if (article.statoVendita !== "DISPONIBILE") {
           problems.push(`${item.code}: ${article.statoVendita === "VENDUTO" ? "ARTICOLO GIÀ VENDUTO" : "articolo non disponibile"}`);
         }

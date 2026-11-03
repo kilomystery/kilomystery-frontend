@@ -26,6 +26,7 @@ type ArticoloCassa = {
   retail: number;
   percentualePrezzo: number;
   prezzoPoporama: number;
+  prezzoValido?: boolean;
   statoVendita: string;
   prezzoVendita: number;
   dataVendita: string;
@@ -431,6 +432,7 @@ export default function PoporamaCassaPage() {
 
   function aggiungiAlCarrello() {
     if (!articolo || requestBusyRef.current || pendingSale || saleBlockedRef.current) return;
+    if (articolo.prezzoValido === false) { setError("Prezzo da verificare: imposta un prezzo nel Test o nel Listino."); return; }
     const code = extractPP(articolo.codicePP);
     if (cartRef.current.some((line) => extractPP(line.articolo.codicePP) === code)) {
       setError("ARTICOLO GIÀ PRESENTE NEL CARRELLO");

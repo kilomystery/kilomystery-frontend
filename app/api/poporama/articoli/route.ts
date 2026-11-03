@@ -1,3 +1,5 @@
+import { moneyOrNull, resolvePrice, pricingInfo } from "@/app/lib/poporama-pricing";
+import { parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 import { extractPPNumber, formatPPCode } from "@/app/lib/poporama-pp";
 import { lockPPSequence, nextPPNumber, rememberPPNumber, reservePPRange, readPPReservation } from "@/app/lib/poporama-pp-sequence";
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
@@ -34,11 +36,12 @@ type ArticoloBody = {
   sottocategoria?: string;
 
   retail?: number | string;
-  costoManifest?: number | string;
+  costoManifest?: number | string | null;
 
   grado?: string;
   percentualePrezzo?: number | string;
   prezzoPoporama?: number | string;
+  prezzoManuale?: number | string | null;
 
   numeroSeriale?: string;
 };
@@ -355,6 +358,7 @@ export async function GET(
         prossimoNumeroPP,
         prossimoCodicePP,
         intervallo: null,
+        ...(details ? { articoli: articoli.map(normalizeArticolo) } : {}),
       });
     }
 
@@ -591,34 +595,14 @@ export async function POST(
         body.retail
       );
 
-    const costoManifest =
-      parseMoney(
-        body.costoManifest
-      );
-
-    const percentualePrezzo =
-      parsePercentage(
-        body.percentualePrezzo
-      );
-
-    const prezzoPoporama =
-      body.prezzoPoporama ===
-        undefined ||
-      body.prezzoPoporama ===
-        null ||
-      body.prezzoPoporama ===
-        ""
-        ? roundMoney(
-            retail *
-              (
-                percentualePrezzo /
-                100
-              )
-          )
-        : parseMoney(
-            body.prezzoPoporama
-          );
-
+    const costoManifest = moneyOrNull(body.costoManifest);
+    const explicitPercentage = body.percentualePrezzo === undefined ? undefined : parseTestPercentage(body.percentualePrezzo);
+    if (explicitPercentage === null) return NextResponse.json({ ok: false, error: "Percentuale non valida." }, { status: 400 });
+    let percentualePrezzo = explicitPercentage ?? 0;
+    const manualInput = body.prezzoManuale ?? body.prezzoPoporama;
+    const manual = moneyOrNull(manualInput);
+    if (manualInput != null && manualInput !== "" && manual === null) return NextResponse.json({ ok: false, error: "Prezzo manuale non valido." }, { status: 400 });
+    let prezzoPoporama = 0;
     const accessToken =
       await getShopifyAccessToken();
 
@@ -658,6 +642,16 @@ export async function POST(
 
     const all = await getAllArticoli(accessToken);
     const existingCodes = all.map((item) => getFieldValue(item, "codice_pp"));
+    if (grado === "N" && body.percentualePrezzo === undefined) {
+      const result = await shopifyGraphQL(accessToken, `query ImportListino($id: ID!) { metaobject(id: $id) { fields { key value } } }`, { id: lottoId });
+      const configured = result.data?.metaobject?.fields?.find((f: ShopifyField) => f.key === "percentuale_grado_n")?.value;
+      const configuredPercentage = configured === undefined || configured === null || configured === "" ? 50 : parseTestPercentage(configured);
+      if (configuredPercentage === null) return NextResponse.json({ ok: false, error: "Percentuale N del lotto non valida." }, { status: 400 });
+      percentualePrezzo = configuredPercentage;
+    }
+    const resolved = resolvePrice({ manual, grade: grado, percentage: percentualePrezzo, retail, cogs: costoManifest });
+    prezzoPoporama = resolved.price ?? 0;
+
     const reservation = body.ppReservation === undefined ? null : readPPReservation(body.ppReservation, lottoId);
     if (body.ppReservation !== undefined && !reservation) {
       return NextResponse.json({ ok: false, error: "Piano PP non valido. Verifica e prepara nuovamente l'importazione." }, { status: 409 });
@@ -812,9 +806,7 @@ export async function POST(
       {
         key: "costo_manifest",
         value:
-          moneyValueForShopify(
-            costoManifest
-          ),
+          costoManifest === null ? "" : moneyValueForShopify(costoManifest),
       },
 
       {
@@ -838,6 +830,8 @@ export async function POST(
             prezzoPoporama
           ),
       },
+
+      { key: "risultati_test", value: JSON.stringify({ _poporamaPricing: { version: 1, manual, rule: body.percentualePrezzo === undefined ? null : { base: grado === "N" ? "COGS" : "RETAIL", percentage: percentualePrezzo }, valid: resolved.valid } }) },
 
       {
         key:
@@ -866,7 +860,7 @@ export async function POST(
             handle:
               articoloHandle,
 
-            fields,
+            fields: fields.filter(field => !(field.key === "costo_manifest" && !field.value) && !(field.key === "prezzo_poporama" && !resolved.valid)),
           },
         }
       );
@@ -1167,6 +1161,8 @@ function normalizeArticolo(
   articolo: ShopifyMetaobject
 ) {
   return {
+    ...pricingInfo(articolo.fields),
+    lottoId: getFieldValue(articolo, "lotto"),
     id:
       articolo.id,
 
@@ -1270,12 +1266,12 @@ function normalizeArticolo(
       ),
 
     prezzoPoporama:
-      parseShopifyMoney(
+      pricingInfo(articolo.fields).prezzoValido ? parseShopifyMoney(
         getFieldValue(
           articolo,
           "prezzo_poporama"
         )
-      ),
+      ) : 0,
 
     condizioneEstetica:
       getFieldValue(
@@ -1518,45 +1514,6 @@ function roundMoney(
 // PERCENTUALI
 // ============================================================
 
-function parsePercentage(
-  value:
-    | number
-    | string
-    | undefined
-) {
-  if (
-    value === undefined ||
-    value === null ||
-    value === ""
-  ) {
-    return 0;
-  }
-
-  const normalized =
-    typeof value === "string"
-      ? value
-          .trim()
-          .replace(",", ".")
-      : value;
-
-  const number =
-    Number(normalized);
-
-  if (
-    !Number.isFinite(
-      number
-    ) ||
-    number < 0 ||
-    number > 100
-  ) {
-    throw new Error(
-      "Percentuale non valida."
-    );
-  }
-
-  return number;
-}
-
 function parseShopifyDecimal(
   value: string
 ) {
@@ -1616,5 +1573,5 @@ function matchesImportRow(article: ShopifyMetaobject, body: ArticoloBody, lottoI
   ];
   return pairs.every(([key, value]) => getFieldValue(article, key!).trim() === (value?.trim() || "")) &&
     parseShopifyMoney(getFieldValue(article, "retail")) === parseMoney(body.retail) &&
-    parseShopifyMoney(getFieldValue(article, "costo_manifest")) === parseMoney(body.costoManifest);
+    moneyOrNull(getFieldValue(article, "costo_manifest")) === moneyOrNull(body.costoManifest);
 }
