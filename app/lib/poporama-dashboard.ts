@@ -1,3 +1,4 @@
+import { titleInfo } from "./poporama-titles";
 import { pricingInfo } from "./poporama-pricing";
 import { calcolaEconomia, normalizeGrade, normalizeSaleStatus, parseShopifyMoney, saleTimestamp, sumMoney } from "./poporama-economics";
 
@@ -23,7 +24,7 @@ export function aggregateDashboard(lottoNodes: DashboardNode[], articleNodes: Da
   const byId = new Map(lotti.map((lotto) => [lotto.id, lotto]));
   const articles = uniqueArticles.map((node) => ({
     id: node.id, lottoId: field(node, "lotto"), codicePP: field(node, "codice_pp"),
-    nomeProdotto: field(node, "nome_prodotto"), grado: normalizeGrade(field(node, "grado")),
+    nomeProdotto: titleInfo(node.fields).nomeProdotto, grado: normalizeGrade(field(node, "grado")),
     statoVendita: normalizeSaleStatus(field(node, "stato_vendita")),
     prezzoVendita: parseShopifyMoney(field(node, "prezzo_vendita")),
     prezzoPoporama: pricingInfo(node.fields).prezzoValido ? parseShopifyMoney(field(node, "prezzo_poporama")) : 0,

@@ -557,6 +557,8 @@ function articoloToLabel(
       articolo.categoria ||
       "ARTICOLO",
 
+    lpn: articolo.lpn,
+
     serial:
       articolo.numeroSeriale ||
       undefined,

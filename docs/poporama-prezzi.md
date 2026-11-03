@@ -33,8 +33,8 @@ sovrascrittura dei prezzi storici se desiderata.
 Ordine: prezzo manuale; regola specifica salvata sull’articolo (anche applicata a
 un carico intero); percentuale del grado nel lotto; per N, fallback 50% del COGS.
 I default A/B/C già esistenti sono conservati. La percentuale N è modificabile
-nel listino del lotto; l’importazione ne carica il valore iniziale e permette
-una percentuale specifica per i prodotti importati. Cambiare un default non
+nel listino del lotto; l’importazione automatica usa il valore configurato. Per una percentuale
+specifica sui prodotti usare il Listino/Stampa dopo l’importazione. Cambiare un default non
 riscrive retroattivamente i prezzi già salvati: usare il pannello massivo.
 
 Euro e percentuali ammettono virgola o punto e massimo due decimali; percentuali
@@ -174,3 +174,6 @@ salvataggio/riapertura/modifica su prodotto storico, Listino, PDF scaricato e
 ripristino automatico persistente. Screenshot, PDF e log sono salvati nella
 cartella temporanea indicata dal test. I due file sono
 `tests/poporama-test-ui.cjs` e `tests/helpers/poporama-shopify-fixture.cjs`.
+
+Per la nuova importazione automatica CSV/Excel e i titoli italiani vedere
+[poporama-traduzioni.md](poporama-traduzioni.md).

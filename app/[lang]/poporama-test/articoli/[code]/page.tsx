@@ -15,6 +15,9 @@ type Articolo = {
   codicePP: string;
   lottoId: string;
   nomeProdotto: string;
+  nomeOriginale?: string;
+  nomeItaliano?: string;
+  statoTraduzione?: string;
   asin: string;
   ean: string;
   upc: string;
@@ -62,6 +65,10 @@ export default function SchedaArticoloPage() {
   const [articolo, setArticolo] =
     useState<Articolo | null>(null);
 
+  const [nomeItalianoInput, setNomeItalianoInput] = useState("");
+  const [salvaNome, setSalvaNome] = useState(false);
+  const [messaggioNome, setMessaggioNome] = useState("");
+
   const [loading, setLoading] =
     useState(true);
 
@@ -106,6 +113,7 @@ export default function SchedaArticoloPage() {
       }
 
       setArticolo(data.articolo);
+      setNomeItalianoInput(data.articolo.nomeItaliano || data.articolo.nomeProdotto);
     } catch (err) {
       console.error(
         "Errore caricamento scheda POPORAMA:",
@@ -372,6 +380,23 @@ export default function SchedaArticoloPage() {
             </div>
           </div>
         </header>
+
+        <section className="mt-6 rounded-2xl border border-zinc-700 bg-zinc-900 p-6">
+          <label htmlFor="nome-italiano" className="block font-bold text-yellow-400">Nome italiano del prodotto</label>
+          <p className="mt-2 text-sm text-zinc-400">Nome originale Amazon: {articolo.nomeOriginale || articolo.nomeProdotto}</p>
+          <textarea id="nome-italiano" className="mt-3 w-full rounded-xl border border-zinc-600 bg-zinc-950 p-3" rows={3} maxLength={4000} value={nomeItalianoInput} onChange={e => setNomeItalianoInput(e.target.value)} disabled={salvaNome} />
+          <button type="button" disabled={salvaNome || !nomeItalianoInput.trim()} className="mt-3 rounded-xl bg-yellow-400 px-4 py-3 font-bold text-black disabled:opacity-50" onClick={async () => {
+            setSalvaNome(true); setMessaggioNome("");
+            try {
+              const response = await fetch(`/api/poporama/articoli/${encodeURIComponent(code)}/titolo`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ nomeItaliano: nomeItalianoInput }) });
+              const data = await response.json();
+              if (!response.ok || !data.ok) throw new Error(data.error || "Nome non salvato");
+              setArticolo(current => current ? { ...current, nomeProdotto: data.nomeProdotto, nomeOriginale: data.nomeOriginale, nomeItaliano: data.nomeItaliano, statoTraduzione: data.statoTraduzione } : current);
+              setMessaggioNome("Nome italiano salvato. Le traduzioni automatiche non lo sovrascriveranno.");
+            } catch (e) { setMessaggioNome((e as Error).message); } finally { setSalvaNome(false); }
+          }}>Salva nome italiano</button>
+          {messaggioNome && <p role="status" className="mt-3 text-sm">{messaggioNome}</p>}
+        </section>
 
         <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6 sm:p-8">
           <SectionTitle

@@ -1,3 +1,4 @@
+import { titleInfo } from "@/app/lib/poporama-titles";
 import { pricingInfo } from "@/app/lib/poporama-pricing";
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import { NextRequest, NextResponse } from "next/server";
@@ -247,8 +248,7 @@ async function loadArticle(code: string) {
       fieldValue(fields, "codice_pp") || code,
     lotto: node.lotto?.reference?.codiceLotto?.value ||
       node.lotto?.reference?.handle || fieldValue(fields, "lotto"),
-    nomeProdotto:
-      fieldValue(fields, "nome_prodotto"),
+    ...titleInfo(fields),
     ean: fieldValue(fields, "ean"),
     asin: fieldValue(fields, "asin"),
     grado:

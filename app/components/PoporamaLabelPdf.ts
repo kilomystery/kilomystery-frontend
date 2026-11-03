@@ -22,6 +22,7 @@ export type LabelData = {
   productType: string;
 
   serial?: string;
+  lpn?: string;
   originCondition?: string;
   cosmeticCondition?: string;
   missingAccessories?: string;
@@ -281,8 +282,7 @@ async function addPoporamaLabelPage(
   // BOX GRADO
   // ==========================================================
 
-  const gradeBoxHeight =
-    105;
+  const gradeBoxHeight = data.lpn ? 89 : 105;
 
   page.drawRectangle({
     x: margin,
@@ -314,7 +314,7 @@ async function addPoporamaLabelPage(
   drawCenteredTextFit(
     page,
     data.grade === "NEW" ? "NUOVO" : data.grade,
-    y - 76,
+    y - (data.lpn ? 66 : 76),
     61,
     24,
     boldFont,
@@ -327,7 +327,7 @@ async function addPoporamaLabelPage(
     getGradeDescription(
       data.grade
     ),
-    y - 96,
+    y - (data.lpn ? 81 : 96),
     8,
     5.5,
     boldFont,
@@ -450,6 +450,14 @@ async function addPoporamaLabelPage(
     regularFont
   );
 
+  if (data.lpn) {
+    const text = cleanPdfText(`LPN: ${data.lpn}`);
+    const available = A6_WIDTH - margin * 2;
+    const size = Math.min(7, available / boldFont.widthOfTextAtSize(text, 1));
+    page.drawText(text, { x: margin, y, size, font: boldFont, color: black });
+    y -= 11;
+  }
+
   // ==========================================================
   // PREZZO USCITA AMAZON
   // ==========================================================
@@ -486,7 +494,7 @@ async function addPoporamaLabelPage(
         x: margin,
         y,
 
-        size: 6.5,
+        size: 8.5,
         font: boldFont,
         color: black,
       }
@@ -498,7 +506,7 @@ async function addPoporamaLabelPage(
       );
 
     const referenceSize =
-      12;
+      14;
 
     const referenceWidth =
       boldFont.widthOfTextAtSize(

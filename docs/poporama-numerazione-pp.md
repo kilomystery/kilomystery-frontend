@@ -1,5 +1,12 @@
 # Numerazione PP
 
+Il flusso automatico attuale è descritto in [poporama-traduzioni.md](poporama-traduzioni.md).
+La coda conserva in Shopify range, blocchi e checkpoint, serializza i worker con
+un lease e salva il massimo prenotato prima di creare articoli. Continua a
+riutilizzare la stessa creazione articoli e recupera i precedenti piani firmati.
+Le sezioni seguenti descrivono anche l’API e i piani precedenti, mantenuti per
+compatibilità; la nuova pagina non richiede preparazione o conferme manuali.
+
 La creazione degli articoli passa da `app/api/poporama/articoli/route.ts`.
 Il nuovo lotto crea soltanto il lotto; il manifest crea poi gli articoli.
 Non sono attualmente implementati flussi separati di creazione manuale o stock senza manifest.

@@ -490,6 +490,7 @@ export default function TestArticoloPage() {
           articolo.sottocategoria ||
           articolo.categoria ||
           "Articolo POPORAMA",
+        lpn: articolo.lpn,
         serial:
           articolo.numeroSeriale ||
           undefined,

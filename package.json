@@ -18,7 +18,11 @@
 
     "test": "node --test tests/*.test.cjs",
 
-    "test:ui": "node tests/poporama-test-ui.cjs"
+    "test:ui": "node tests/poporama-test-ui.cjs",
+
+    "test:ui:translation": "POPORAMA_UI_TRANSLATION=1 node tests/poporama-test-ui.cjs",
+
+    "worker:poporama": "node --env-file-if-exists=.env.local scripts/poporama-worker.cjs"
 
   },
 
@@ -67,6 +71,8 @@
     "resend": "^6.4.2",
 
     "stripe": "19.3.1",
+
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
 
     "zod": "3.23.8"
 

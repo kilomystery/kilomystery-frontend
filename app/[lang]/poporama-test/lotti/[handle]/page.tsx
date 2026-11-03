@@ -2602,6 +2602,7 @@ function articoloToLabelData(
       articolo.sottocategoria ||
       articolo.categoria ||
       "Articolo POPORAMA",
+    lpn: articolo.lpn,
     serial:
       articolo.numeroSeriale ||
       undefined,

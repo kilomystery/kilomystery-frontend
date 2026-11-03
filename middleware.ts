@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { SUPPORTED_LANGS, detectLangFromHeader, type Lang } from "./i18n/lang";
 import { UTM_LINKS } from "./src/utm-links";
+import { workerAuthorized } from "./app/lib/poporama-worker-auth";
 import { POPORAMA_COOKIE, verifyPoporamaSession } from "./app/lib/poporama-session";
 
 const PUBLIC_FILE = /\.(.*)$/;
@@ -48,7 +49,8 @@ export async function middleware(req: NextRequest) {
   if (loginPage && await verifyPoporamaSession(req.cookies.get(POPORAMA_COOKIE)?.value)) {
     return poporamaRedirect(`/${loginPage[1]}/poporama-test`);
   }
-  if ((privateApi && pathname !== "/api/poporama/session") || privatePage) {
+  const authorizedWorker = pathname === "/api/poporama/jobs/run" && await workerAuthorized(req);
+  if ((privateApi && pathname !== "/api/poporama/session" && !authorizedWorker) || privatePage) {
     const expiresAt = await verifyPoporamaSession(req.cookies.get(POPORAMA_COOKIE)?.value);
     if (!expiresAt) {
       if (privateApi) return NextResponse.json({ ok: false, authenticated: false,

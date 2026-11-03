@@ -1,5 +1,6 @@
 "use client";
 
+import PoporamaTranslateMissing from "@/app/components/PoporamaTranslateMissing";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { downloadPoporamaLabelsPdf, type Grade, type LabelData } from "@/app/components/PoporamaLabelPdf";
@@ -8,6 +9,7 @@ import { parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 
 type Article = {
   id: string; lottoId: string; codicePP: string; nomeProdotto: string; asin: string;
+  lpn?: string;
   retail: number; costoManifest: number; cogsDisponibile: boolean; grado: Grade; prezzoPoporama: number;
   prezzoManuale: number | null; prezzoValido: boolean; prezzoLegacy: boolean; updatedAt: string;
   statoVendita: string; categoria: string; numeroSeriale: string; condizioneEstetica: string;
@@ -99,7 +101,7 @@ export default function ListinoPage() {
       if (fresh.length !== chosen.length) throw new Error("La selezione è cambiata. Ricarica il listino prima di stampare.");
       const labels: LabelData[] = fresh.map(a => ({ code: a.codicePP, brand: "", model: a.nomeProdotto, productType: a.categoria || "Articolo POPORAMA",
         grade: a.grado || "N", referencePrice: a.retail.toFixed(2), poporamaPrice: a.prezzoPoporama.toFixed(2), priceValid: a.prezzoValido,
-        serial: a.numeroSeriale, cosmeticCondition: a.condizioneEstetica, missingAccessories: a.accessoriMancanti, defects: a.difettiDichiarati,
+        lpn: a.lpn, serial: a.numeroSeriale, cosmeticCondition: a.condizioneEstetica, missingAccessories: a.accessoriMancanti, defects: a.difettiDichiarati,
         testDate: a.grado === "N" ? a.createdAt?.slice(0, 10) : a.dataTest?.slice(0, 10) }));
       await downloadPoporamaLabelsPdf(labels, "POPORAMA_LISTINO.pdf");
       setArticles(result.articoli);
@@ -121,6 +123,7 @@ export default function ListinoPage() {
   return <main className="min-h-screen bg-zinc-950 p-6 text-white"><div className="mx-auto max-w-7xl space-y-6">
     <a href={`/${lang}/poporama-test`} className="text-yellow-400">← Dashboard</a>
     <h1 className="text-3xl font-black text-yellow-400">Listino / Stampa</h1>
+    <PoporamaTranslateMissing lottoHandle={currentLot?.handle} onComplete={() => { void load(); }} />
     <p className="text-zinc-400">Seleziona lo stock disponibile, verifica l’anteprima e salva le regole prima della stampa. Ogni codice PP identifica un singolo pezzo, anche con ASIN uguale.</p>
     <fieldset disabled={busy} className="space-y-5 rounded-2xl border border-zinc-700 p-5 disabled:opacity-60">
       <div className="flex flex-wrap items-center gap-4">

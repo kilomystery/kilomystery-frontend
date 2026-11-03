@@ -1,3 +1,5 @@
+import { titleInfo } from "@/app/lib/poporama-titles";
+import { importContext } from "@/app/lib/poporama-import-context";
 import { moneyOrNull, resolvePrice, pricingInfo } from "@/app/lib/poporama-pricing";
 import { parseTestPercentage } from "@/app/lib/poporama-test-pricing";
 import { extractPPNumber, formatPPCode } from "@/app/lib/poporama-pp";
@@ -71,6 +73,8 @@ type ShopifyMetaobjectEdge = {
 // ============================================================
 
 async function getShopifyAccessToken() {
+  const context = importContext();
+  if (context) return context.accessToken;
   const shop = process.env.SHOPIFY_SHOP;
   const clientId =
     process.env.SHOPIFY_CLIENT_ID;
@@ -102,6 +106,7 @@ async function getShopifyAccessToken() {
         client_secret: clientSecret,
       }),
       cache: "no-store",
+      signal: importContext()?.signal,
     }
   );
 
@@ -158,6 +163,7 @@ async function shopifyGraphQL(
         variables,
       }),
       cache: "no-store",
+      signal: importContext()?.signal,
     }
   );
 
@@ -527,7 +533,7 @@ export async function GET(
 export async function POST(
   request: NextRequest
 ) {
-  const unauthorized = await requirePoporamaSession();
+  const unauthorized = importContext() ? null : await requirePoporamaSession();
   if (unauthorized) return unauthorized;
   const release = await lockPPSequence();
   try {
@@ -640,7 +646,7 @@ export async function POST(
       );
     }
 
-    const all = await getAllArticoli(accessToken);
+    const all = importContext()?.articles ?? await getAllArticoli(accessToken);
     const existingCodes = all.map((item) => getFieldValue(item, "codice_pp"));
     if (grado === "N" && body.percentualePrezzo === undefined) {
       const result = await shopifyGraphQL(accessToken, `query ImportListino($id: ID!) { metaobject(id: $id) { fields { key value } } }`, { id: lottoId });
@@ -831,7 +837,7 @@ export async function POST(
           ),
       },
 
-      { key: "risultati_test", value: JSON.stringify({ _poporamaPricing: { version: 1, manual, rule: body.percentualePrezzo === undefined ? null : { base: grado === "N" ? "COGS" : "RETAIL", percentage: percentualePrezzo }, valid: resolved.valid } }) },
+      { key: "risultati_test", value: JSON.stringify({ _poporamaPricing: { version: 1, manual, rule: body.percentualePrezzo === undefined ? null : { base: grado === "N" ? "COGS" : "RETAIL", percentage: percentualePrezzo }, valid: resolved.valid }, ...(importContext()?.titles.get(nomeProdotto) ? { _poporamaTitle: importContext()!.titles.get(nomeProdotto) } : {}) }) },
 
       {
         key:
@@ -1175,11 +1181,7 @@ function normalizeArticolo(
         "codice_pp"
       ),
 
-    nomeProdotto:
-      getFieldValue(
-        articolo,
-        "nome_prodotto"
-      ),
+    ...titleInfo(articolo.fields),
 
     asin:
       getFieldValue(

@@ -208,7 +208,7 @@ test('POPORAMA pricing and persistence regressions (offline)', async t => {
     const { PDFDocument, PDFPage } = require('pdf-lib');
     const originalDraw = PDFPage.prototype.drawText;
     const drawn = []; let downloaded;
-    PDFPage.prototype.drawText = function(value, options) { drawn.push({ value, y: options.y }); return originalDraw.call(this, value, options); };
+    PDFPage.prototype.drawText = function(value, options) { drawn.push({ value, y: options.y, size: options.size }); return originalDraw.call(this, value, options); };
     global.window = { location: { origin: 'http://localhost', pathname: '/it/poporama-test/listino' }, atob: v => Buffer.from(v, 'base64').toString('binary') };
     global.document = { createElement: () => ({ click() {} }), body: { appendChild() {}, removeChild() {} } };
     const originalCreate = URL.createObjectURL; const originalRevoke = URL.revokeObjectURL;
@@ -216,13 +216,15 @@ test('POPORAMA pricing and persistence regressions (offline)', async t => {
     try {
       const { downloadPoporamaLabelsPdf } = require('../app/components/PoporamaLabelPdf.ts');
       const label = { code: 'PP-000001', brand: '', model: 'Prodotto', productType: 'Elettronica', referencePrice: '399.99', poporamaPrice: '149.90', grade: 'N', testDate: '03/11/2026', originCondition: 'Customer Damage' };
-      await downloadPoporamaLabelsPdf([label, { ...label, code: 'PP-000002', originCondition: 'Defective', priceValid: false }, { ...label, code: 'PP-000003', grade: 'C', serial: 'SER-3', defects: 'Difetto dichiarato '.repeat(15) }]);
+      await downloadPoporamaLabelsPdf([label, { ...label, code: 'PP-000002', originCondition: 'Defective', priceValid: false }, { ...label, code: 'PP-000003', grade: 'C', serial: 'SER-3', lpn: 'LPN-012345678901234567890123456789', defects: 'Difetto dichiarato '.repeat(15) }]);
       const doc = await PDFDocument.load(await downloaded.arrayBuffer()); assert.equal(doc.getPageCount(), 3);
       assert.ok(Math.abs(doc.getPage(0).getWidth() - 105 * 72 / 25.4) < 0.01);
       const text = drawn.map(d => d.value).join('\n');
-      for (const expected of ['Prezzo uscita Amazon', 'Prezzo Poporama', 'PP-000001', 'PP-000002', 'Non testato', '149,90', '399,99', '€', 'da verificare']) assert.ok(text.includes(expected), expected);
+      for (const expected of ['Prezzo uscita Amazon', 'Prezzo Poporama', 'PP-000001', 'PP-000002', 'Non testato', '149,90', '399,99', '€', 'da verificare', 'LPN-012345678901234567890123456789']) assert.ok(text.includes(expected), expected);
       for (const forbidden of ['Customer Damage', 'Defective', 'Condizione:', 'PREZZO DI RIFERIMENTO']) assert.ok(!text.includes(forbidden), forbidden);
       assert.ok(drawn.every(d => d.y >= 0));
+      assert.ok(drawn.find(d => d.value === "Prezzo uscita Amazon").size >= 8);
+      assert.ok(drawn.find(d => d.value.includes("149,90")).size > drawn.find(d => d.value.includes("399,99")).size);
       assert.ok(drawn.filter(d => d.value.startsWith("Seriale:")).every(d => d.y >= 17));
     } finally { PDFPage.prototype.drawText = originalDraw; URL.createObjectURL = originalCreate; URL.revokeObjectURL = originalRevoke; delete global.window; delete global.document; }
   });

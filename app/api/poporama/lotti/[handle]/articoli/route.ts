@@ -1,3 +1,4 @@
+import { titleInfo } from "@/app/lib/poporama-titles";
 import { pricingInfo } from "@/app/lib/poporama-pricing";
 import { requirePoporamaSession } from "@/app/lib/poporama-auth";
 import {
@@ -702,11 +703,7 @@ function normalizeArticolo(
         "lotto"
       ),
 
-    nomeProdotto:
-      getFieldValue(
-        articolo,
-        "nome_prodotto"
-      ),
+    ...titleInfo(articolo.fields),
 
     asin:
       getFieldValue(

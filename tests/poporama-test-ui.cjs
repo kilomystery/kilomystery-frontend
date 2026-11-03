@@ -23,8 +23,8 @@ async function until(check, message, timeout = 30000) {
   const appPort = await port(), chromePort = await port();
   const origin = `http://127.0.0.1:${appPort}`;
   const log = fs.openSync(path.join(temp, 'server.log'), 'w');
-  const server = spawn(process.execPath, ['-r', path.join(__dirname, 'helpers/poporama-shopify-fixture.cjs'), path.join(root, 'node_modules/next/dist/bin/next'), 'start', '-p', String(appPort)], {
-    cwd: root, stdio: ['ignore', log, log], env: { ...process.env, POPORAMA_UI_FIXTURE: '1', SHOPIFY_SHOP: 'poporama-ui-fixture', SHOPIFY_CLIENT_ID: 'fixture', SHOPIFY_CLIENT_SECRET: 'fixture', POPORAMA_ACCESS_PIN: 'fixture-pin', POPORAMA_SESSION_SECRET: 'isolated-ui-fixture-secret-at-least-32-characters' },
+  const server = spawn(process.execPath, ['-r', path.join(__dirname, process.env.POPORAMA_UI_TRANSLATION === '1' ? 'helpers/poporama-translation-fixture.cjs' : 'helpers/poporama-shopify-fixture.cjs'), path.join(root, 'node_modules/next/dist/bin/next'), 'start', '-p', String(appPort)], {
+    cwd: root, stdio: ['ignore', log, log], env: { ...process.env, POPORAMA_UI_FIXTURE: '1', SHOPIFY_SHOP: 'poporama-ui-fixture', SHOPIFY_CLIENT_ID: 'fixture', SHOPIFY_CLIENT_SECRET: 'fixture', POPORAMA_WORKER_SECRET: 'fixture-worker-secret-at-least-32-characters', ...(process.env.POPORAMA_UI_TRANSLATION === '1' ? { DEEPL_API_KEY: 'fixture', DEEPL_API_FREE: 'false' } : {}), POPORAMA_ACCESS_PIN: 'fixture-pin', POPORAMA_SESSION_SECRET: 'isolated-ui-fixture-secret-at-least-32-characters' },
   });
   let chrome, socket;
   try {
@@ -92,5 +92,56 @@ async function until(check, message, timeout = 30000) {
     await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: true });
     assert.ok(await evaluate(`(() => {const f=document.querySelector('#prezzo-poporama-euro'); f.scrollIntoView({block:'center'}); const r=f.getBoundingClientRect(); return r.width>0 && r.left>=0 && r.right<=innerWidth;})()`));
     console.log(`PASS: field remains visible on mobile. Evidence: ${temp}`);
+    if (process.env.POPORAMA_UI_TRANSLATION === '1') {
+      await send('Emulation.setDeviceMetricsOverride', { width: 1365, height: 1000, deviceScaleFactor: 1, mobile: false });
+      const csvPath = path.join(temp, 'amazon.csv');
+      fs.writeFileSync(csvPath, 'Item Desc;ASIN;LPN;Retail;COGS\nSony Wireless Headphones WH-1000XM5 32 GB;SAME;LPN-000000000000000000001;400;100\nSony Wireless Headphones WH-1000XM5 32 GB;SAME;LPN-000000000000000000002;400;100\n');
+      let dialogs = 0;
+      socket.on('message', raw => { const message = JSON.parse(raw); if (message.method === 'Page.javascriptDialogOpening') { dialogs++; void send('Page.handleJavaScriptDialog', { accept: true }); } });
+      await send('Page.navigate', { url: `${origin}/it/poporama-test/lotti/load-test/importa` });
+      await until(() => evaluate(`!!document.querySelector('input[type=file]')`), 'Import page did not render');
+      const dom = await send('DOM.getDocument');
+      const fileInput = await send('DOM.querySelector', { nodeId: dom.root.nodeId, selector: 'input[type=file]' });
+      await send('DOM.setFileInputFiles', { nodeId: fileInput.nodeId, files: [csvPath] });
+      await until(() => evaluate(`document.body.textContent.includes('Elaborazione completata')`), 'Automatic import did not complete', 60000).catch(async e=>{console.error(await evaluate('document.body.innerText.slice(-3500)'));throw e;});
+      assert.equal(dialogs, 0);
+      const all = await evaluate(`fetch('/api/poporama/articoli?details=1').then(r=>r.json()).then(r=>r.articoli)`);
+      const imported = all.filter(a => a.codicePP !== 'PP-000001'); assert.equal(imported.length, 2);
+      assert.equal(imported[0].nomeItaliano, 'Sony Cuffie wireless WH-1000XM5 32 GB');
+      assert.equal(imported[0].nomeOriginale, 'Sony Wireless Headphones WH-1000XM5 32 GB');
+      assert.equal(imported[0].retail, 400);
+      console.log('PASS: selecting a CSV imports and translates automatically, with no preview, confirmation or duplicate ASIN loss.');
+      const pp = imported[0].codicePP;
+      await send('Page.navigate', { url: `${origin}/it/poporama-test/articoli/${pp}/test` }); await waitField();
+      assert.ok(await evaluate(`document.body.textContent.includes('Sony Cuffie wireless')`));
+      await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='SALVA CLASSIFICAZIONE').click()`);
+      await until(() => evaluate(`Array.from(document.querySelectorAll('button')).some(b=>b.textContent.trim()==='SCARICA ETICHETTA')`), 'Imported product label button missing');
+      await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='SCARICA ETICHETTA').click()`);
+      await until(() => evaluate(`!!window.__labelPdf`), 'Translated PDF missing');
+      const encodedLabel = await evaluate(`window.__labelPdf.arrayBuffer().then(b=>{let s='';for(const n of new Uint8Array(b))s+=String.fromCharCode(n);return btoa(s)})`);
+      const label = await PDFDocument.load(Buffer.from(encodedLabel,'base64')); let text='';
+      for (const [, object] of label.context.enumerateIndirectObjects()) if (object instanceof PDFRawStream) {
+        try { const stream=Buffer.from(decodePDFRawStream(object).decode()).toString('latin1');for(const match of stream.matchAll(/<([a-f0-9]+)>\s*Tj/gi))text+=Buffer.from(match[1],'hex').toString('latin1')+'\n'; } catch {}
+      }
+      assert.ok(text.includes('CUFFIE WIRELESS')); assert.ok(text.includes(imported[0].lpn)); assert.ok(text.includes('Prezzo uscita Amazon')); assert.ok(!text.includes('Customer Damage'));
+      console.log('PASS: Test and downloaded A6 PDF use the Italian name and complete LPN.');
+      await send('Page.navigate', { url: `${origin}/it/poporama-test/articoli/${pp}` });
+      await until(() => evaluate(`!!document.querySelector('#nome-italiano')`), 'Manual Italian name field missing');
+      await evaluate(`(()=>{const f=document.querySelector('#nome-italiano');Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype,'value').set.call(f,'Nome italiano corretto manualmente');f.dispatchEvent(new Event('input',{bubbles:true}));})()`);
+      await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='Salva nome italiano').click()`);
+      await until(() => evaluate(`document.body.textContent.includes('Nome italiano salvato.')`), 'Manual name not saved');
+      await send('Page.navigate', { url: `${origin}/it/poporama-test/listino` });
+      await until(() => evaluate(`document.querySelector('tbody')?.textContent.includes('Nome italiano corretto manualmente')`), 'Listino did not update the corrected title');
+      await evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent.trim()==='Traduci nomi mancanti').click()`);
+      await until(() => evaluate(`document.body.textContent.includes('Elaborazione completata')`), 'Missing translation command did not complete');
+      const protectedName = await evaluate(`fetch('/api/poporama/articoli/${pp}/test').then(r=>r.json()).then(r=>r.articolo.nomeItaliano)`);
+      assert.equal(protectedName, 'Nome italiano corretto manualmente');
+      console.log('PASS: manual Italian corrections persist in the product detail and Listino; missing-name translation preserves them.');
+      const rejectedWorker = await fetch(`${origin}/api/poporama/jobs/run`, { method: 'POST', headers: { Authorization: 'Bearer wrong-secret', 'Content-Type': 'application/json' }, body: '{}' });
+      assert.equal(rejectedWorker.status, 401);
+      const acceptedWorker = await fetch(`${origin}/api/poporama/jobs/run`, { method: 'POST', headers: { Authorization: 'Bearer fixture-worker-secret-at-least-32-characters', 'Content-Type': 'application/json' }, body: '{}' });
+      assert.equal(acceptedWorker.status, 200, await acceptedWorker.text());
+      console.log('PASS: middleware accepts the authenticated background worker without browser cookies and rejects an invalid secret.');
+    }
   } finally { if (socket) socket.close(); if (chrome) chrome.kill(); server.kill(); fs.closeSync(log); }
 })().catch(error => { console.error(error); console.error(`UI test logs: ${temp}`); process.exitCode = 1; });
