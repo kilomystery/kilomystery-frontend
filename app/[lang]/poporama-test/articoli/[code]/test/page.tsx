@@ -1316,7 +1316,6 @@ export default function TestArticoloPage() {
                   percentualePrezzo
                 }
                 onChange={(event) => changePercentage(event.target.value)}
-                required
                 aria-label="Percentuale prezzo"
                 disabled={sold || saving}
                 placeholder="—"
@@ -1330,36 +1329,42 @@ export default function TestArticoloPage() {
               <p className="mt-1 text-xs text-zinc-500">Da 0 a 100, massimo 2 decimali. La modifica vale solo per questo articolo.</p>
             </div>
 
-            <div>
-              <FieldLabel>
-                PREZZO POPORAMA
-              </FieldLabel>
-
+            <div className="rounded-2xl border-2 border-yellow-400 bg-yellow-400/5 p-5">
+              <label htmlFor="prezzo-poporama-euro" className="mb-2 block text-sm font-black text-yellow-400">
+                Prezzo Poporama (€)
+              </label>
               <input
+                id="prezzo-poporama-euro"
                 type="text"
                 inputMode="decimal"
-                value={
-                  formatInputCurrency(prezzoPoporama)
-                }
-                readOnly
-                disabled={sold}
-                placeholder="—"
+                aria-invalid={manualPrice !== "" && moneyOrNull(manualPrice) === null}
+                aria-describedby="prezzo-poporama-help"
+                value={manualPrice !== "" ? manualPrice : prezzoPoporama.replace(".", ",")}
+                onChange={(event) => {
+                  setManualPrice(event.target.value);
+                  setSuccess("");
+                  setError("");
+                }}
+                disabled={sold || saving}
+                placeholder="Es. 149,90"
                 className={`${inputClass} text-xl font-black text-yellow-400`}
               />
-
-              <p className="mt-2 text-xs text-zinc-500">
-                Il prezzo manuale ha priorità. Il grado N usa il COGS; COGS assente: da verificare. Le regole salvate dal Listino restano attive.
+              <p id="prezzo-poporama-help" className="mt-2 text-xs text-zinc-400">
+                {manualPrice !== ""
+                  ? "Prezzo manuale: ha priorità su Retail, COGS e percentuali."
+                  : "Prezzo automatico. Scrivi direttamente un importo in euro per modificarlo."}
+                {" "}Accetta virgola o punto, massimo due decimali. Premi Salva per confermare.
               </p>
+              <button
+                type="button"
+                disabled={sold || saving}
+                onClick={() => { setManualPrice(""); setSuccess(""); setError(""); }}
+                className="mt-3 rounded-xl border border-yellow-400 px-3 py-2 text-sm font-bold text-yellow-400 disabled:opacity-40"
+              >
+                Ripristina prezzo automatico
+              </button>
             </div>
           </div>
-        </section>
-
-        <section className="mt-6 rounded-3xl border border-zinc-800 bg-zinc-900 p-6">
-          <FieldLabel>PREZZO MANUALE IN EURO (IVA INCLUSA)</FieldLabel>
-          <input aria-label="Prezzo manuale in euro" type="text" inputMode="decimal" value={manualPrice} disabled={sold || saving}
-            onChange={e => { setManualPrice(e.target.value); setSuccess(""); }} placeholder="Es. 149,90" className={inputClass} />
-          <button type="button" disabled={sold || saving} onClick={() => setManualPrice("")} className="mt-3 font-bold text-yellow-400">Cancella prezzo manuale e torna al calcolo automatico</button>
-          <p className="mt-2 text-sm text-zinc-400">Premi Salva per confermare il prezzo o la sua cancellazione.</p>
         </section>
 
         {!preview.valid && <p role="status" className="mt-4 text-yellow-300">Prezzo da verificare: manca una base o una percentuale valida. Puoi inserire un prezzo manuale.</p>}

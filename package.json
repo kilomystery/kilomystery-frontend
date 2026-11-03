@@ -16,7 +16,9 @@
 
     "lint": "next lint",
 
-    "test": "node --test tests/*.test.cjs"
+    "test": "node --test tests/*.test.cjs",
+
+    "test:ui": "node tests/poporama-test-ui.cjs"
 
   },
 

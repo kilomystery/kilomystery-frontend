@@ -143,3 +143,34 @@ Verifica manuale consigliata su dati di prova:
 - `app/lib/poporama-dashboard.ts`: esclusione importi non validi dallo stock stimato.
 - `tests/poporama-pricing.test.cjs`, `package.json`: test ripetibili con `npm test`.
 - `docs/poporama-prezzi.md`: questa guida.
+
+## Campo prezzo nella schermata Test
+
+Componente effettivo: `app/[lang]/poporama-test/articoli/[code]/test/page.tsx`.
+Dal lotto aprire il pulsante Test del PP oppure visitare
+`/it/poporama-test/articoli/PP-000001/test` (con un PP esistente).
+Nella sezione 05, **Prezzo POPORAMA**, il campo **Prezzo Poporama (€)** è
+accanto alla percentuale, evidenziato con un bordo giallo. È editabile anche
+per i prodotti storici: non è più l’anteprima in sola lettura. Digitare, per
+esempio, `149,90` e premere **SALVA TEST** o **SALVA CLASSIFICAZIONE**.
+Il pulsante **Ripristina prezzo automatico** elimina l’override nel modulo e
+mostra il prezzo ricalcolato; premere Salva per rendere persistente il ripristino.
+Il Retail originale non cambia.
+
+La verifica nel browser è ripetibile con:
+
+```sh
+npm run build
+npm run test:ui
+```
+
+Richiede Google Chrome locale (o `CHROME_PATH` impostato al suo eseguibile) e
+la possibilità di aprire porte localhost. Usa il pacchetto WebSocket incluso
+in Next, senza nuove dipendenze. Il test avvia il sito reale su una porta
+locale libera con un profilo Chrome temporaneo e credenziali di prova; le API
+reali leggono e scrivono una fixture Shopify in memoria, senza collegamenti
+allo store reale. Verifica rendering desktop/mobile, prezzo con virgola,
+salvataggio/riapertura/modifica su prodotto storico, Listino, PDF scaricato e
+ripristino automatico persistente. Screenshot, PDF e log sono salvati nella
+cartella temporanea indicata dal test. I due file sono
+`tests/poporama-test-ui.cjs` e `tests/helpers/poporama-shopify-fixture.cjs`.

@@ -337,12 +337,15 @@ export async function PATCH(
     } else if (explicitPercentage !== undefined) {
       rule = { base: grado === "N" ? "COGS" : "RETAIL", percentage: explicitPercentage };
     }
+    // A euro-only edit must not silently rewrite a historical percentage.
+    const preservePercentage = manual !== null && explicitPercentage === undefined &&
+      body.regolaPrezzo === undefined && getFieldValue(articolo, "grado").trim().toUpperCase() === grado;
     const resolved = resolvePrice({ manual, rule, grade: grado, percentage: percentualePrezzo,
       retail: getFieldValue(articolo, "retail"), cogs: getFieldValue(articolo, "costo_manifest") });
     const prezzoPoporama = resolved.price;
     const pricing: PricingState = { version: 1, manual, rule, valid: resolved.valid };
     const pricingFields = [
-      { key: "percentuale_prezzo", value: String(rule?.percentage ?? percentualePrezzo ?? 0) },
+      ...(preservePercentage ? [] : [{ key: "percentuale_prezzo", value: String(rule?.percentage ?? percentualePrezzo ?? 0) }]),
       ...(prezzoPoporama === null ? [] : [{ key: "prezzo_poporama", value: formatMoney(prezzoPoporama) }]),
       { key: "risultati_test", value: JSON.stringify({ ...testDocument(getFieldValue(articolo, "risultati_test")), _poporamaPricing: pricing }) },
     ];
@@ -390,14 +393,10 @@ export async function PATCH(
         value: grado,
       },
 
-      {
-        key:
-          "percentuale_prezzo",
-        value:
-          formatDecimal(
-            rule?.percentage ?? percentualePrezzo ?? 0
-          ),
-      },
+      ...(preservePercentage ? [] : [{
+        key: "percentuale_prezzo",
+        value: formatDecimal(rule?.percentage ?? percentualePrezzo ?? 0),
+      }]),
 
       ...(prezzoPoporama === null ? [] : [{ key: "prezzo_poporama", value: formatMoney(prezzoPoporama) }]),
 

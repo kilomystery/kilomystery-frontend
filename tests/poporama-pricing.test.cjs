@@ -130,6 +130,32 @@ test('POPORAMA pricing and persistence regressions (offline)', async t => {
     assert.equal(result.articolo.risultatiTest.extra, 'preservare');
     assert.equal(readPricing(field(nodes[0], 'risultati_test')).manual, 149.9);
   });
+  await t.test('legacy Test product saves, reopens, edits and clears a manual euro price without a percentage change', async () => {
+    fixture(); setField(nodes[0], 'grado', 'A');
+    setField(nodes[0], 'risultati_test', JSON.stringify({ accensione: { result: 'OK', note: 'Storico' } }));
+    const originalPercentage = field(nodes[0], 'percentuale_prezzo');
+    const originalRetail = field(nodes[0], 'retail');
+    async function reopen() {
+      const response = await route.GET(new Request('http://localhost/api/poporama/articoli/PP-000001/test'), { params: { code: 'PP-000001' } });
+      assert.equal(response.status, 200);
+      return (await response.json()).articolo;
+    }
+    for (const [input, expected] of [['149,90', 149.9], ['159.95', 159.95]]) {
+      const saved = await patch({ grado: 'A', prezzoManuale: input, dataTest: '2026-11-03' });
+      assert.equal(saved.status, 200);
+      const article = await reopen();
+      assert.equal(article.prezzoManuale, expected); assert.equal(article.prezzoPoporama, expected);
+      assert.equal(field(nodes[0], 'percentuale_prezzo'), originalPercentage);
+      assert.equal(field(nodes[0], 'retail'), originalRetail);
+      const response = await articlesRoute.GET(new Request('http://localhost/api/poporama/articoli?details=1'));
+      const listino = (await response.json()).articoli.find(a => a.codicePP === 'PP-000001');
+      assert.equal(listino.prezzoPoporama, expected);
+    }
+    assert.equal((await patch({ grado: 'A', prezzoManuale: null, dataTest: '2026-11-03' })).status, 200);
+    const automatic = await reopen();
+    assert.equal(automatic.prezzoManuale, null); assert.equal(automatic.prezzoPoporama, 219.99);
+    assert.equal(automatic.risultatiTest.accensione.note, 'Storico');
+  });
   await t.test('invalid prices, stale previews, sold and unauthenticated changes rejected', async () => {
     fixture();
     assert.equal((await patch({ pricingOnly: true, prezzoManuale: '12,999' })).status, 400);
