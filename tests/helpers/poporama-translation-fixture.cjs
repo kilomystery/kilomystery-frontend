@@ -27,6 +27,7 @@ global.fetch = async (input, options = {}) => {
   let data;
   if (query.includes('metaobjectDefinitionByType')) data = { metaobjectDefinitionByType: definitions.get(v.type) || null };
   else if (query.includes('metaobjectDefinitionCreate(')) {
+    if (!v.definition.type.startsWith('$app:') && Object.hasOwn(v.definition.access || {}, 'admin')) return Response.json({data:{metaobjectDefinitionCreate:{metaobjectDefinition:null,userErrors:[{code:'ADMIN_ACCESS_INPUT_NOT_ALLOWED',field:['definition','access','admin'],message:'Admin access can only be specified on metaobject definitions that have an app-reserved type.'}]}}});
     definitions.set(v.definition.type, { id: `definition-${v.definition.type}`, access: { storefront: "NONE" }, fieldDefinitions: [{ key: 'data', type: { name: 'json' } }] });
     data = { metaobjectDefinitionCreate: { metaobjectDefinition: definitions.get(v.definition.type), userErrors: [] } };
   } else if (query.includes('metaobjectUpsert(')) {

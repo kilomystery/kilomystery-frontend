@@ -1,5 +1,6 @@
+import { QUEUE_SCOPES, safeUserErrors, ShopifyDefinitionError } from "./poporama-shopify-scopes";
 import { randomUUID } from "crypto";
-import { byHandle, field, graphql, page, NODE_FIELDS, type MetaNode } from "./poporama-shopify";
+import { byHandle, field, graphql, page, NODE_FIELDS, ensureAccessScopes, type MetaNode } from "./poporama-shopify";
 export const JOB_TYPE = "poporama_import_job";
 export const CHUNK_TYPE = "poporama_import_chunk";
 export const CACHE_TYPE = "poporama_translation_cache";
@@ -15,6 +16,7 @@ export async function put(type: string, handle: string, value: unknown) {
 let ready = false;
 export async function ensureJobSchema() {
   if (ready) return;
+  await ensureAccessScopes(QUEUE_SCOPES);
   for (const [type, name] of [[JOB_TYPE, "POPORAMA lavori importazione"], [CHUNK_TYPE, "POPORAMA blocchi importazione"], [CACHE_TYPE, "POPORAMA memoria traduzioni"]]) {
     const existing = await graphql(`query PoporamaDefinition($type: String!) { metaobjectDefinitionByType(type:$type) { id access { storefront } fieldDefinitions { key type { name } } } }`, { type });
     if (existing.metaobjectDefinitionByType) {
@@ -22,13 +24,21 @@ export async function ensureJobSchema() {
       if (!existing.metaobjectDefinitionByType.fieldDefinitions.some((f: { key: string; type: { name: string } }) => f.key === "data" && f.type.name === "json")) throw new Error(`Schema ${type} incompatibile: nessun dato è stato modificato.`);
       continue;
     }
-    const data = await graphql(`mutation PoporamaDefinitionCreate($definition: MetaobjectDefinitionCreateInput!) { metaobjectDefinitionCreate(definition:$definition) { metaobjectDefinition { id } userErrors { message code } } }`, {
-      definition: { type, name, access: { storefront: "NONE", admin: "MERCHANT_READ_WRITE" }, fieldDefinitions: [{ key: "data", name: "Dati interni", type: "json", required: true }] },
+    const data = await graphql(`mutation PoporamaDefinitionCreate($definition: MetaobjectDefinitionCreateInput!) { metaobjectDefinitionCreate(definition:$definition) { metaobjectDefinition { id } userErrors { field message code } } }`, {
+      definition: { type, name, access: { storefront: "NONE" }, fieldDefinitions: [{ key: "data", name: "Dati interni", type: "json", required: true }] },
     });
-    if (data.metaobjectDefinitionCreate.userErrors?.length) {
-      const concurrent = await graphql(`query PoporamaDefinition($type: String!) { metaobjectDefinitionByType(type:$type) { id } }`, { type });
-      if (!concurrent.metaobjectDefinitionByType) throw new Error("Servono i permessi Shopify read/write_metaobject_definitions per inizializzare la coda. Nessun articolo è stato cancellato.");
+    const result = data.metaobjectDefinitionCreate;
+    if (result.userErrors?.length) {
+      const errors = safeUserErrors(result.userErrors);
+      // Only a uniqueness conflict can mean another instance has just created this type.
+      if (errors.every(error => error.code === "TAKEN")) {
+        const concurrent = await graphql(`query PoporamaDefinition($type: String!) { metaobjectDefinitionByType(type:$type) { id access { storefront } fieldDefinitions { key type { name } } } }`, { type });
+        const definition = concurrent.metaobjectDefinitionByType;
+        if (definition?.access?.storefront === "NONE" && definition.fieldDefinitions?.some((f: { key: string; type: { name: string } }) => f.key === "data" && f.type.name === "json")) continue;
+      }
+      throw new ShopifyDefinitionError(type, errors);
     }
+    if (!result.metaobjectDefinition?.id) throw new ShopifyDefinitionError(type, []);
   }
   ready = true;
 }

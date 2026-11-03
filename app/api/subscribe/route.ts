@@ -8,13 +8,6 @@ const API_VERSION = process.env.SHOPIFY_API_VERSION || "2024-07";
 // lo forziamo a true per vedere sempre i dettagli di errore
 const IS_DEV = true;
 
-// Debug env (solo prefisso e length, niente leak del token)
-console.log("[newsletter] DEBUG ENV", {
-  STORE_DOMAIN,
-  ADMIN_TOKEN_PREFIX: ADMIN_TOKEN ? ADMIN_TOKEN.slice(0, 10) : null,
-  ADMIN_TOKEN_LEN: ADMIN_TOKEN ? ADMIN_TOKEN.length : null,
-});
-
 function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

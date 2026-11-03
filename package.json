@@ -22,6 +22,8 @@
 
     "test:ui:translation": "POPORAMA_UI_TRANSLATION=1 node tests/poporama-test-ui.cjs",
 
+    "diagnose:shopify": "node scripts/poporama-shopify-diagnose.cjs",
+
     "worker:poporama": "node --env-file-if-exists=.env.local scripts/poporama-worker.cjs"
 
   },
