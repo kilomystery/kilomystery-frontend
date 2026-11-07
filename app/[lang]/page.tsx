@@ -1,11 +1,12 @@
 /* eslint-disable react/no-unescaped-entities */
 import type { Metadata } from "next";
+import Image from "next/image";
 import { getPageMetadata } from "@/src/seo/meta";
 import { Lang, normalizeLang } from "@/i18n/lang";
-import Image from "next/image";
-import Header from "../components/Header";
 import Footer from "../components/Footer";
-import ProductsTabs from "../components/ProductsTabs";
+import PremiumHomeIntro, { PremiumHomeHeader } from "../components/home/PremiumHomeIntro";
+import MysteryShowroom from "../components/home/MysteryShowroom";
+import styles from "../components/home/home.module.css";
 import ContactForm from "../components/ContactForm";
 import SectionMarquee from "../components/SectionMarquee";
 import LiveTikTok from "../components/livetiktok";
@@ -544,7 +545,7 @@ export default async function HomePage({
   const t = HOME_COPY[lang] ?? HOME_COPY.it;
 
   return (
-    <>
+    <div className={styles.page}>
       <div className="border-b border-white/10 bg-[#0d1714] py-2 text-center text-[11px] sm:text-xs font-medium text-white">
         {lang === "it"
           ? "Spedizione gratuita in Italia da 50€ · in Europa da 100€"
@@ -557,86 +558,13 @@ export default async function HomePage({
           : "Kostenloser Versand in Italien ab 50€ · in Europa ab 100€"}
       </div>
 
-      <SectionMarquee lang={lang as any} />
-      <Header lang={lang as any} />
-
-      <main className="container space-y-16 py-10">
-        <section className="relative overflow-hidden rounded-2xl border border-white/10 min-h-[460px] md:min-h-[560px]">
-          <div className="absolute inset-0">
-            <video
-              className="h-full w-full object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              controls={false}
-              disablePictureInPicture
-            >
-              <source src="/hero/hero-bg.mov" type="video/quicktime" />
-            </video>
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-b from-[#07110f]/45 via-[#07110f]/35 to-[#07110f]/75" />
-          <div className="absolute inset-0 bg-black/20" />
-
-          <div className="relative z-10 flex min-h-[460px] md:min-h-[560px] items-center p-6 pt-10 md:p-10 md:pt-12">
-            <div className="w-full">
-              <div className="mx-auto mb-6 md:mb-8 w-[220px] md:w-[320px]">
-                <Image
-                  src="/logo.svg"
-                  alt="KiloMystery"
-                  width={320}
-                  height={180}
-                  className="w-full h-auto drop-shadow-[0_0_30px_rgba(124,58,237,0.35)]"
-                  priority
-                />
-              </div>
-
-              <h1 className="text-center text-4xl md:text-6xl font-extrabold leading-tight">
-                <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
-                  {t.heroTitle}
-                </span>
-              </h1>
-
-              <p className="mx-auto mt-4 max-w-2xl text-center text-white/85">
-                {t.heroSubtitle}
-              </p>
-
-              <p className="mx-auto mt-3 max-w-3xl text-center text-[11px] md:text-xs text-white/55 leading-relaxed">
-                {t.heroAsteriskNote}
-              </p>
-
-              <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <a
-                  href={`/${lang}/products`}
-                  className="inline-flex items-center justify-center rounded-full px-5 py-3 font-extrabold text-[#0c0f10]
-                             bg-gradient-to-r from-[#7A20FF] to-[#20D27A]
-                             shadow-[0_14px_36px_rgba(122,32,255,.25),0_8px_24px_rgba(32,210,122,.25)]
-                             border border-white/70 transition-transform duration-150 hover:-translate-y-0.5"
-                >
-                  {t.ctaPrices}
-                </a>
-
-                <a
-                  href="#come-funziona"
-                  className="inline-flex items-center justify-center rounded-full px-5 py-3 font-bold
-                             text-white bg-white/10 border border-white/25
-                             shadow-[0_8px_22px_rgba(0,0,0,.25)]
-                             transition-transform duration-150 hover:bg-white/15 hover:-translate-y-0.5"
-                >
-                  {t.ctaHowItWorks}
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-
+      <PremiumHomeHeader lang={lang} />
+      <main>
+      <PremiumHomeIntro lang={lang} />
+      <MysteryShowroom lang={lang} />
+      <p className={styles.originNote}>{t.heroAsteriskNote}</p>
+      <div className={`container space-y-16 py-10 ${styles.lower}`}>
         <HowItWorksScroll lang={lang} />
-
-        <section id="prodotti">
-          <ProductsTabs lang={lang as any} />
-        </section>
 
         <section className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -660,7 +588,7 @@ export default async function HomePage({
           <div className="grid gap-4 md:grid-cols-3">
             <a href={`/${lang}/unboxing-experience`} className="card !p-0 overflow-hidden">
               <div className="ratio-16-9">
-                <img className="media" src="/videos/unboxing/posters/u-001.jpg" alt={t.reviewsCard1Title} />
+                <Image fill sizes="(max-width: 768px) 90vw, 400px" className="media" src="/videos/unboxing/posters/u-001.jpg" alt={t.reviewsCard1Title} />
               </div>
               <div className="p-4">
                 <p className="text-xs uppercase tracking-[.15em] text-white/60">{t.reviewsCard1Kicker}</p>
@@ -671,7 +599,7 @@ export default async function HomePage({
 
             <a href={`/${lang}/unboxing-experience`} className="card !p-0 overflow-hidden">
               <div className="ratio-16-9">
-                <img className="media" src="/videos/unboxing/posters/u-002.jpg" alt={t.reviewsCard2Title} />
+                <Image fill sizes="(max-width: 768px) 90vw, 400px" className="media" src="/videos/unboxing/posters/u-002.jpg" alt={t.reviewsCard2Title} />
               </div>
               <div className="p-4">
                 <p className="text-xs uppercase tracking-[.15em] text-white/60">{t.reviewsCard2Kicker}</p>
@@ -766,7 +694,7 @@ export default async function HomePage({
               <p className="text-white/70 text-sm md:text-base mt-1 max-w-xl">{t.eventsSubtitle}</p>
             </div>
 
-            <a href="https://www.kilomystery.com/it/events" className="btn btn-brand btn-sm md:btn-lg">
+            <a href={`/${lang}/events`} className="btn btn-brand btn-sm md:btn-lg">
               {t.eventsCta}
             </a>
           </div>
@@ -797,9 +725,10 @@ export default async function HomePage({
           <p className="text-white/70">{t.contactSubtitle}</p>
           <ContactForm lang={lang} />
         </section>
+      </div>
       </main>
 
       <Footer lang={lang as any} />
-    </>
+    </div>
   );
 }
