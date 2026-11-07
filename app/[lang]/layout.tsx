@@ -4,6 +4,7 @@ import Script from "next/script";
 import CookieBanner from "../components/CookieBanner";
 import NewsletterModalDelayed from "../components/NewsletterModalDelayed";
 import CartProviderRoot from "../CartProviderRoot";
+import StorefrontTheme from "../components/StorefrontTheme";
 
 import { cookies, headers } from "next/headers";
 import { detectLangFromHeader, normalizeLang, type Lang } from "@/i18n/lang";
@@ -144,17 +145,13 @@ gtag('config', '${GA_MEASUREMENT_ID}', {
         }}
       />
 
-      <div
-        className={`${inter.className} antialiased`}
-        data-lang-layout="1"
-        data-lang={lang}
-      >
+      <StorefrontTheme className={`${inter.className} antialiased`} lang={lang}>
         <CartProviderRoot>
           {children}
           <CookieBanner />
           <NewsletterModalDelayed />
         </CartProviderRoot>
-      </div>
+      </StorefrontTheme>
     </>
   );
 }

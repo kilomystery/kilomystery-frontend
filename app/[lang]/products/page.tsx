@@ -7,7 +7,8 @@ import { useEffect, useMemo, useRef } from "react";
 import Image from "next/image";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import ProductsTabs from "../../components/ProductsTabs";
+import MysteryShowroom, { MysteryPackage } from "../../components/home/MysteryShowroom";
+import { SHOWROOM_COPY } from "../../components/home/copy";
 import { useCart } from "../../components/cart/CartProvider";
 import SectionInsideBox from "../../components/SectionInsideBox";
 
@@ -393,20 +394,6 @@ const EXPLORER_COMPARE_TOTAL = 454.4;
 const EXPLORER_PRICE_PER_KG = +(EXPLORER_PRICE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
 const EXPLORER_COMPARE_PER_KG = +(EXPLORER_COMPARE_TOTAL / EXPLORER_TOTAL_KG).toFixed(2);
 
-function safeError(label: string, err: unknown) {
-  const msg =
-    err instanceof Error
-      ? err.message
-      : (() => {
-          try {
-            return typeof err === "string" ? err : JSON.stringify(err);
-          } catch {
-            return String(err);
-          }
-        })();
-  console.error(`${label}: ${msg}`);
-}
-
 function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
   const { addItem } = useCart();
 
@@ -565,7 +552,6 @@ function ExplorerCard({ lang, t }: { lang: Lang; t: CopyPerLang }) {
 export default function ProductsPage({ params }: { params: { lang: string } }) {
   const lang: Lang = normalizeLang(params?.lang);
   const t = PRODUCTS_COPY[lang] ?? PRODUCTS_COPY.it;
-  const animRef = useRef<HTMLDivElement>(null);
   const listTrackedRef = useRef<string>("");
 
   useEffect(() => {
@@ -586,58 +572,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       },
     ] as any);
   }, [lang, t]);
-
-  useEffect(() => {
-    let destroyed = false;
-    let anim: import("lottie-web").AnimationItem | null = null;
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    const prefersReduced =
-      typeof window !== "undefined" &&
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-    if (prefersReduced) return;
-
-    timer = setTimeout(() => {
-      (async () => {
-        try {
-          const { default: lottie } = await import("lottie-web");
-
-          const res = await fetch("/lottie/products-animation.json", {
-            cache: "force-cache",
-          });
-          if (!res.ok) {
-            safeError("Lottie load error", `HTTP ${res.status}`);
-            return;
-          }
-
-          const data = await res.json();
-
-          if (!destroyed && animRef.current) {
-            anim = lottie.loadAnimation({
-              container: animRef.current,
-              renderer: "svg",
-              loop: true,
-              autoplay: true,
-              animationData: data,
-            });
-            (animRef.current.style as any).willChange = "transform";
-          }
-        } catch (e) {
-          safeError("Lottie load error", e);
-        }
-      })();
-    }, 2000);
-
-    return () => {
-      destroyed = true;
-      if (timer) clearTimeout(timer);
-      try {
-        anim?.destroy();
-      } catch {}
-    };
-  }, []);
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://www.kilomystery.com";
   const pageUrl = `${siteUrl}/${lang}/products`;
@@ -769,14 +703,9 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
       <Header lang={lang} />
 
       <main className="container py-10 mb-16 space-y-10">
-        <section className="space-y-6 text-center max-w-3xl mx-auto">
-          <div className="mx-auto w-[160px] md:w-[220px] relative aspect-[3/1]">
-            <Image src="/logo.svg" alt="KiloMystery" fill className="object-contain" priority />
-          </div>
-
-          <div ref={animRef} className="mx-auto w-[280px] md:w-[360px] h-[220px] md:h-[260px]" />
-
-          <header className="space-y-3">
+        <section className="km-catalog-hero">
+          <header className="space-y-4">
+            <p className="section-kicker">STANDARD / PREMIUM — 01–10 KG</p>
             <h1 className="text-3xl md:text-4xl font-extrabold">
               <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
                 {t.heroTitleHighlight}
@@ -787,9 +716,9 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
             <p className="text-white/70">{t.heroSubtitle1}</p>
             <p className="text-white/70">{t.heroSubtitle2}</p>
 
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <a href={`/${lang}/mystery-box`} className="btn btn-brand px-5 py-2">
-                {t.seoCtaPrimary}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <a href="#prodotti" className="btn btn-brand px-5 py-2">
+                {SHOWROOM_COPY[lang].explore} ↗
               </a>
               <a href={`/${lang}/how-it-works`} className="btn btn-ghost px-5 py-2">
                 {t.seoCtaSecondary}
@@ -799,7 +728,10 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
               </a>
             </div>
           </header>
+          <div className="km-catalog-visual" aria-hidden="true"><MysteryPackage tier="premium" /></div>
         </section>
+
+        <MysteryShowroom lang={lang} />
 
         <section className="grid gap-3 md:grid-cols-3 text-sm">
           <div className="card p-3 space-y-1">
@@ -883,7 +815,6 @@ export default function ProductsPage({ params }: { params: { lang: string } }) {
           </div>
         </section>
 
-        <ProductsTabs lang={lang as any} />
 
         <ExplorerCard lang={lang} t={t} />
 

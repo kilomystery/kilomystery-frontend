@@ -1,8 +1,5 @@
-"use client";
-
 /* eslint-disable react/no-unescaped-entities */
 
-import { use } from "react";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import FAQ from "../../components/FAQ";
@@ -82,12 +79,12 @@ function hrefFor(lang: Lang, path: string) {
   return `/${lang}${p}`.replace(/\/{2,}/g, "/");
 }
 
-export default function FAQPage({
+export default async function FAQPage({
   params,
 }: {
   params: Promise<{ lang: string }>;
 }) {
-  const resolved = use(params);
+  const resolved = await params;
   const lang: Lang = normalizeLang(resolved?.lang);
   const t = COPY[lang] ?? COPY.it;
 

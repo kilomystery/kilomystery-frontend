@@ -18,7 +18,7 @@ export default function CartIcon({ lang, className }: Props) {
         className ??
         "inline-flex items-center gap-1 rounded-full border border-white/25 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition"
       }
-      aria-label="Carrello"
+      aria-label={({ it: "Carrello", en: "Cart", es: "Carrito", fr: "Panier", de: "Warenkorb" } as Record<string, string>)[lang] || "Cart"}
     >
       <svg
         viewBox="0 0 24 24"

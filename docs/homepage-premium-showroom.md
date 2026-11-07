@@ -1,5 +1,7 @@
 # Homepage premium e showroom
 
+Questa pagina documenta la prima fase. Per l’estensione del tema a tutto il sito e le nuove interazioni a scorrimento, vedere [Restyling esteso](storefront-premium.md).
+
 Branch: `feat/homepage-premium-showroom`. Nessuna pubblicazione o modifica alla configurazione di Vercel o Shopify.
 
 ## Anteprima e confronto

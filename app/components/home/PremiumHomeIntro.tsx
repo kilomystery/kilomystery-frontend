@@ -1,20 +1,11 @@
-import Image from 'next/image';
-import Link from 'next/link';
 import type { Lang } from '@/i18n/lang';
-import CartIcon from '@/app/components/cart/CartIcon';
+import Header from '@/app/components/Header';
 import { MysteryPackage } from './MysteryShowroom';
 import { SHOWROOM_COPY } from './copy';
 import styles from './home.module.css';
 
 export function PremiumHomeHeader({ lang }: { lang: Lang }) {
-  const t = SHOWROOM_COPY[lang];
-  return (
-<header className={styles.header}>
-      <Link href={`/${lang}`} className={styles.logo} aria-label="KiloMystery"><Image src="/logo.svg" alt="" width={56} height={40} priority /><span>KILO<span>MYSTERY</span><small>EXPECT THE UNEXPECTED</small></span></Link>
-      <nav aria-label="Menu" className={styles.nav}><a href="#prodotti">Mystery Box</a><a href="#come-funziona">{t.how}</a><Link href={`/${lang}/unboxing-experience`}>{t.unboxing} ↗</Link></nav>
-      <div className={styles.headerActions}><details className={styles.language}><summary aria-label="Language">{lang.toUpperCase()} ⌄</summary><div>{(['it', 'en', 'es', 'fr', 'de'] as Lang[]).map(l => <Link href={`/${l}`} key={l} hrefLang={l} lang={l} aria-current={l === lang ? 'page' : undefined}>{({ it: 'Italiano', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch' })[l]}</Link>)}</div></details><CartIcon lang={lang} className={styles.cart} /></div>
-    </header>
-  );
+  return <Header lang={lang} />;
 }
 
 export default function PremiumHomeIntro({ lang }: { lang: Lang }) {

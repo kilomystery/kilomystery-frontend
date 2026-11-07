@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./storefront.css";
 import ClientTracking from "./providers/ClientTracking";
 import Script from "next/script";
 

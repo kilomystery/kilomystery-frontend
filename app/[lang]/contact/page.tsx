@@ -328,9 +328,9 @@ export default function ContactPage({ params }: { params: { lang: string } }) {
 
   const disabled = state.status === 'loading';
 
-  const returnsHref = `/${lang}/returns`;
-  const shippingHref = `/${lang}/shipping`;
-  const termsHref = `/${lang}/terms`;
+  const returnsHref = `/${lang}/policy/returns`;
+  const shippingHref = `/${lang}/policy/shipping`;
+  const termsHref = `/${lang}/policy/terms`;
 
   return (
     <>

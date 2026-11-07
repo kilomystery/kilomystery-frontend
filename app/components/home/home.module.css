@@ -1142,3 +1142,8 @@
 
 }
 
+
+.variantAnchor { display:block; height:0; scroll-margin-top:125px; }
+.scrollProgress { position:absolute; bottom:26px; right:25px; display:flex; gap:6px; }
+.scrollProgress span { width:15px; height:2px; background:#ffffff20; transition:background .25s,width .25s; }
+.scrollProgress span[data-active=true] { width:30px; background:#c4b3dc; }

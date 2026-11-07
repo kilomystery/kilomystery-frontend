@@ -44,10 +44,33 @@ async function until(check, message) { const end = Date.now() + 25000; while (Da
     assert.equal(await evaluate(`document.querySelectorAll('h1').length`), 1);
     assert.equal(await evaluate(`document.documentElement.scrollWidth <= innerWidth`), true);
     const live = await (await fetch(`${origin}/api/showroom/catalog`)).json(); fixture = live.variants;
-    const premium = fixture.find(v => v.tier === 'premium' && v.kg === 1);
-    assert.equal(await evaluate(`document.querySelector('[data-testid="showroom-price"]').textContent`), new Intl.NumberFormat('it', { style: 'currency', currency: 'EUR' }).format(premium.price));
+    const initial = fixture.find(v => v.tier === 'standard' && v.kg === 1);
+    assert.equal(await evaluate(`document.querySelector('[data-testid="showroom-price"]').textContent`), new Intl.NumberFormat('it', { style: 'currency', currency: 'EUR' }).format(initial.price));
     await shot('desktop-hero.png');
-    await evaluate(`document.querySelector('#prodotti').scrollIntoView({block:'start'})`); await pause(400); await shot('desktop-showroom.png');
+    await evaluate(`document.querySelector('#prodotti').scrollIntoView({block:'start'})`); await pause(400);
+    const sceneWheel = async deltaY => {
+      const p = await evaluate(`(()=>{const r=document.querySelector('#prodotti [role="group"]').getBoundingClientRect();return {x:r.x+r.width*.7,y:r.y+r.height*.5}})()`);
+      await send('Input.dispatchMouseEvent', { type: 'mouseWheel', x:p.x, y:p.y, deltaX:0, deltaY });
+      await pause(120);
+    };
+    const openState = () => evaluate(`document.querySelector('#prodotti button[aria-expanded]').getAttribute('aria-expanded')`);
+    const selectedTier = name => evaluate(`Array.from(document.querySelectorAll('#prodotti button')).find(b=>b.textContent.trim()===${JSON.stringify(name + '↗')}).getAttribute('aria-pressed') === 'true'`);
+    const sceneScroll = await evaluate('scrollY');
+    await sceneWheel(95); await until(async () => await openState() === 'true', 'Wheel did not open Standard');
+    assert.equal(await selectedTier('Standard'), true);
+    await sceneWheel(95); assert.equal(await selectedTier('Standard'), true, 'Trackpad inertia skipped a step');
+    await pause(700); await sceneWheel(95);
+    await until(() => selectedTier('Premium'), 'Wheel did not change Standard to Premium');
+    assert.equal(await openState(), 'false');
+    await pause(700); await sceneWheel(95); await until(async () => await openState() === 'true', 'Wheel did not open Premium');
+    await shot('desktop-showroom.png');
+    await pause(700); await sceneWheel(95);
+    await until(() => evaluate(`scrollY > ${sceneScroll + 10}`), 'Wheel trapped page at final step');
+    await evaluate(`document.querySelector('#prodotti').scrollIntoView({block:'start'})`); await pause(400);
+    await sceneWheel(-95); await until(async () => await openState() === 'false', 'Reverse wheel did not close Premium');
+    await pause(700); await sceneWheel(-95); await until(() => selectedTier('Standard'), 'Reverse wheel did not return to Standard');
+    assert.equal(await openState(), 'true');
+    console.log('PASS wheel: opening, both tiers, reverse scrolling, inertia guard and page-scroll release.');
     await click('Standard↗'); await pause(350);
     const soldWeight = fixture.find(v => v.tier === 'standard' && !v.available);
     if (soldWeight) assert.equal(await evaluate(`document.querySelector('#prodotti button[aria-label="${soldWeight.kg} kg — Non disponibile"]').disabled`), true);
@@ -77,11 +100,12 @@ async function until(check, message) { const end = Date.now() + 25000; while (Da
     await send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: point.x - 100, y: point.y }] });
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await pause(350);
-    assert.equal(await evaluate(`Array.from(document.querySelectorAll('#prodotti button')).find(b=>b.textContent.trim()==='Standard↗').getAttribute('aria-pressed')`), 'true');
-    await evaluate(`Array.from(document.querySelectorAll('#prodotti button')).find(b=>b.textContent.trim()==='Premium↗').focus()`);
+    assert.equal(await evaluate(`Array.from(document.querySelectorAll('#prodotti button')).find(b=>b.textContent.trim()==='Premium↗').getAttribute('aria-pressed')`), 'true');
+    assert.equal(await openState(), 'true', 'Swipe must open the incoming box');
+    await evaluate(`Array.from(document.querySelectorAll('#prodotti button')).find(b=>b.textContent.trim()==='Standard↗').focus()`);
     await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, text: '\r', unmodifiedText: '\r' });
     await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
-    await until(() => evaluate(`Array.from(document.querySelectorAll('#prodotti button')).find(b=>b.textContent.trim()==='Premium↗').getAttribute('aria-pressed') === 'true'`), 'Keyboard selection did not update');
+    await until(() => evaluate(`Array.from(document.querySelectorAll('#prodotti button')).find(b=>b.textContent.trim()==='Standard↗').getAttribute('aria-pressed') === 'true'`), 'Keyboard selection did not update');
     await evaluate(`document.querySelector('#prodotti [aria-busy]').scrollIntoView({block:'start'})`); await pause(350); await shot('mobile-details.png');
     console.log('PASS mobile: 390 px layout, touch swipe and keyboard selection change the selected box.');
     await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
@@ -103,6 +127,51 @@ async function until(check, message) { const end = Date.now() + 25000; while (Da
       assert.ok((await response.text()).includes(title), `Missing ${lang} homepage copy`);
     }
     console.log('PASS translated homepage routes: EN, ES, FR, DE.');
+    catalogMode = 'live';
+    await viewport(390, 844, true);
+    const publicRoutes = ['products', 'about', 'contact', 'faq', 'events', 'how-it-works', 'blog', 'press', 'policy/shipping', 'policy/returns', 'policy/privacy', 'policy/terms', 'pacchi-smarriti', 'mystery-box', 'pacchi-non-reclamati', 'resi-ecommerce', 'giacenze-ecommerce', 'pacchi-smarriti-poste', 'pacchi-smarriti-amazon'];
+    for (const route of publicRoutes) {
+      await send('Page.navigate', { url: `${origin}/it/${route}` });
+      await until(() => evaluate(`location.pathname === '/it/${route}' && !!document.querySelector('.km-storefront main') && document.readyState === 'complete'`), `Route did not render: ${route}`);
+      await evaluate(`window.scrollTo(0,0)`); await pause(150);
+      assert.equal(await evaluate(`getComputedStyle(document.querySelector('.km-storefront')).backgroundColor`), 'rgb(16, 16, 20)', route);
+      assert.equal(await evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, `Mobile overflow: ${route}`);
+      assert.equal(await evaluate(`!!document.querySelector('.km-footer') && !!document.querySelector('header button[aria-controls="site-explore"]')`), true, `Shared theme missing: ${route}`);
+      if (route === 'faq') {
+        await evaluate(`document.querySelector('#faq summary').click()`);
+        assert.equal(await evaluate(`document.querySelector('#faq details').open`), true);
+      }
+      if (route === 'contact') assert.equal(await evaluate(`document.querySelector('main form').checkValidity()`), false);
+      if (['products', 'about', 'faq', 'contact', 'policy/shipping'].includes(route)) await shot(`mobile-${route.replace('/', '-')}.png`);
+    }
+    await send('Page.navigate', { url: `${origin}/it/about` });
+    await until(() => evaluate(`!!document.querySelector('[data-storefront-page="about"]')`), 'About not ready');
+    await evaluate(`document.querySelector('header button[aria-controls="site-explore"]').click()`);
+    assert.equal(await evaluate(`!!document.querySelector('#site-explore a[href="/it/products"]')`), true);
+    await send('Input.dispatchKeyEvent', { type:'keyDown', key:'Escape', code:'Escape', windowsVirtualKeyCode:27 });
+    await until(() => evaluate(`!document.querySelector('#site-explore')`), 'Escape did not close menu');
+    await evaluate(`document.querySelector('header button[aria-label="Language"]').click()`);
+    assert.equal(await evaluate(`!!document.querySelector('#site-languages a[href="/en/about"]')`), true);
+    console.log('PASS shared premium design on 19 public routes; mobile menu, Escape and route-preserving language links.');
+    await viewport(1440, 1050, false);
+    for (const route of ['products', 'about', 'cart', 'events', 'blog', 'contact', 'policy/shipping']) {
+      await send('Page.navigate', { url:`${origin}/it/${route}` });
+      await until(() => evaluate(`location.pathname === '/it/${route}' && document.readyState === 'complete' && !!document.querySelector('main')`), route);
+      assert.equal(await evaluate(`document.documentElement.scrollWidth <= innerWidth`), true, `Desktop overflow: ${route}`);
+      await evaluate(`window.scrollTo(0,0)`); await pause(150);
+      await shot(`desktop-${route.replace('/', '-')}.png`);
+    }
+    await send('Page.navigate', { url: `${origin}/it/products#buy-premium-10` }); await ready();
+    await until(() => selectedTier('Premium'), 'Legacy product anchor did not select Premium');
+    assert.equal(await evaluate(`document.querySelector('#prodotti button[aria-label="10 kg"]').getAttribute('aria-pressed')`), 'true');
+    await send('Page.navigate', { url: `${origin}/it/blog` });
+    await until(() => evaluate(`!!document.querySelector('main article a[href*="/blog/"]')`), 'Blog list missing');
+    const article = await evaluate(`document.querySelector('main article a[href*="/blog/"]').href`);
+    await send('Page.navigate', { url: article });
+    await until(() => evaluate(`document.readyState === 'complete' && !!document.querySelector('.km-storefront main')`), 'Article missing');
+    assert.equal(await evaluate(`document.documentElement.scrollWidth <= innerWidth`), true);
+    console.log('PASS desktop pages, article layout and existing 10 kg product anchors.');
+    assert.deepEqual(errors, []);
     console.log(`Screenshots: ${temp}`);
   } finally { socket?.close(); chrome.kill(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

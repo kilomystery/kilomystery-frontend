@@ -16,13 +16,13 @@ export default function LegalPage({ lang, title, children }: Props) {
       <Header lang={lang} />
 
       {/* HERO */}
-      <section className="relative border-b border-white/10">
+      <section className="km-legal-hero relative border-b border-white/10">
         <div
           className="absolute inset-0"
           aria-hidden="true"
           style={{
             background:
-              "radial-gradient(1200px 400px at 20% -20%, rgba(139,92,246,.15), transparent 60%), radial-gradient(1200px 400px at 80% -20%, rgba(34,197,94,.12), transparent 60%)",
+              "radial-gradient(1200px 400px at 20% -20%, rgba(139,92,246,.15), transparent 60%), radial-gradient(1200px 400px at 80% -20%, rgba(196,179,220,.07), transparent 60%)",
           }}
         />
         <div className="container relative py-12 md:py-16">

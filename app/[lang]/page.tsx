@@ -546,7 +546,7 @@ export default async function HomePage({
 
   return (
     <div className={styles.page}>
-      <div className="border-b border-white/10 bg-[#0d1714] py-2 text-center text-[11px] sm:text-xs font-medium text-white">
+      <div className="border-b border-white/10 bg-[#141218] py-2 text-center text-[11px] sm:text-xs font-medium text-white">
         {lang === "it"
           ? "Spedizione gratuita in Italia da 50€ · in Europa da 100€"
           : lang === "en"

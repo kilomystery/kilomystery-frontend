@@ -4,7 +4,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import styles from "./storefront.module.css";
 import CartIcon from "@/app/components/cart/CartIcon";
 
 type Lang = "it" | "en" | "es" | "fr" | "de";
@@ -117,497 +118,74 @@ function replaceLang(path: string, to: Lang) {
 
 export default function Header({ lang = "it" as Lang }) {
   const pathname = usePathname() || `/${lang}`;
+  const currentLang = SUPPORTED.includes(lang) ? lang : "it";
+  const labels = HEADER_LABELS[currentLang];
   const [open, setOpen] = useState(false);
   const [openLang, setOpenLang] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const home = pathname === `/${currentLang}`;
+  const langLinks = useMemo(() => Object.fromEntries(SUPPORTED.map(code => [code, replaceLang(pathname, code)])), [pathname]);
+  const primary = [
+    [home ? '#prodotti' : `/${currentLang}/products`, labels.navProducts],
+    [home ? '#come-funziona' : `/${currentLang}/how-it-works`, labels.navHow],
+    [`/${currentLang}/unboxing-experience`, 'Unboxing ↗'],
+  ];
+  const secondary = [
+    [`/${currentLang}/pacchi-smarriti`, labels.navLostParcels],
+    [`/${currentLang}/live-tiktok`, labels.navLive],
+    [`/${currentLang}/about`, labels.navAbout],
+    [`/${currentLang}/events`, labels.navEvents],
+    [`/${currentLang}/blog`, 'Blog'],
+    [`/${currentLang}/faq`, 'FAQ'],
+    [`/${currentLang}/contact`, ({ it: 'Contatti', en: 'Contact', es: 'Contacto', fr: 'Contact', de: 'Kontakt' })[currentLang]],
+  ];
 
-  const currentLang: Lang = SUPPORTED.includes(lang) ? lang : "it";
-  const labels = HEADER_LABELS[currentLang];
-
-  const langLinks = useMemo(() => {
-    const safePath = pathname || `/${currentLang}`;
-    const out: Record<Lang, string> = {} as any;
-    for (const l of SUPPORTED) out[l] = replaceLang(safePath, l);
-    return out;
-  }, [pathname, currentLang]);
-
+  useEffect(() => { setOpen(false); setOpenLang(false); }, [pathname]);
   useEffect(() => {
-    setOpen(false);
-    setOpenLang(false);
-  }, [pathname]);
-
-  const isActive = (href: string) => {
-    if (!pathname) return false;
-    return pathname === href || pathname.startsWith(href + "/");
-  };
-
-  const liveHref = `/${currentLang}/live-tiktok`;
+    function outside(event: PointerEvent) {
+      if (!headerRef.current?.contains(event.target as Node)) { setOpen(false); setOpenLang(false); }
+    }
+    function escape(event: KeyboardEvent) {
+      if (event.key === 'Escape') { setOpen(false); setOpenLang(false); menuButton.current?.focus(); }
+    }
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
+    return () => { document.removeEventListener('pointerdown', outside); document.removeEventListener('keydown', escape); };
+  }, []);
 
   return (
-    <header className="site-header sticky top-0 z-40 border-b border-white/10 bg-gradient-to-b from-[#080b11]/95 via-[#05070b]/95 to-[#05070b]/90 backdrop-blur-xl">
-      {/* linea glow */}
-      <div className="h-[1px] w-full bg-gradient-to-r from-[#7A20FF] via-emerald-400/70 to-[#20D27A]" />
-
-      <div className="container h-16 flex items-center justify-between gap-3">
-        {/* LOGO */}
-        <Link href={`/${currentLang}`} className="flex items-center gap-3 group">
-          <div className="relative h-9 w-9 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_25px_rgba(122,32,255,0.45)]">
-            <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
-              <Image
-                src="/logo.svg"
-                alt="Kilomistery"
-                width={80}
-                height={80}
-                className="h-6 w-auto"
-                priority
-              />
-            </div>
-          </div>
-          <span className="hidden sm:block text-sm font-semibold tracking-[0.18em] uppercase text-white/70 group-hover:text-white transition">
-            KILOMYSTERY
-          </span>
+    <header ref={headerRef} className={styles.header}>
+      <div className={styles.headerInner}>
+        <Link href={`/${currentLang}`} className={styles.logo} aria-label="KiloMystery">
+          <Image src="/logo.svg" alt="" width={56} height={40} priority />
+          <span>KILO<span>MYSTERY</span><small>EXPECT THE UNEXPECTED</small></span>
         </Link>
-
-        {/* NAV DESKTOP */}
-        <nav className="hidden md:flex items-center gap-3">
-          <Link
-            href={`/${currentLang}/products`}
-            className={`nav-link ${
-              isActive(`/${currentLang}/products`) ? "nav-link--active" : ""
-            }`}
-          >
-            {labels.navProducts}
-          </Link>
-
-          <Link
-            href={`/${currentLang}/how-it-works`}
-            className={`nav-link ${
-              isActive(`/${currentLang}/how-it-works`) ? "nav-link--active" : ""
-            }`}
-          >
-            {labels.navHow}
-          </Link>
-
-          {/* Pacchi smarriti (SEO hub) */}
-          <Link
-            href={`/${currentLang}/pacchi-smarriti`}
-            className={`nav-link ${
-              isActive(`/${currentLang}/pacchi-smarriti`) ? "nav-link--active" : ""
-            }`}
-          >
-            {labels.navLostParcels}
-          </Link>
-
-          {/* 🔴 Live TikTok (evidenziato) */}
-          <Link
-            href={liveHref}
-            className={`nav-link-live ${
-              isActive(liveHref) ? "nav-link-live--active" : ""
-            }`}
-          >
-            <span className="live-dot" aria-hidden="true" />
-            {labels.navLive}
-          </Link>
-
-          <Link
-            href={`/${currentLang}/about`}
-            className={`nav-link ${
-              isActive(`/${currentLang}/about`) ? "nav-link--active" : ""
-            }`}
-          >
-            {labels.navAbout}
-          </Link>
-
-          <Link
-            href={`/${currentLang}/events`}
-            className={`nav-link ${
-              isActive(`/${currentLang}/events`) ? "nav-link--active" : ""
-            }`}
-          >
-            {labels.navEvents}
-          </Link>
-
-          {/* SOCIAL + CARRELLO DESKTOP */}
-          <div className="flex items-center gap-3 pl-2">
-            {/* Instagram */}
-            <a
-              href={INSTAGRAM_URL}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={labels.ariaInstagram}
-              className="w-9 h-9 flex items-center justify-center rounded-full border border-white/15 bg-black/30 hover:bg-black/60 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
-            >
-              <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
-                <defs>
-                  <linearGradient
-                    id="igGradientDesktop"
-                    x1="0%"
-                    y1="0%"
-                    x2="100%"
-                    y2="100%"
-                  >
-                    <stop offset="0%" stopColor="#feda75" />
-                    <stop offset="25%" stopColor="#fa7e1e" />
-                    <stop offset="50%" stopColor="#d62976" />
-                    <stop offset="75%" stopColor="#962fbf" />
-                    <stop offset="100%" stopColor="#4f5bd5" />
-                  </linearGradient>
-                </defs>
-                <rect
-                  x="2"
-                  y="2"
-                  width="20"
-                  height="20"
-                  rx="5"
-                  fill="url(#igGradientDesktop)"
-                />
-                <path
-                  d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 6.5A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5Z"
-                  fill="#fff"
-                />
-                <circle cx="17.5" cy="6.5" r="1.1" fill="#fff" />
-              </svg>
-            </a>
-
-            {/* TikTok */}
-            <a
-              href={TIKTOK_URL}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={labels.ariaTikTokDesktop}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/30 hover:bg-black/60 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
-                <path
-                  d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
-                  fill="#00f2ea"
-                  stroke="#ff0050"
-                  strokeWidth={0.8}
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </a>
-
-            {/* Facebook */}
-            <a
-              href={FACEBOOK_URL}
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Facebook"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-black/30 hover:bg-black/60 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
-            >
-              <svg viewBox="0 0 24 24" aria-hidden="true" className="h-4 w-4">
-                <rect x="2" y="2" width="20" height="20" rx="5" fill="#1877F2" />
-                <path
-                  d="M13.2 18.5v-4.7h1.6l.3-2h-1.9v-1.3c0-.6.2-.9 1-.9h.9V7.1A11 11 0 0 0 13.9 7c-1.5 0-2.6.9-2.6 2.7v2h-1.7v2h1.7v4.8Z"
-                  fill="#fff"
-                />
-              </svg>
-            </a>
-
-            {/* CARRELLO DESKTOP */}
-            <CartIcon lang={currentLang} />
-          </div>
-
-          {/* LANG DROPDOWN */}
-          <div className="relative">
-            <button
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 hover:text-white hover:bg-white/10 hover:border-white/40 transition shadow-[0_0_18px_rgba(15,23,42,0.8)]"
-              onClick={() => setOpenLang(!openLang)}
-              aria-haspopup="listbox"
-              aria-expanded={openLang}
-            >
-              <span>{LANGS.find((l) => l.code === currentLang)?.flag}</span>
-              <span className="font-semibold">{currentLang.toUpperCase()}</span>
-              <span className="text-[10px] opacity-70">▾</span>
-            </button>
-
-            {openLang && (
-              <ul
-                role="listbox"
-                className="dropdown-menu right open absolute top-full mt-2 right-0 z-50 min-w-[150px] rounded-2xl border border-white/15 bg-[#05070b]/95 shadow-[0_18px_45px_rgba(0,0,0,.75)] py-1 backdrop-blur-xl"
-              >
-                {LANGS.map((l) => (
-                  <li key={l.code}>
-                    <Link
-                      role="option"
-                      aria-selected={l.code === currentLang}
-                      href={langLinks[l.code]}
-                      className={`dropdown-item w-full flex items-center gap-2 px-3 py-1.5 text-sm ${
-                        l.code === currentLang
-                          ? "bg-white/10 text-white"
-                          : "text-white/75 hover:bg-white/5 hover:text-white"
-                      }`}
-                      onClick={() => setOpenLang(false)}
-                    >
-                      <span className="text-lg leading-none">{l.flag}</span>
-                      <span className="font-semibold">{l.label}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+        <nav className={styles.primaryNav} aria-label="Menu">
+          {primary.map(([href, label]) => <Link key={href} href={href} aria-current={pathname === href ? 'page' : undefined}>{label}</Link>)}
         </nav>
-
-        {/* DESTRA MOBILE */}
-        <div className="flex items-center gap-2 md:hidden">
-          {/* SOCIAL ICONS MOBILE SEMPRE VISIBILI */}
-          <a
-            href={INSTAGRAM_URL}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={labels.ariaInstagram}
-            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
-          >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
-              <defs>
-                <linearGradient
-                  id="igGradientMobileHeader"
-                  x1="0%"
-                  y1="0%"
-                  x2="100%"
-                  y2="100%"
-                >
-                  <stop offset="0%" stopColor="#feda75" />
-                  <stop offset="25%" stopColor="#fa7e1e" />
-                  <stop offset="50%" stopColor="#d62976" />
-                  <stop offset="75%" stopColor="#962fbf" />
-                  <stop offset="100%" stopColor="#4f5bd5" />
-                </linearGradient>
-              </defs>
-              <rect
-                x="2"
-                y="2"
-                width="20"
-                height="20"
-                rx="5"
-                fill="url(#igGradientMobileHeader)"
-              />
-              <path
-                d="M12 8a4 4 0 1 0 4 4 4 4 0 0 0-4-4Zm0 6.5A2.5 2.5 0 1 1 14.5 12 2.5 2.5 0 0 1 12 14.5Z"
-                fill="#fff"
-              />
-              <circle cx="17.5" cy="6.5" r="1.1" fill="#fff" />
-            </svg>
-          </a>
-
-          <a
-            href={TIKTOK_URL}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={labels.ariaTikTokMobile}
-            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
-          >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
-              <path
-                d="M15.5 5.2c.6.7 1.4 1.3 2.3 1.7.3.1.6.2.9.2v2.2a5.5 5.5 0 0 1-3.2-1.1v5.6A4.9 4.9 0 0 1 10.6 18 4.4 4.4 0 0 1 6 13.6 4.5 4.5 0 0 1 10.5 9h.3v2.3h-.3a2.2 2.2 0 1 0 2.2 2.2V4.5h2.8v.7Z"
-                fill="#00f2ea"
-                stroke="#ff0050"
-                strokeWidth={0.9}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-          </a>
-
-          <a
-            href={FACEBOOK_URL}
-            target="_blank"
-            rel="noreferrer"
-            aria-label="Facebook"
-            className="w-8 h-8 flex items-center justify-center rounded-full border border-white/25 bg-black/30 hover:bg-black/60 hover:border-white/40 transition"
-          >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" aria-hidden="true">
-              <rect x="2" y="2" width="20" height="20" rx="5" fill="#1877F2" />
-              <path
-                d="M13.2 18.5v-4.7h1.6l.3-2h-1.9v-1.3c0-.6.2-.9 1-.9h.9V7.1A11 11 0 0 0 13.9 7c-1.5 0-2.6.9-2.6 2.7v2h-1.7v2h1.7v4.8Z"
-                fill="#fff"
-              />
-            </svg>
-          </a>
-
-          <CartIcon
-            lang={currentLang}
-            className="inline-flex items-center justify-center rounded-full border border-white/25 bg-white/5 px-3 py-1.5 hover:bg-white/10 transition shadow-[0_0_18px_rgba(0,0,0,0.7)]"
-          />
-
-          <button
-            aria-label={labels.ariaOpenMenu}
-            className="rounded-xl border border-white/20 bg-white/5 p-2 hover:bg-white/10 hover:border-white/40 transition shadow-[0_0_18px_rgba(0,0,0,0.7)]"
-            onClick={() => setOpen((v) => !v)}
-          >
-            <span className="text-xl leading-none text-white">≡</span>
-          </button>
+        <div className={styles.actions}>
+          <div className={styles.language}>
+            <button type="button" aria-expanded={openLang} aria-controls="site-languages" aria-label="Language" onClick={() => { setOpenLang(!openLang); setOpen(false); }}>{currentLang.toUpperCase()} ⌄</button>
+            {openLang && <nav id="site-languages" aria-label="Language" className={styles.languagePanel}>
+              {LANGS.map(({ code }) => <Link key={code} href={langLinks[code]} hrefLang={code} lang={code} aria-current={code === currentLang ? 'page' : undefined} onClick={() => setOpenLang(false)}>{({ it: 'Italiano', en: 'English', es: 'Español', fr: 'Français', de: 'Deutsch' })[code]}</Link>)}
+            </nav>}
+          </div>
+          <CartIcon lang={currentLang} className={styles.cart} />
+          <button ref={menuButton} type="button" className={styles.menuButton} aria-label={labels.ariaOpenMenu} aria-expanded={open} aria-controls="site-explore" onClick={() => { setOpen(!open); setOpenLang(false); }}><span aria-hidden="true">{open ? '×' : '☰'}</span></button>
         </div>
       </div>
-
-      {/* MENU MOBILE */}
-      {open && (
-        <div className="md:hidden border-t border-white/10 bg-gradient-to-b from-[#05070b] to-[#020308]">
-          <div className="container py-3 flex flex-col gap-3">
-            <Link
-              href={`/${currentLang}/products`}
-              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
-              onClick={() => setOpen(false)}
-            >
-              {labels.navProducts}
-            </Link>
-
-            <Link
-              href={`/${currentLang}/how-it-works`}
-              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
-              onClick={() => setOpen(false)}
-            >
-              {labels.navHow}
-            </Link>
-
-            <Link
-              href={`/${currentLang}/pacchi-smarriti`}
-              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
-              onClick={() => setOpen(false)}
-            >
-              {labels.navLostParcels}
-            </Link>
-
-            {/* 🔴 Live TikTok (mobile) */}
-            <Link
-              href={liveHref}
-              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition flex items-center justify-between"
-              onClick={() => setOpen(false)}
-            >
-              <span className="flex items-center gap-2">
-                <span className="inline-block h-2 w-2 rounded-full bg-red-400 shadow-[0_0_14px_rgba(248,113,113,0.55)]" />
-                {labels.navLive}
-              </span>
-              <span className="text-xs text-white/50">↗</span>
-            </Link>
-
-            <Link
-              href={`/${currentLang}/about`}
-              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
-              onClick={() => setOpen(false)}
-            >
-              {labels.navAbout}
-            </Link>
-
-            <Link
-              href={`/${currentLang}/events`}
-              className="dropdown-item text-sm rounded-lg px-3 py-2 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white transition"
-              onClick={() => setOpen(false)}
-            >
-              {labels.navEvents}
-            </Link>
-
-            {/* Lingue mobile */}
-            <div className="mt-2 grid grid-cols-5 gap-1 px-1">
-              {LANGS.map((l) => (
-                <Link
-                  key={l.code}
-                  href={langLinks[l.code]}
-                  className={`dropdown-item flex items-center justify-center gap-1 rounded-lg px-2 py-1 text-xs ${
-                    l.code === currentLang
-                      ? "bg-white/10 text-white"
-                      : "text-white/75 hover:bg-white/5 hover:text-white"
-                  }`}
-                  onClick={() => setOpen(false)}
-                >
-                  <span>{l.flag}</span>
-                  <span className="font-semibold">{l.label}</span>
-                </Link>
-              ))}
-            </div>
-          </div>
+      {open && <div id="site-explore" className={styles.explore}>
+        <nav aria-label={labels.ariaOpenMenu}>
+          {primary.map(([href, label]) => <Link className={styles.mobilePrimary} key={href} href={href} onClick={() => setOpen(false)}>{label}<span>↗</span></Link>)}
+          {secondary.map(([href, label]) => <Link key={href} href={href} onClick={() => setOpen(false)}>{label}<span>↗</span></Link>)}
+        </nav>
+        <div className={styles.socials}>
+          <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">Instagram ↗</a>
+          <a href={TIKTOK_URL} target="_blank" rel="noreferrer">TikTok ↗</a>
+          <a href={FACEBOOK_URL} target="_blank" rel="noreferrer">Facebook ↗</a>
         </div>
-      )}
-
-      <style jsx>{`
-        .nav-link {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          padding: 0.35rem 0.9rem;
-          border-radius: 999px;
-          font-size: 0.85rem;
-          font-weight: 600;
-          color: rgba(255, 255, 255, 0.85);
-          transition: color 0.15s ease, background 0.15s ease,
-            text-shadow 0.15s ease, transform 0.15s ease;
-        }
-        .nav-link::after {
-          content: "";
-          position: absolute;
-          inset-inline: 18%;
-          bottom: 0.2rem;
-          height: 2px;
-          border-radius: 999px;
-          background: linear-gradient(90deg, #7a20ff, #ffffff, #20d27a);
-          opacity: 0;
-          transform: scaleX(0.6);
-          transform-origin: center;
-          transition: opacity 0.18s ease, transform 0.18s ease;
-        }
-        .nav-link:hover {
-          background-image: linear-gradient(90deg, #7a20ff, #ffffff, #20d27a);
-          -webkit-background-clip: text;
-          color: transparent;
-          text-shadow: 0 0 14px rgba(110, 231, 183, 0.35);
-          transform: translateY(-0.5px);
-        }
-        .nav-link:hover::after {
-          opacity: 1;
-          transform: scaleX(1);
-        }
-        .nav-link--active {
-          background-image: linear-gradient(90deg, #7a20ff, #ffffff, #20d27a);
-          -webkit-background-clip: text;
-          color: transparent;
-          text-shadow: 0 0 18px rgba(32, 210, 122, 0.45);
-        }
-        .nav-link--active::after {
-          opacity: 1;
-          transform: scaleX(1);
-        }
-
-        /* Live link (leggermente evidenziato) */
-        .nav-link-live {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          gap: 0.45rem;
-          padding: 0.35rem 0.85rem;
-          border-radius: 999px;
-          font-size: 0.85rem;
-          font-weight: 700;
-          color: rgba(255, 255, 255, 0.92);
-          border: 1px solid rgba(255, 255, 255, 0.16);
-          background: rgba(255, 255, 255, 0.04);
-          box-shadow: 0 0 18px rgba(122, 32, 255, 0.12);
-          transition: transform 0.15s ease, background 0.15s ease,
-            border-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        .nav-link-live:hover {
-          transform: translateY(-0.5px);
-          background: rgba(255, 255, 255, 0.07);
-          border-color: rgba(255, 255, 255, 0.28);
-          box-shadow: 0 0 22px rgba(32, 210, 122, 0.14),
-            0 0 28px rgba(122, 32, 255, 0.14);
-        }
-        .live-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 999px;
-          background: #f87171;
-          box-shadow: 0 0 14px rgba(248, 113, 113, 0.55);
-        }
-        .nav-link-live--active {
-          border-color: rgba(255, 255, 255, 0.35);
-          background: rgba(255, 255, 255, 0.08);
-          box-shadow: 0 0 24px rgba(32, 210, 122, 0.18),
-            0 0 28px rgba(122, 32, 255, 0.18);
-        }
-      `}</style>
+      </div>}
     </header>
   );
 }

@@ -178,7 +178,7 @@ export default function NewsletterForm({ lang = "it" as Lang }) {
       {/* Nota privacy mini */}
       <p className="mt-1 text-xs text-white/50">
         {t.privacyPrefix}
-        <a href="/it/legal/privacy" className="btn-link">
+        <a href={`/${lang}/policy/privacy`} className="btn-link">
           {t.privacyLinkText}
         </a>
         {t.privacySuffix}

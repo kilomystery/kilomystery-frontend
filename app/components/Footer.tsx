@@ -196,34 +196,17 @@ export default function Footer({
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-20 border-t border-white/10 bg-gradient-to-b from-[#05070b] via-[#05070b] to-[#020308]">
-      <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-[#7A20FF] via-emerald-300/80 to-[#20D27A]" />
+    <footer className="km-footer">
 
       <div className="container py-12 relative z-10">
-        <div className="flex items-center gap-3 mb-8">
-          <Link href={base} prefetch={false} className="inline-flex items-center group">
-            <div className="relative h-10 w-10 rounded-2xl bg-gradient-to-br from-[#7A20FF] via-[#4c1d95] to-[#20D27A] p-[1px] shadow-[0_0_30px_rgba(122,32,255,0.5)]">
-              <div className="h-full w-full rounded-2xl bg-[#05070b] flex items-center justify-center">
-                <Image
-                  src="/logo.svg"
-                  alt="KiloMystery"
-                  width={140}
-                  height={40}
-                  className="h-6 w-auto"
-                  priority
-                />
-              </div>
-            </div>
+        <Link href={base} prefetch={false} className="km-footer-brand">
+          <Image src="/logo.svg" alt="" width={65} height={40} />
+          <span>KiloMystery</span>
+        </Link>
 
-            <span className="ml-2 text-sm font-semibold tracking-[0.22em] uppercase text-white/60 group-hover:text-white transition">
-              KILOMYSTERY
-            </span>
-          </Link>
-        </div>
-
-        <section className="mb-12 rounded-2xl border border-white/10 bg-gradient-to-tr from-white/[0.04] via-[#111827]/70 to-white/[0.06] p-6 shadow-[0_25px_60px_rgba(0,0,0,0.8)]">
+        <section className="km-footer-newsletter">
           <h3 className="text-xl md:text-2xl font-extrabold tracking-tight">
-            <span className="bg-gradient-to-r from-[#7A20FF] via-white to-[#20D27A] bg-clip-text text-transparent">
+            <span className="text-inherit">
               {L.newsletterTitle}
             </span>
           </h3>
@@ -396,39 +379,7 @@ export default function Footer({
         </div>
       </div>
 
-      <style jsx>{`
-        .footer-heading {
-          font-size: 1.1rem;
-          font-weight: 800;
-          margin-bottom: 0.75rem;
-          position: relative;
-        }
 
-        .footer-heading::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          bottom: -0.3rem;
-          width: 36%;
-          height: 2px;
-          background: linear-gradient(90deg, #7a20ff, #fff, #20d27a);
-          opacity: 0.7;
-          border-radius: 999px;
-        }
-
-        .footer-link {
-          color: rgba(255,255,255,0.78);
-          font-size: 0.9rem;
-          position: relative;
-          transition: all 0.18s ease;
-        }
-
-        .footer-link:hover {
-          color: #fff;
-          transform: translateX(2px);
-          text-shadow: 0 0 14px rgba(255,255,255,0.2);
-        }
-      `}</style>
     </footer>
   );
 }
